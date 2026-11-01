@@ -28,10 +28,10 @@ non da risultati preparati in anticipo: ogni stagione è diversa.
 
 | Livello | Nome | Moto | Note |
 |---|---|---|---|
-| Premier | VWC Premier | Prototipi 1000 cc, 4 cilindri (regolamento modificabile) | costruttori, concessioni, sviluppo libero entro limiti |
-| Intermediate | VWC Intermediate | Motore unico 800 cc tre cilindri *Orvane*, telai dei costruttori di telai | sviluppo telaio/sospensioni, elettronica unica |
-| Lightweight | VWC Lightweight | 250 cc monocilindrico | limite di età 28 anni, costi bassi |
-| Feeder | Junior Velocity Cup | monomarca 250 cc | 13–17 anni, scouting |
+| Premier | VWC Premier | Prototipi 1000 cc, 4 cilindri (regolamento modificabile) | costruttori, concessioni, sviluppo libero entro limiti; **2 moto per pilota (A/B)** |
+| Intermediate | VWC Intermediate | Motore unico 800 cc tre cilindri *Orvane*, telai dei costruttori di telai | sviluppo telaio/sospensioni, elettronica unica; **1 moto per pilota** |
+| Lightweight | VWC Lightweight | 250 cc monocilindrico | limite di età 28 anni, costi bassi; **1 moto per pilota** |
+| Feeder | **Velocity Rookies Cup** | monomarca Lysander R250 Rookies, **1 moto per pilota** | 13–17 anni, nuovi piloti ogni stagione, vetrina per gli scout |
 | Feeder | Continental Talent Cups (Europa, Asia-Pacifico, Americhe) | 250 cc | campionati regionali |
 | Feeder | Campionati nazionali | — | simulati in modo statistico, fonte di giovani |
 
@@ -240,3 +240,23 @@ competente e scegliendo come sviluppare la moto durante il weekend. Specifica co
   pre-gara (strategia, gomme, carburante, scenari di pioggia, piano di emergenza). Previsioni incerte:
   dedicare tempo alla preparazione da bagnato è una scommessa.
 - **IA**: le squadre avversarie usano gli stessi sistemi con le proprie risorse e informazioni.
+
+## 17. Moto per categoria, infortuni, sostituti e collaudatori (revisione Fase 0)
+
+Specifiche: [REGULATIONS.md](REGULATIONS.md) e [INJURIES_AND_TESTERS.md](INJURIES_AND_TESTERS.md).
+
+- **Moto per pilota dipendenti dalla categoria** (valori iniziali, configurabili da regolamento):
+  Velocity Rookies Cup 1 (monomarca), Lightweight 1, Intermediate 1, **Premier 2 (Moto A e Moto B)**.
+  Il sistema A/B completo (configurazioni, confronto, preparazione, flag-to-flag) esiste solo in Premier;
+  nelle altre categorie l'interfaccia mostra un'unica moto e nessun comando per la seconda.
+- **Infortuni** con durata in giorni confrontata col calendario (1, 2, 3, 4, 5 o più gare), visita di idoneità obbligatoria.
+- **Decisione del Team Principal** per ogni evento: A) schierare il collaudatore, B) ingaggiare un
+  sostituto con contratto temporaneo, C) **non schierare nessuno** (posto vacante, nessuna penalità se non prevista).
+  Anteprima delle conseguenze sportive, economiche e regolamentari prima della conferma.
+- **Rientro del titolare** con notifica, idoneità, fine dell'incarico del sostituto, storico delle assenze.
+- **Collaudatori** con feedback tecnico e capacità di sviluppo che determinano la qualità dei test.
+- **Sessioni di test** in pre-stagione e in stagione (Premier circa ogni 5 GP).
+- **Velocity Rookies Cup**: monomarca, tute identiche, nuovi piloti ogni anno dai campionati nazionali,
+  promozioni in Lightweight, storie di carriera generate (es. Fabrizio Vitellino).
+- **IA**: le squadre avversarie scelgono fra le stesse tre opzioni in base a budget, obiettivi, durata
+  dell'assenza, collaudatori, mercato, classifica e regolamento.

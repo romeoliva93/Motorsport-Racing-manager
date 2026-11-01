@@ -53,7 +53,14 @@ Category      { id, tier: 'lightweight'|'intermediate'|'premier'|'feeder', name,
 Regulation    { id, categoryId, season, points: number[], sprintPoints: number[],
                 weekendFormat: SessionSpec[], engineAllocation, tyreAllocation,
                 minWeight, fuelCapacity, techLimits, devFreezes, concessions,
-                radioPolicy: 'none'|'dashboard'|'full', penaltiesTable, budgetCap? }
+                radioPolicy: 'none'|'dashboard'|'full', penaltiesTable, budgetCap?,
+                // revisione Fase 0 (REGULATIONS.md)
+                bikesPerRider: 1|2, flagToFlag: boolean, testBikesPerTeam, rebuildAllowedBetweenSessions,
+                riderAge: { min, max, rookieMax? }, licenseRequired,
+                substitution: { allowed: 'yes'|'organizerReserveOnly'|'no', vacancyAllowed: boolean,
+                                vacancyPenalty?: Penalty, participationFeeReductionPerRound?: number,
+                                entryDeadline: { weekday, hour }, testerLicenseWaiverKm? },
+                inSeasonTests: { everyRounds?: number, sessions?: number } }
 RegulationProposal { id, proposedBy, change, voteDeadline, votes: Record<Id,'yes'|'no'|'abstain'>, status }
 Season        { id, year, categoryId, roundIds[], status, championRiderId?, championTeamId? }
 Round         { id, seasonId, circuitId, startDay, sessionIds[], pressConferenceId? }
@@ -83,7 +90,24 @@ Rider extends Person {
   setupPreferences, crewChiefId?, trackEngineerId?, role: 'race'|'test'|'reserve'|'academy',
   careerStats, seasonStats
 }
-Injury        { type, bodyPart, startDay, expectedReturnDay, severity, fitToRideRisk }
+Injury        { id, riderId, type, bodyPart, severity, cause: 'race'|'practice'|'test'|'training'|'relapse',
+                startDay, recoveryDaysEstimate: [min, max], expectedReturnDay, fitToRideRisk,
+                medicalAssessment: { staffId, confidence, note } }
+Fitness       { riderId, status: 'fit'|'unfit'|'pendingCheck'|'fitReduced', checkDay?, performanceFactor }
+RiderAbsence  { id, riderId, teamId, injuryId, roundIds[], decisions: Record<RoundId, SeatDecisionId> }
+SeatDecision  { id, teamId, seatRiderId, roundId, option: 'tester'|'substitute'|'vacant',
+                replacementRiderId?, contractId?, decidedBy: 'player'|'ai', deadlineDay,
+                expected: { points, cost, sponsorImpact, participationFeeLoss, penalty? },
+                actual?: { points, cost, sponsorImpact } }
+TemporaryContract extends Contract { kind: 'substitute', scope: 'singleRound'|'multiRound'|'untilReturn',
+                roundIds[], feePerRound, signingCost, loanFeeToOriginTeam?, earlyReleaseOnReturn: boolean,
+                extensionOption? }
+TestRider extends Rider { role: 'test', testExperienceKm, developmentSkill, substituteAvailable: boolean,
+                lentTo?: TeamId }      // collaudatore del costruttore prestato a un satellite
+TestSession   { id, seasonId, circuitId, days[], categoryIds[], participants: { teamId, riderIds[], bikeIds[] }[],
+                program: SessionRunPlan[] }
+RookiesEntry  { riderId, seasonId, selectionRank, originChampionship, reserve: boolean }
+NationalChampionship { id, country, ageRange, simulated: 'statistical', seasonResults[] }
 
 StaffMember extends Person {
   role: 'technicalDirector'|'crewChief'|'trackEngineer'|'engineEngineer'|'electronicsEngineer'|
@@ -132,6 +156,7 @@ Bike          { id, teamId, riderId, slot: 'A'|'B', label: 'reference'|'experime
                 categoryId, season, components: Record<Slot, ComponentId>,   // Slot include 'accessories'
                 setupId, mileageKm, wear, reliabilityNow, damage: Damage[], maintenance: MaintenanceState,
                 readiness (0..1), availability: 'ready'|'preparing'|'damaged'|'notAllowed' }
+                // slot 'B' esiste solo se Regulation.bikesPerRider = 2; le moto da test hanno label 'test'
 EngineAllocation { riderId, season, allowed, usedEngineIds[] }   // condivisa fra Moto A e B
 Damage          { componentId, severity, repairHours, cause, day }
 MaintenanceState{ hoursSinceService, pendingJobs: Job[] }
@@ -193,6 +218,16 @@ PressConference { id, roundId, questions: { text, options: Answer[] }[], effects
 RecordEntry   { kind, categoryId, holderId, value, day }
 SeasonArchive { seasonId, finalStandings, rounds summary, champions, awards, transfers }
 CareerStats   { starts, wins, podiums, poles, fastestLaps, points, dnfs, titles, perSeason[] }
+```
+
+### Ritratti e aspetto (ADR-0004)
+
+```ts
+Appearance    { personId, seed, skinTone, faceShape, hairStyle, hairColor, eyeColor, features[],
+                ageVisualOffset }                        // identità visiva fissa
+PortraitAsset { personId, kind: 'generated'|'photo', path?, sizeVariants: ('xs'|'s'|'m'|'l'|'xl')[] }
+Outfit        { personId, teamId, type: 'racesuit'|'polo'|'formal', colors: [primary, secondary],
+                number?, sponsorDecals[] }               // cambia con la squadra
 ```
 
 ## 4. Conoscenza e nebbia di guerra

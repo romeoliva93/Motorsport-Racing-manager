@@ -45,6 +45,9 @@ simulazione, design system e mockup di menu principale e dashboard.
 - Un capotecnico e un ingegnere di pista per pilota con attributi tecnici di base.
 - Feedback del pilota dopo le prove e prime modifiche all'assetto (briefing semplificato), con modello verità/osservazioni già attivo.
 - **Una sola moto per pilota** in gara (lo schema dati prevede già Moto A/B: nessuna migrazione futura).
+- `bikesPerRider` già presente nel regolamento (Premier = 2 attivato in Fase 3).
+- **Infortuni base**: durata in giorni, gare saltate calcolate dal calendario, idoneità; scelta fra
+  collaudatore e **posto vacante** (opzioni A e C) con anteprima delle conseguenze; storico delle assenze.
 - Classifiche piloti/squadre/costruttori, risultati di ogni sessione.
 - Finanze base con bilancio reale derivato dalle transazioni.
 - Salvataggi su slot e autosalvataggio.
@@ -61,7 +64,10 @@ categorie Intermediate e Lightweight giocabili, serie feeder simulate.
 - M3.x **Mercato ingegneri**: scouting dello staff con attributi a intervallo, contratti (ruolo e pilota garantiti), offerte delle squadre IA.
 - M3.x **Crescita professionale**: competenze dal lavoro svolto, reputazione dai risultati, potenziale e curve di carriera, corsi di formazione.
 - M3.x **Rapporti pilota-staff**: fiducia, comunicazione, compatibilità, comprensione dello stile; riassegnazioni.
-- M3.x **Moto A / Moto B**: due moto per pilota, stato individuale, lavori e prontezza, condivisione dei motori.
+- M3.x **Moto A / Moto B**: due moto per pilota (solo Premier), stato individuale, lavori e prontezza, condivisione dei motori.
+- M3.x **Sostituti dal mercato** (opzione B): contratti temporanei, prestiti da altre categorie, confronto candidati; IA sulle tre opzioni.
+- M3.x **Collaudatori e sessioni di test**: capacità di sviluppo, programma test, validazione R&D.
+- M3.x **Velocity Rookies Cup** e campionati nazionali giovanili (simulati), selezioni annuali, storie di carriera.
 
 ## Fase 4 — Simulazione avanzata
 Assetto completo con feedback e proposte dello staff, telemetria con grafici e confronto,

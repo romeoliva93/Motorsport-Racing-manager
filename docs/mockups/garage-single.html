@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Garage moto unica (Lightweight)</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  main { display: grid; grid-template-columns: 1.35fr 1fr 1fr; grid-template-rows: auto auto 1fr; gap: .85rem; height: calc(100vh - 3.75rem); }
+  .viewer { grid-column: 1; grid-row: 1 / 3; position: relative; overflow: hidden; background: radial-gradient(700px 320px at 50% 62%, rgba(255,210,63,.10), transparent 70%), linear-gradient(180deg, #12151c, #0b0d12); }
+  .viewer .floor { position: absolute; left: 0; right: 0; bottom: 5.4rem; height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong), transparent); }
+  .bikeimg { height: 25rem; margin-top: .5rem; border-radius: 10px; overflow: hidden; border: 1px dashed var(--line-strong); background: linear-gradient(180deg,#1a1e27,#0f1218); display: grid; place-items: center; }
+  .bikeimg img { width: 100%; height: 100%; object-fit: cover; }
+  .bikeimg .ph { display: flex; flex-direction: column; gap: .35rem; text-align: center; font-size: .78rem; color: var(--text-2); }
+  .bikeimg .ph b { font: 700 1.2rem var(--font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--text-1); }
+  .views { display: flex; gap: .35rem; }
+  .views .btn { font-size: .68rem; padding: .3rem .55rem; }
+  .bikeinfo { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin-top: .3rem; }
+  .bikeinfo div { background: var(--bg-3); border-radius: 8px; padding: .5rem .6rem; font-size: .66rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; }
+  .bikeinfo b { display: block; color: var(--text-1); font: 700 1.15rem var(--font-display); letter-spacing: 0; text-transform: none; }
+  .comp td:first-child { width: 7.5rem; }
+  .lock { font-size: .62rem; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+  .lock.sealed { background: rgba(255,77,79,.12); color: var(--bad); }
+  .lock.homol { background: rgba(255,176,32,.12); color: var(--warn); }
+  .lock.free { background: rgba(47,191,113,.12); color: var(--ok); }
+  .rider-chip { display: flex; align-items: center; gap: .6rem; }
+  .rider-chip .avatar { width: 2.3rem; height: 2.3rem; }
+  .catbadge { display: flex; align-items: center; gap: .5rem; padding: .35rem .7rem; border-radius: 6px; background: rgba(74,163,255,.1); border: 1px solid rgba(74,163,255,.35); font-size: .74rem; color: var(--info); }
+  .s-up { font-size: .72rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="team"><div class="logo" style="background:linear-gradient(135deg,#ffd23f 0 50%,#2a6cf0 50%)">LJ</div><div><b>Lupo Blu Junior</b><span>Lightweight · Hoshiro</span></div></div>
+    <div class="nav">
+      <div class="grp">Squadra</div><a>Panoramica</a><a>Scuderia</a><a>Piloti</a><a>Personale</a>
+      <div class="grp">Tecnica</div><a class="on">Moto</a><a class="sub" style="color:var(--orange)">Garage</a><a class="sub">Componenti</a><a class="sub">Libreria assetti</a><a>Sviluppo</a><a>Strutture</a>
+      <div class="grp">Persone e affari</div><a>Accademia</a><a>Mercato</a><a>Sponsor</a><a>Finanze</a>
+      <div class="grp">Competizione</div><a>Calendario</a><a>Campionato</a><a>Statistiche</a>
+      <div class="grp">Mondo</div><a>Notizie</a><a>Archivio</a>
+    </div>
+  </aside>
+  <header>
+    <h2>Garage</h2>
+    <div class="rider-chip"><div class="avatar" data-seed="fabrizio-vitellino" data-kind="rider" data-suit="#ffd23f,#2a6cf0" data-age="16" data-sex="m" data-skin="1" data-hair="1" data-num="44"></div><button class="btn sel">#44 Vitellino</button></div>
+    <div class="rider-chip"><div class="avatar" data-seed="noa-lindgren" data-kind="rider" data-suit="#ffd23f,#2a6cf0" data-age="18" data-sex="m" data-skin="0" data-num="9"></div><button class="btn">#9 Lindgren</button></div>
+    <span class="catbadge">ⓘ Lightweight · <b>1 moto per pilota</b> (regolamento)</span>
+    <div class="spacer"></div>
+    <div class="kpi"><small>Momento</small><b>Brennholz-Ring · dopo FP1 · FP2 tra 1 h 50'</b></div>
+    <button class="btn primary">Pianifica lavori</button>
+  </header>
+  <main>
+    <section class="card viewer">
+      <h3>Hoshiro HR250 · #44 <small>livrea Lupo Blu Junior 2027</small></h3>
+      <div class="views"><button class="btn sel">Laterale</button><button class="btn">Frontale</button><button class="btn">Posteriore</button><button class="btn">Dall'alto</button><button class="btn" disabled style="opacity:.45">3D · fase avanzata</button></div>
+      <div class="bikeimg" data-src="assets/bikes/hoshiro-hr250-lupoblu-44-side.jpg">
+        <div class="ph"><b>Foto / render della moto</b><span>Hoshiro HR250 · livrea Lupo Blu Junior (giallo e blu) · #44 · vista laterale</span><span class="muted">l'immagine viene caricata da assets/bikes/ quando disponibile</span></div>
+      </div>
+      <div class="bikeinfo">
+        <div>Stato<b class="ok">Pronta</b></div>
+        <div>Chilometraggio<b>1.240 km</b></div>
+        <div>Usura generale<b>27%</b></div>
+        <div>Affidabilità<b class="ok">94%</b></div>
+      </div>
+      <div class="row" style="margin-top:.5rem"><span class="muted">Danni</span><b class="ok">nessuno (carena sostituita dopo FP1 di R5)</b></div>
+      <div class="row"><span class="muted">Ricambi in pista</span><b>telaio di scorta · 2 carene · motore di dotazione #4</b></div>
+    </section>
+
+    <section class="card">
+      <h3>Componenti <small>cosa consente il regolamento</small></h3>
+      <table class="std comp">
+        <tr><th>Componente</th><th>Montato</th><th>Regola</th></tr>
+        <tr><td>Motore</td><td>#3 · 3/6 usati</td><td><span class="lock homol">dotazione stagionale</span></td></tr>
+        <tr><td>Telaio</td><td>HR250 telaio 2027</td><td><span class="lock homol">omologato</span></td></tr>
+        <tr><td>Forcellone</td><td>standard</td><td><span class="lock homol">omologato</span></td></tr>
+        <tr><td>Sospensioni</td><td>Sorriva 43 mm</td><td><span class="lock free">regolabili</span></td></tr>
+        <tr><td>Freni</td><td>Kaiten 220 mm</td><td><span class="lock homol">omologato</span></td></tr>
+        <tr><td>Elettronica</td><td>centralina unica Cortex</td><td><span class="lock sealed">unica · sigillata</span></td></tr>
+        <tr><td>Aerodinamica</td><td>carena 2027 v1</td><td><span class="lock homol">omologata</span></td></tr>
+        <tr><td>Cambio</td><td>rapporti set B</td><td><span class="lock free">da lista</span></td></tr>
+      </table>
+    </section>
+
+    <section class="card">
+      <h3>Aggiornamenti del costruttore <small>Hoshiro · contratto di fornitura</small></h3>
+      <div class="row s-up"><span>Carena 2027 v2 (meno resistenza)</span><b class="warn">disponibile da R9 · ₡ 38 k</b></div>
+      <div class="row s-up"><span>Mappa di erogazione 1.4</span><b class="ok">disponibile · gratuita</b></div>
+      <div class="row s-up"><span>Pinze freno raffreddate</span><b class="muted">riservato team ufficiale</b></div>
+      <h3 style="margin-top:.8rem">Assetto · confronto fra sessioni <small>moto unica: prima / dopo la modifica</small></h3>
+      <table class="std">
+        <tr><th>Parametro</th><th class="r">FP1</th><th class="r">FP2 (piano)</th></tr>
+        <tr><td>Precarico post.</td><td class="r">6</td><td class="r or">5</td></tr>
+        <tr><td>Idraulica compr. ant.</td><td class="r">10</td><td class="r">10</td></tr>
+        <tr><td>Rapporto finale</td><td class="r">14/38</td><td class="r or">14/39</td></tr>
+        <tr><td>Mappa</td><td class="r">1.3</td><td class="r or">1.4</td></tr>
+      </table>
+      <div class="muted" style="font-size:.66rem;margin-top:.35rem">Il confronto fra sessioni corregge evoluzione pista, gomme e carburante come il confronto A/B.</div>
+    </section>
+
+    <section class="card" style="grid-column: 2 / 4">
+      <h3>Lavori prima di FP2 <small>ore-meccanico disponibili 6,0 h · 3 meccanici · capotecnico F. Gallo (coord. 71)</small></h3>
+      <div class="row"><span>Cambio rapporto finale + mappa 1.4</span><div class="bar" style="max-width:18rem"><span style="width:60%"></span></div><b>0,6 / 1,0 h</b></div>
+      <div class="row"><span>Regolazione precarico posteriore</span><div class="bar" style="max-width:18rem"><span style="width:0%"></span></div><b>0 / 0,4 h</b></div>
+      <div class="row"><span>Controllo catena e freni</span><div class="bar b" style="max-width:18rem"><span style="width:100%"></span></div><b>1,0 / 1,0 h</b></div>
+      <div class="row"><span>Preparazione telaio di scorta (in caso di caduta)</span><div class="bar y" style="max-width:18rem"><span style="width:30%"></span></div><b>0,6 / 2,0 h</b></div>
+    </section>
+
+    <section class="card" style="grid-column: 1">
+      <h3>Regolamento Lightweight <small>cosa cambia rispetto alla Premier</small></h3>
+      <div class="row"><span class="muted">Moto per pilota</span><b>1 — nessuna Moto B, nessun cambio moto in gara</b></div>
+      <div class="row"><span class="muted">Gara con pioggia</span><b>bandiera rossa e ripartenza</b></div>
+      <div class="row"><span class="muted">Dopo una caduta</span><b>riparazione o telaio di scorta (≈ 3,5 h)</b></div>
+      <div class="row"><span class="muted">Moto da test</span><b>1 per squadra nelle sessioni di test</b></div>
+      <div class="row"><span class="muted">Età pilota</span><b>16–28 anni</b></div>
+      <h3 style="margin-top:.8rem">Se la squadra corresse nella Velocity Rookies Cup</h3>
+      <div class="row"><span class="muted">Moto</span><b>Lysander R250 Rookies, uguale per tutti</b></div>
+      <div class="row"><span class="muted">Componenti</span><b class="bad">tutti sigillati · nessun aggiornamento</b></div>
+      <div class="row"><span class="muted">Assetto</span><b>solo entro intervalli fissati dall'organizzatore</b></div>
+      <div class="row"><span class="muted">Schermata</span><b>versione ridotta: assetto e stato, niente lavori sui componenti</b></div>
+    </section>
+
+    <section class="card" style="grid-column: 2 / 4">
+      <h3>Stato tecnico per area</h3>
+      <div class="row"><span>Motore</span><div class="bar g" style="max-width:20rem"><span style="width:76%"></span></div><b>buono · tagliando tra 560 km</b></div>
+      <div class="row"><span>Ciclistica</span><div class="bar g" style="max-width:20rem"><span style="width:88%"></span></div><b>ottimo</b></div>
+      <div class="row"><span>Freni</span><div class="bar g" style="max-width:20rem"><span style="width:81%"></span></div><b>buono</b></div>
+      <div class="row"><span>Gomme assegnate rimaste</span><div class="bar y" style="max-width:20rem"><span style="width:45%"></span></div><b>post. S 2 · M 3 · Rain 4</b></div>
+      <h3 style="margin-top:.8rem">Storico stagione</h3>
+      <div class="row"><span class="muted">Cadute · guasti</span><b>2 · 0</b></div>
+      <div class="row"><span class="muted">Costo riparazioni</span><b>₡ 64 k</b></div>
+      <div class="row"><span class="muted">Motori usati</span><b>3 / 6 · proiezione fine stagione: 6 / 6</b></div>
+      <div class="row"><span class="muted">Prossima sessione di test</span><b>dopo R10 · 1 moto da test · collaudatore: nessuno (usa i titolari)</b></div>
+    </section>
+  </main>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+<script src="portrait.js"></script>
+<script>document.querySelectorAll('.bikeimg').forEach(el=>{const i=new Image();i.onload=()=>{el.innerHTML='';el.style.border='0';el.appendChild(i)};i.src=el.dataset.src;});</script>
+</body>
+</html>

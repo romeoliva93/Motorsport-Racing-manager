@@ -12,7 +12,7 @@
   .rider .num { font: 800 3.2rem/1 var(--font-display); font-style: italic; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .rider .nm { font: 800 1.35rem/1 var(--font-display); text-transform: uppercase; }
   .member { display: grid; grid-template-columns: auto 1fr auto; gap: .8rem; align-items: start; }
-  .member .avatar { width: 3rem; height: 3rem; font-size: .95rem; }
+  .member .avatar { width: 3.4rem; height: 4rem; border-radius: 10px; font-size: .95rem; }
   .member .nm { font: 700 1rem var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
   .member .role { color: var(--text-3); font-size: .68rem; }
   .ovr { font: 800 1.6rem/1 var(--font-display); text-align: right; }
@@ -63,10 +63,10 @@
   <main>
     <!-- Garage #27 -->
     <div class="garage">
-      <div class="rider"><span class="num">27</span><div><div class="nm">Teo Varriale</div><div class="muted" style="font-size:.72rem">Feedback tecnico 74 · stile staccatore · soddisfazione staff <b class="ok">alta</b></div></div></div>
+      <div class="rider"><div class="avatar" data-seed="teo-varriale" data-kind="rider" data-suit="#2a6cf0,#0d1530" data-age="24" data-sex="m" data-skin="2" data-hair="0" data-num="27" style="width:3.6rem;height:4.2rem;border-radius:10px"></div><span class="num">27</span><div><div class="nm">Teo Varriale</div><div class="muted" style="font-size:.72rem">Feedback tecnico 74 · stile staccatore · soddisfazione staff <b class="ok">alta</b></div></div></div>
       <section class="card">
         <div class="member">
-          <div class="avatar" style="background:linear-gradient(160deg,#ff7a1a,#3a1a05)">MD</div>
+          <div class="avatar" data-seed="marco-doria" data-suit="#2a6cf0,#0d1530" data-age="51" data-sex="m" data-skin="1" data-hair="0"></div>
           <div><div class="nm">Marco Doria</div><div class="role">Capotecnico · 51 anni · ITA · contratto 2028</div>
             <div class="mini"><span>Mecc. <b>88</b></span><span>Sospens. <b>84</b></span><span>Telaio <b>79</b></span><span>Coord. mecc. <b>82</b></span><span>Precisione <b>86</b></span><span>Tempo <b>77</b></span></div></div>
           <div class="ovr">82<small>valutaz.</small></div>
@@ -75,7 +75,7 @@
       </section>
       <section class="card">
         <div class="member">
-          <div class="avatar" style="background:linear-gradient(160deg,#2fbf71,#0d3020)">AK</div>
+          <div class="avatar" data-seed="anja-kessler" data-suit="#2a6cf0,#0d1530" data-age="34" data-sex="f" data-skin="0" data-hair="3"></div>
           <div><div class="nm">Anja Kessler</div><div class="role">Ingegnere di pista · 34 anni · AUT · contratto 2027</div>
             <div class="mini"><span>Telemetria <b>84</b></span><span>Diagnosi <b>74</b></span><span>Feedback <b>69</b></span><span>Gomme <b>77</b></span><span>Meteo <b>61</b></span><span>Comunic. <b>70</b></span></div></div>
           <div class="ovr">76<small>valutaz.</small></div>
@@ -101,7 +101,7 @@
 
     <!-- Garage #61 -->
     <div class="garage">
-      <div class="rider" style="background:linear-gradient(100deg, rgba(42,108,240,.22), rgba(21,24,33,1) 60%)"><span class="num">61</span><div><div class="nm">Rafa Oyarzún</div><div class="muted" style="font-size:.72rem">Feedback tecnico 61 · stile fluido · soddisfazione staff <b class="bad">bassa</b></div></div></div>
+      <div class="rider" style="background:linear-gradient(100deg, rgba(42,108,240,.22), rgba(21,24,33,1) 60%)"><div class="avatar" data-seed="rafa-oyarzun" data-kind="rider" data-suit="#2a6cf0,#0d1530" data-age="21" data-sex="m" data-skin="1" data-hair="1" data-num="61" style="width:3.6rem;height:4.2rem;border-radius:10px"></div><span class="num">61</span><div><div class="nm">Rafa Oyarzún</div><div class="muted" style="font-size:.72rem">Feedback tecnico 61 · stile fluido · soddisfazione staff <b class="bad">bassa</b></div></div></div>
       <div class="alert">
         <div class="t">⚠ Conflitto tecnico</div>
         <p>Oyarzún è insoddisfatto del suo ingegnere di pista: "Non capisce cosa gli dico, cambiamo sempre la cosa sbagliata." Chiede di lavorare con <b>Aitor Rementeria</b> (Lightweight, spagnolo).</p>
@@ -109,7 +109,7 @@
       </div>
       <section class="card">
         <div class="member">
-          <div class="avatar" style="background:linear-gradient(160deg,#4aa3ff,#0b2340)">FC</div>
+          <div class="avatar" data-seed="franco-cattaneo" data-suit="#2a6cf0,#0d1530" data-age="46" data-sex="m" data-skin="1"></div>
           <div><div class="nm">Franco Cattaneo</div><div class="role">Capotecnico · 46 anni · ITA · contratto 2027</div>
             <div class="mini"><span>Mecc. <b>80</b></span><span>Sospens. <b>76</b></span><span>Telaio <b>81</b></span><span>Coord. mecc. <b>74</b></span><span>Precisione <b>79</b></span><span>Tempo <b>72</b></span></div></div>
           <div class="ovr">77<small>valutaz.</small></div>
@@ -118,7 +118,7 @@
       </section>
       <section class="card" style="flex:1">
         <div class="member">
-          <div class="avatar" style="background:linear-gradient(160deg,#a9b0bf,#262b37)">KL</div>
+          <div class="avatar" data-seed="karl-lindqvist" data-suit="#2a6cf0,#0d1530" data-age="39" data-sex="m" data-skin="0" data-hair="6"></div>
           <div><div class="nm">Karl Lindqvist</div><div class="role">Ingegnere di pista · 39 anni · SWE · contratto 2027 · <span class="warn">offerta da Akane Racing</span></div>
             <div class="mini"><span>Telemetria <b>78</b></span><span>Diagnosi <b>72</b></span><span>Feedback <b>58</b></span><span>Gomme <b>70</b></span><span>Meteo <b>66</b></span><span>Comunic. <b class="bad">49</b></span></div></div>
           <div class="ovr">70<small>valutaz.</small></div>
@@ -164,5 +164,6 @@
   </main>
 </div>
 <div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+<script src="portrait.js"></script>
 </body>
 </html>

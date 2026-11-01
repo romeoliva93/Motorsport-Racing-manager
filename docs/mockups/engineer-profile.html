@@ -8,7 +8,7 @@
 <style>
   .app { grid-template-rows: auto 1fr; }
   .hero { grid-column: 2; display: flex; align-items: center; gap: 1.6rem; padding: 1.1rem 1.6rem; background: linear-gradient(100deg, rgba(47,191,113,.16), rgba(14,16,21,0) 55%), var(--bg-1); border-bottom: 1px solid var(--line); }
-  .hero .avatar { width: 5.6rem; height: 5.6rem; font-size: 1.9rem; background: linear-gradient(160deg,#2fbf71,#0d3020); box-shadow: 0 0 0 3px var(--bg-1), 0 0 0 5px #2fbf71; }
+  .hero .avatar { width: 6.4rem; height: 7.6rem; border-radius: 14px; font-size: 1.9rem; background: linear-gradient(160deg,#2fbf71,#0d3020); box-shadow: 0 0 0 3px var(--bg-1), 0 0 0 5px #2fbf71; }
   .hero h1 { margin: 0; font: 800 2.5rem/1 var(--font-display); text-transform: uppercase; }
   .hero .sub { color: var(--text-2); margin-top: .35rem; font-size: .9rem; }
   .tags { display: flex; gap: .4rem; margin-top: .55rem; }
@@ -45,7 +45,7 @@
     </div>
   </aside>
   <div class="hero">
-    <div class="avatar">AK</div>
+    <div class="avatar" data-seed="anja-kessler" data-suit="#2a6cf0,#0d1530" data-age="34" data-sex="f" data-skin="0" data-hair="3"></div>
     <div>
       <h1>Anja Kessler</h1>
       <div class="sub">Ingegnere di pista · 34 anni · Austria · assegnata a #27 Varriale</div>
@@ -157,5 +157,6 @@
   </div>
 </div>
 <div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+<script src="portrait.js"></script>
 </body>
 </html>

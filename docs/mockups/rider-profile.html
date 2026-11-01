@@ -12,7 +12,7 @@
   aside a { display: block; padding: .42rem .7rem; border-radius: 6px; color: var(--text-2); font-size: .82rem; }
   aside a.on { background: linear-gradient(90deg, rgba(229,50,45,.20), rgba(255,122,26,.04)); color: var(--text-1); box-shadow: inset 2px 0 0 var(--orange); }
   main { overflow: hidden; display: flex; flex-direction: column; }
-  .hero { position: relative; padding: 1.5rem 2rem; background: linear-gradient(100deg, rgba(42,108,240,.22), rgba(14,16,21,0) 55%), var(--bg-1); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 2rem; overflow: hidden; }
+  .hero { position: relative; padding: 1rem 2rem; background: linear-gradient(100deg, rgba(42,108,240,.22), rgba(14,16,21,0) 55%), var(--bg-1); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 2rem; overflow: hidden; }
   .hero .num { font: 800 8rem/0.8 var(--font-display); font-style: italic; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .hero h1 { margin: 0; font: 800 3rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; }
   .hero .sub { color: var(--text-2); margin-top: .4rem; }
@@ -53,7 +53,7 @@
   </aside>
   <main>
     <div class="hero">
-      <div class="num">27</div>
+      <div class="avatar" data-seed="teo-varriale" data-kind="rider" data-suit="#2a6cf0,#0d1530" data-age="24" data-sex="m" data-skin="2" data-hair="0" data-num="27" style="width:8.5rem;height:10rem;border-radius:14px;flex:none;box-shadow:0 0 0 2px #2a6cf0"></div><div class="num">27</div>
       <div>
         <h1>Teo Varriale</h1>
         <div class="sub">Italia · 24 anni · Scuderia Lupo Blu · Pilota titolare</div>
@@ -143,5 +143,6 @@
   </main>
 </div>
 <div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+<script src="portrait.js"></script>
 </body>
 </html>

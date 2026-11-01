@@ -147,7 +147,62 @@ comprensione dello stile, soddisfazione). Segnalazione dei **conflitti** con le 
 reparti specialistici con carico di lavoro, tecnici promuovibili dall'interno e **anteprima degli
 effetti** di una riassegnazione prima della conferma.
 
-## 7. Altre schermate chiave (linee guida)
+## 7. Categorie, infortuni e sostituti (revisione Fase 0)
+
+### 7.1 Garage per categoria
+
+![Garage moto unica](images/garage-single.png)
+
+La schermata Garage si adatta a `Regulation.bikesPerRider`:
+- **Premier (2 moto)** → Garage A/B (§6.1).
+- **Lightweight, Intermediate (1 moto)** → garage a moto unica: vista grafica della moto con livrea, numero
+  e costruttore (laterale, frontale, posteriore, dall'alto; il 3D è previsto come funzione avanzata),
+  stato tecnico, componenti con ciò che il regolamento consente (regolabile, omologato, sigillato),
+  aggiornamenti del costruttore, assetto confrontato **fra sessioni** (prima/dopo una modifica), lavori, ricambi.
+- **Velocity Rookies Cup** → versione ridotta: moto monomarca, solo assetto entro intervalli e stato tecnico.
+Nessun pulsante, colonna o sezione dedicata alla seconda moto compare se il regolamento non la prevede.
+
+### 7.2 Gestione infortunio
+
+![Gestione infortunio](images/injury.png)
+
+Ritratto del pilota con numero, tipo e gravità dell'infortunio, prognosi in giorni, rientro previsto,
+valutazione dello staff medico; calendario con la **probabilità di assenza per ogni GP**; le tre opzioni
+(collaudatore, sostituto, nessun pilota) con dettagli; tabella delle **conseguenze previste**
+(sportive, economiche, regolamentari, squadra) per confrontarle prima di decidere; decisione **per evento**
+con le scadenze d'iscrizione.
+
+### 7.3 Scelta del sostituto
+
+![Scelta del sostituto](images/substitute.png)
+
+Candidati da tutte le fonti (senza contratto, ex titolari, categorie inferiori, accademia, prestiti) con
+ritratto, velocità, esperienza, adattamento alla moto, forma fisica, compatibilità con lo staff,
+disponibilità, costo e idoneità regolamentare; confronto diretto fra due candidati; parere dello staff;
+costruttore del **contratto temporaneo** (1 GP, più GP, fino al rientro; compenso, bonus, clausole).
+
+## 8. Ritratti dei personaggi e immagini delle moto
+
+Ogni pilota e membro dello staff ha un **ritratto fotografico realistico**; ogni moto ha una
+**foto/render realistico** con la livrea della squadra. Il sistema separa tre livelli (vedi [ADR-0004](adr/0004-portraits.md)):
+1. **Identità** — dati fissi del personaggio (aspetto descritto: età, capelli, carnagione, tratti), invariati per tutta la carriera.
+2. **Ritratto** — fotografia associata al personaggio (`assets/portraits/<id>.jpg`).
+3. **Abbigliamento** — tuta (piloti) o polo (staff) nei colori della squadra: quando il personaggio cambia
+   squadra si usa la variante con i nuovi colori, il volto resta lo stesso.
+
+Finché una foto non è disponibile l'interfaccia mostra un **segnaposto fotografico neutro** (sagoma con i
+colori della squadra e la scritta FOTO), mai un disegno. Le istruzioni per generare le immagini sono in
+[ART_PROMPTS.md](ART_PROMPTS.md).
+
+Dimensioni per contesto: **XL** intestazione scheda pilota/infortunio (≈ 10 rem), **L** briefing e confronti
+(≈ 6–7 rem), **M** card della dashboard e squadra tecnica (≈ 4 rem), **S** tabelle di mercato (≈ 2,4 rem),
+**XS** classifiche e notizie (≈ 1,6 rem, facoltativo per non ridurre la leggibilità).
+
+> Nota sulla revisione: i ritratti illustrati generati dal codice sono stati scartati perché non abbastanza
+> realistici. In questo ambiente non è disponibile un generatore di immagini fotorealistiche: le foto si
+> producono con uno strumento esterno seguendo ART_PROMPTS.md e si caricano nel progetto.
+
+## 9. Altre schermate chiave (linee guida)
 
 - **Tabelle**: intestazioni fisse, ordinamento, filtri salvabili, colonne configurabili,
   virtualizzazione oltre 100 righe, confronto di due righe.
@@ -158,6 +213,6 @@ effetti** di una riassegnazione prima della conferma.
 - **Telemetria**: grafici a traccia sovrapposta per distanza (velocità, gas, freno, piega),
   delta-tempo, confronto pilota A/B, selettore giro.
 
-## 8. Accessibilità
+## 10. Accessibilità
 Contrasto minimo AA sul testo, stati mai indicati solo dal colore, dimensione testo regolabile,
 modalità per daltonici sui colori di gomme e squadre, riduzione animazioni.

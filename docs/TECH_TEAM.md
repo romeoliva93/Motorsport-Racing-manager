@@ -26,7 +26,7 @@ Questo rende possibile: errori di diagnosi, ingegneri più o meno bravi, giocato
 
 ### 1.1 Regole
 - Ogni pilota dispone di **fino a due moto** (`A` e `B`), secondo il regolamento della categoria:
-  `bikesPerRider` (Premier 2; Intermediate e Lightweight 1 + telaio di scorta, configurabile) e
+  `bikesPerRider` (valori iniziali: **Premier 2; Intermediate, Lightweight e Rookies Cup 1**, vedi [REGULATIONS.md](REGULATIONS.md)) e
   `flagToFlag` (vero solo dove il cambio moto è ammesso).
 - I limiti tecnici valgono **per pilota**, non per moto: i motori della dotazione stagionale
   sono condivisi fra A e B, così come le mescole assegnate per il weekend e i pacchetti omologati.
@@ -40,6 +40,8 @@ chilometraggio, usura, affidabilità attuale, danni, stato di manutenzione, asse
 **prontezza** (0–100%) e **disponibilità** per la sessione (pronta / in preparazione / danneggiata / non ammessa).
 
 ### 1.3 Ruoli d'uso
+- Le sezioni seguenti (§1.2–1.6) valgono **solo dove `bikesPerRider = 2`** (Premier). Nelle altre categorie
+  il pilota ha una moto: restano stato individuale, lavori, prontezza e confronto fra *sessioni* (prima/dopo una modifica).
 - **Moto A — configurazione principale**: riferimento conosciuto.
 - **Moto B — configurazione sperimentale**: assetto o componenti diversi da provare.
 - In alternativa **A asciutto / B bagnato** quando il meteo è incerto (vedi §8).

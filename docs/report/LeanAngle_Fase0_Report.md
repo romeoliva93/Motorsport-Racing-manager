@@ -7,23 +7,26 @@ integrata in `main`).
 **Stato**: solo progettazione. Nessun sistema di gioco è ancora
 implementato; i mockup usano dati illustrativi.
 
-| Tema                            | Proposta                                                                                                                                                                                                                                                                                                                               |
-|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Tecnologia                      | TypeScript (monorepo npm) · simulazione in pacchetti puri su Web Worker · React + Vite · Canvas 2D · Tauri 2 per PC · Vitest + Playwright                                                                                                                                                                                              |
-| Architettura                    | simulazione separata dalla UI; comandi validati uguali per giocatore e IA; PRNG con seme (determinismo, replay); stato relazionale in memoria; eventi di dominio                                                                                                                                                                       |
-| Universo                        | federazione IVF, campionato Velocity World Championship; categorie Lightweight 250 cc, Intermediate 800 cc motore unico, Premier 1000 cc; feeder Junior Velocity Cup e Continental Talent Cups; costruttori Ardena, Hoshiro, Takaido, Vohrmann, Corvane; 11 squadre Premier; 20 circuiti immaginari                                    |
-| Simulazione                     | profilo di velocità fisico (aderenza, potenza, aria, frenata) + modello comportamentale del pilota + traffico, scia, sorpassi, errori, gomme, carburante, meteo, assetto, affidabilità                                                                                                                                                 |
-| Prima versione giocabile (v0.1) | stagione Premier completa con squadra esistente, gara 2D da pausa a 16×, prove/qualifiche/gara, classifiche, finanze base, salvataggi                                                                                                                                                                                                  |
-| Squadra tecnica (revisione 2)   | Moto A/B per pilota con confronto corretto e cambio flag-to-flag; briefing tecnico come meccanica di gioco (verità vs osservazioni vs ipotesi); mercato, attributi, crescita e rapporti degli ingegneri; IA con gli stessi sistemi. MVP: 1 capotecnico + 1 ingegnere per pilota, feedback e prime modifiche all'assetto, una sola moto |
-| Primo modulo                    | infrastruttura + `packages/core` + schema dati (M1.1–M1.3) e spike del tempo sul giro                                                                                                                                                                                                                                                  |
+| Tema                                | Proposta                                                                                                                                                                                                                                                                                                                               |
+|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Tecnologia                          | TypeScript (monorepo npm) · simulazione in pacchetti puri su Web Worker · React + Vite · Canvas 2D · Tauri 2 per PC · Vitest + Playwright                                                                                                                                                                                              |
+| Architettura                        | simulazione separata dalla UI; comandi validati uguali per giocatore e IA; PRNG con seme (determinismo, replay); stato relazionale in memoria; eventi di dominio                                                                                                                                                                       |
+| Universo                            | federazione IVF, campionato Velocity World Championship; categorie Lightweight 250 cc, Intermediate 800 cc motore unico, Premier 1000 cc; feeder Junior Velocity Cup e Continental Talent Cups; costruttori Ardena, Hoshiro, Takaido, Vohrmann, Corvane; 11 squadre Premier; 20 circuiti immaginari                                    |
+| Simulazione                         | profilo di velocità fisico (aderenza, potenza, aria, frenata) + modello comportamentale del pilota + traffico, scia, sorpassi, errori, gomme, carburante, meteo, assetto, affidabilità                                                                                                                                                 |
+| Prima versione giocabile (v0.1)     | stagione Premier completa con squadra esistente, gara 2D da pausa a 16×, prove/qualifiche/gara, classifiche, finanze base, salvataggi                                                                                                                                                                                                  |
+| Squadra tecnica (revisione 2)       | Moto A/B per pilota con confronto corretto e cambio flag-to-flag; briefing tecnico come meccanica di gioco (verità vs osservazioni vs ipotesi); mercato, attributi, crescita e rapporti degli ingegneri; IA con gli stessi sistemi. MVP: 1 capotecnico + 1 ingegnere per pilota, feedback e prime modifiche all'assetto, una sola moto |
+| Categorie e infortuni (revisione 3) | Moto per pilota: Rookies Cup 1, Lightweight 1, Intermediate 1, Premier 2 (A/B); infortuni in giorni confrontati col calendario; per ogni GP il Team Principal sceglie collaudatore, sostituto con contratto temporaneo o posto vacante; collaudatori e sessioni di test; Velocity Rookies Cup; IA con le stesse scelte                 |
+| Immagini                            | Ritratti e moto come fotografie realistiche (schede in ART_PROMPTS.md); segnaposto neutri finché mancano                                                                                                                                                                                                                               |
+| Primo modulo                        | infrastruttura + `packages/core` + schema dati (M1.1–M1.3) e spike del tempo sul giro                                                                                                                                                                                                                                                  |
 
 **Decisioni richieste**: (1) stack tecnologico; (2) titolo e nomi
 dell'universo; (3) primo modulo e spike del tempo sul giro.
 
 **Indice**: 1 Game Design Document · 2 Squadra tecnica, Moto A/B e
-briefing · 3 Architettura · 4 Modello dati · 5 Modello di simulazione ·
-6 Roadmap · 7 Proposta grafica · 8 Decisioni tecniche (ADR) · Appendice:
-galleria screenshot.
+briefing · Regolamenti delle categorie · Infortuni, sostituti e
+collaudatori · 3 Architettura · 4 Modello dati · 5 Modello di
+simulazione · 6 Roadmap · 7 Proposta grafica · 8 Decisioni tecniche
+(ADR) · Appendice: galleria screenshot.
 
 # Game Design Document
 
@@ -61,14 +64,14 @@ diversa.
 
 ### Federazione e campionati
 
-| Livello      | Nome                                                      | Moto                                                                      | Note                                                   |
-|--------------|-----------------------------------------------------------|---------------------------------------------------------------------------|--------------------------------------------------------|
-| Premier      | VWC Premier                                               | Prototipi 1000 cc, 4 cilindri (regolamento modificabile)                  | costruttori, concessioni, sviluppo libero entro limiti |
-| Intermediate | VWC Intermediate                                          | Motore unico 800 cc tre cilindri *Orvane*, telai dei costruttori di telai | sviluppo telaio/sospensioni, elettronica unica         |
-| Lightweight  | VWC Lightweight                                           | 250 cc monocilindrico                                                     | limite di età 28 anni, costi bassi                     |
-| Feeder       | Junior Velocity Cup                                       | monomarca 250 cc                                                          | 13–17 anni, scouting                                   |
-| Feeder       | Continental Talent Cups (Europa, Asia-Pacifico, Americhe) | 250 cc                                                                    | campionati regionali                                   |
-| Feeder       | Campionati nazionali                                      | —                                                                         | simulati in modo statistico, fonte di giovani          |
+| Livello      | Nome                                                      | Moto                                                                      | Note                                                                                |
+|--------------|-----------------------------------------------------------|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Premier      | VWC Premier                                               | Prototipi 1000 cc, 4 cilindri (regolamento modificabile)                  | costruttori, concessioni, sviluppo libero entro limiti; **2 moto per pilota (A/B)** |
+| Intermediate | VWC Intermediate                                          | Motore unico 800 cc tre cilindri *Orvane*, telai dei costruttori di telai | sviluppo telaio/sospensioni, elettronica unica; **1 moto per pilota**               |
+| Lightweight  | VWC Lightweight                                           | 250 cc monocilindrico                                                     | limite di età 28 anni, costi bassi; **1 moto per pilota**                           |
+| Feeder       | **Velocity Rookies Cup**                                  | monomarca Lysander R250 Rookies, **1 moto per pilota**                    | 13–17 anni, nuovi piloti ogni stagione, vetrina per gli scout                       |
+| Feeder       | Continental Talent Cups (Europa, Asia-Pacifico, Americhe) | 250 cc                                                                    | campionati regionali                                                                |
+| Feeder       | Campionati nazionali                                      | —                                                                         | simulati in modo statistico, fonte di giovani                                       |
 
 ### Costruttori (Premier)
 
@@ -346,6 +349,37 @@ la moto durante il weekend. Specifica completa in
 - **IA**: le squadre avversarie usano gli stessi sistemi con le proprie
   risorse e informazioni.
 
+## 17. Moto per categoria, infortuni, sostituti e collaudatori (revisione Fase 0)
+
+Specifiche: [REGULATIONS.md](REGULATIONS.md) e
+[INJURIES_AND_TESTERS.md](INJURIES_AND_TESTERS.md).
+
+- **Moto per pilota dipendenti dalla categoria** (valori iniziali,
+  configurabili da regolamento): Velocity Rookies Cup 1 (monomarca),
+  Lightweight 1, Intermediate 1, **Premier 2 (Moto A e Moto B)**. Il
+  sistema A/B completo (configurazioni, confronto, preparazione,
+  flag-to-flag) esiste solo in Premier; nelle altre categorie
+  l'interfaccia mostra un'unica moto e nessun comando per la seconda.
+- **Infortuni** con durata in giorni confrontata col calendario (1, 2,
+  3, 4, 5 o più gare), visita di idoneità obbligatoria.
+- **Decisione del Team Principal** per ogni evento: A) schierare il
+  collaudatore, B) ingaggiare un sostituto con contratto temporaneo, C)
+  **non schierare nessuno** (posto vacante, nessuna penalità se non
+  prevista). Anteprima delle conseguenze sportive, economiche e
+  regolamentari prima della conferma.
+- **Rientro del titolare** con notifica, idoneità, fine dell'incarico
+  del sostituto, storico delle assenze.
+- **Collaudatori** con feedback tecnico e capacità di sviluppo che
+  determinano la qualità dei test.
+- **Sessioni di test** in pre-stagione e in stagione (Premier circa ogni
+  5 GP).
+- **Velocity Rookies Cup**: monomarca, tute identiche, nuovi piloti ogni
+  anno dai campionati nazionali, promozioni in Lightweight, storie di
+  carriera generate (es. Fabrizio Vitellino).
+- **IA**: le squadre avversarie scelgono fra le stesse tre opzioni in
+  base a budget, obiettivi, durata dell'assenza, collaudatori, mercato,
+  classifica e regolamento.
+
 # Squadra tecnica, Moto A/B e briefing
 
 > Stato: **PROPOSTA — revisione Fase 0**. Documento di dettaglio dei
@@ -379,9 +413,10 @@ imparano a leggere i dati, e IA avversarie che non barano.
 ### 1.1 Regole
 
 - Ogni pilota dispone di **fino a due moto** (`A` e `B`), secondo il
-  regolamento della categoria: `bikesPerRider` (Premier 2; Intermediate
-  e Lightweight 1 + telaio di scorta, configurabile) e `flagToFlag`
-  (vero solo dove il cambio moto è ammesso).
+  regolamento della categoria: `bikesPerRider` (valori iniziali:
+  **Premier 2; Intermediate, Lightweight e Rookies Cup 1**, vedi
+  [REGULATIONS.md](REGULATIONS.md)) e `flagToFlag` (vero solo dove il
+  cambio moto è ammesso).
 - I limiti tecnici valgono **per pilota**, non per moto: i motori della
   dotazione stagionale sono condivisi fra A e B, così come le mescole
   assegnate per il weekend e i pacchetti omologati.
@@ -400,6 +435,10 @@ preparazione / danneggiata / non ammessa).
 
 ### 1.3 Ruoli d'uso
 
+- Le sezioni seguenti (§1.2–1.6) valgono **solo dove
+  `bikesPerRider = 2`** (Premier). Nelle altre categorie il pilota ha
+  una moto: restano stato individuale, lavori, prontezza e confronto fra
+  *sessioni* (prima/dopo una modifica).
 - **Moto A — configurazione principale**: riferimento conosciuto.
 - **Moto B — configurazione sperimentale**: assetto o componenti diversi
   da provare.
@@ -741,6 +780,291 @@ probabilità, nessun testo generato).
 
 Dettagli e dipendenze in [ROADMAP.md](ROADMAP.md).
 
+# Regolamenti delle categorie
+
+> Stato: **PROPOSTA — revisione Fase 0**. Valori iniziali della stagione
+> di partenza. Ogni valore è un campo di `Regulation` (vedi
+> [DATA_MODEL.md](DATA_MODEL.md)) e può cambiare nelle stagioni
+> successive tramite le decisioni della federazione IVF.
+
+## 1. Quadro generale
+
+| Parametro                             | Velocity Rookies Cup                                         | Lightweight                                                 | Intermediate                                                           | Premier                                           |
+|---------------------------------------|--------------------------------------------------------------|-------------------------------------------------------------|------------------------------------------------------------------------|---------------------------------------------------|
+| Ruolo                                 | giovanile monomarca                                          | 1ª classe mondiale                                          | 2ª classe mondiale                                                     | classe regina                                     |
+| Moto                                  | Lysander R250 Rookies (monomarca)                            | 250 cc monocilindrico, costruttori                          | 800 cc tre cilindri, motore unico Orvane + telai                       | prototipi 1000 cc, costruttori                    |
+| **Moto per pilota (`bikesPerRider`)** | **1**                                                        | **1**                                                       | **1**                                                                  | **2 (Moto A e Moto B)**                           |
+| Garage nell'interfaccia               | moto unica                                                   | moto unica                                                  | moto unica                                                             | Garage A/B                                        |
+| Cambio moto in gara (`flagToFlag`)    | no                                                           | no                                                          | no                                                                     | sì                                                |
+| Gara con cambio meteo                 | bandiera rossa e ripartenza                                  | bandiera rossa e ripartenza                                 | bandiera rossa e ripartenza                                            | flag-to-flag                                      |
+| Età pilota                            | 13–17 anni, max 2 stagioni                                   | 16–28 anni (esordienti max 25)                              | ≥ 16 anni                                                              | ≥ 18 anni                                         |
+| Licenza richiesta                     | selezione Rookies                                            | Lightweight                                                 | Intermediate                                                           | Premier                                           |
+| Libertà tecnica                       | solo assetto entro intervalli fissati, componenti sigillati  | assetto, manutenzione, componenti omologati del costruttore | assetto, sospensioni e telaio; motore ed elettronica unici e sigillati | sviluppo completo entro limiti, concessioni       |
+| Motori per stagione (per pilota)      | forniti e ruotati dall'organizzatore                         | 6                                                           | sigillati, sostituiti dall'organizzatore                               | 7 (condivisi fra Moto A e B)                      |
+| Squadre                               | gestita dall'organizzatore (piloti iscritti individualmente) | 14 squadre × 2                                              | 15 squadre × 2                                                         | 11 squadre × 2                                    |
+| Collaudatori                          | no                                                           | facoltativi                                                 | facoltativi                                                            | sì (squadre ufficiali; satelliti tramite accordo) |
+| Test in stagione                      | 1 giornata collettiva pre-stagione                           | pre-stagione + 2 sessioni                                   | pre-stagione + 2 sessioni                                              | pre-stagione + sessioni ogni ~5 GP                |
+
+## 2. Moto per pilota e riserve
+
+- `bikesPerRider` decide quante moto un pilota può usare in un weekend.
+  **Valori iniziali: Rookies 1, Lightweight 1, Intermediate 1, Premier
+  2.**
+- Nelle categorie con una moto, la squadra può tenere **parti di
+  ricambio** (telaio di scorta, motore di dotazione) ma non una seconda
+  moto pronta: dopo una caduta la moto va riparata o ricostruita nei
+  tempi consentiti (`rebuildAllowedBetweenSessions`). Nella Rookies Cup
+  le riparazioni sono a carico dell'organizzatore.
+- Nei test valgono gli stessi limiti; la squadra può portare **moto da
+  test** solo se il regolamento lo prevede (`testBikesPerTeam`: Premier
+  2 aggiuntive per i collaudatori, Lightweight/Intermediate 1, Rookies
+  0).
+- L'interfaccia si adatta: se `bikesPerRider = 1` non compaiono
+  pulsanti, colonne o sezioni della seconda moto.
+
+## 3. Velocity Rookies Cup
+
+- Monomarca: tutti i piloti usano la **Lysander R250 Rookies**, stesse
+  specifiche, stesse gomme, stessa tuta (con nome, numero e bandiera del
+  pilota).
+- 24 piloti per stagione, **nuovi ingressi ogni anno** tramite la
+  selezione autunnale: vi accedono i migliori dei campionati nazionali
+  giovanili e delle Continental Talent Cups. Massimo 2 stagioni.
+- Assetto regolabile solo entro intervalli fissi; il valore del pilota
+  emerge più chiaramente (vetrina per gli scout).
+- Il giocatore non gestisce una squadra Rookies: segue i piloti della
+  propria **accademia** iscritti, ne riceve i risultati e può offrire
+  contratti di accademia o junior.
+- In caso di infortunio l'organizzatore può chiamare un **pilota di
+  riserva** dalla lista della selezione; nessun obbligo di sostituzione.
+
+**Esempio di storia — Fabrizio Vitellino (ITA)**: a 14 anni vince il
+campionato nazionale giovanile italiano (fittizio), viene selezionato
+per la Rookies Cup, chiude la prima stagione 6° con una vittoria e la
+seconda da campione; riceve offerte da due accademie e debutta in
+Lightweight a 16 anni. Il generatore crea storie diverse per ogni
+talento (rivalità nelle serie giovanili, infortuni, stagioni deludenti,
+promozioni anticipate), registrate nello storico carriera e nelle
+notizie.
+
+## 4. Assenze per infortunio e sostituzioni
+
+Parametri per categoria:
+
+| Parametro                                       | Rookies                                              | Lightweight                       | Intermediate         | Premier                                                                             |
+|-------------------------------------------------|------------------------------------------------------|-----------------------------------|----------------------|-------------------------------------------------------------------------------------|
+| Sostituzione consentita                         | solo riserva dell'organizzatore                      | sì                                | sì                   | sì                                                                                  |
+| Posto vacante consentito (`vacancyAllowed`)     | sì                                                   | sì                                | sì                   | sì                                                                                  |
+| Penalità per posto vacante                      | nessuna                                              | nessuna                           | nessuna              | nessuna (valore iniziale)                                                           |
+| Obbligo di partecipazione                       | —                                                    | —                                 | —                    | accordo commerciale: quota partecipazione ridotta in proporzione ai GP senza pilota |
+| Scadenza comunicazione pilota (`entryDeadline`) | —                                                    | giovedì 12:00 dell'evento         | giovedì 12:00        | giovedì 12:00                                                                       |
+| Requisiti del sostituto                         | lista riserve                                        | licenza Lightweight, limiti d'età | licenza Intermediate | licenza Premier (o deroga per collaudatore con km di test sufficienti)              |
+| Punti                                           | al pilota che corre; squadra/costruttore normalmente | idem                              | idem                 | idem                                                                                |
+
+- **Nessuna penalità viene applicata se non è prevista dal
+  regolamento.** Le conseguenze del posto vacante sono quelle naturali
+  (punti non ottenuti, sponsor, visibilità) più quelle contrattuali
+  previste (es. quota di partecipazione Premier, clausole degli
+  sponsor).
+- La federazione può introdurre in futuro obblighi o penalità tramite il
+  sistema di votazione.
+
+## 5. Collaudatori e test
+
+- I collaudatori hanno contratto con la squadra (o con il costruttore,
+  nel caso dei satelliti che ne usufruiscono tramite l'accordo di
+  fornitura).
+- Possono sostituire un titolare se rispettano licenza ed età della
+  categoria.
+- Sessioni di test in stagione: Premier circa ogni 5 GP (calendario),
+  Lightweight e Intermediate 2 sessioni, Rookies nessuna. Numero di moto
+  nei test secondo §2.
+
+## 6. Coerenza fra categorie (verifiche automatiche previste)
+
+Controlli da eseguire in `tools/content-check` e nei test del generatore
+del mondo:
+
+- nessuna categoria con `bikesPerRider` diverso da 1 o 2;
+- `flagToFlag = true` solo se `bikesPerRider = 2`;
+- Garage A/B, confronto A/B e cambio moto disponibili solo se
+  `bikesPerRider = 2`;
+- ogni sostituto rispetta licenza ed età della categoria;
+- nessun pilota iscritto contemporaneamente a due eventi nello stesso
+  fine settimana;
+- nessun contratto duplicato (titolare + sostituto sullo stesso posto
+  nello stesso evento).
+
+# Infortuni, sostituzioni e collaudatori
+
+> Stato: **PROPOSTA — revisione Fase 0**. Regole per categoria in
+> [REGULATIONS.md](REGULATIONS.md).
+
+## 1. Infortunio
+
+### 1.1 Origine
+
+Cadute in gara, prove o test (gravità legata a velocità e punto della
+caduta), incidenti in allenamento (raro), ricadute di un infortunio non
+guarito.
+
+### 1.2 Durata: giorni, non gare
+
+La durata è calcolata in **giorni** e confrontata con il calendario. Non
+esiste un numero fisso di gare saltate.
+
+    giorni_recupero = base(tipo, gravità) × (1 − 0.25·livello_centro_medico/5)
+                      × (1 − 0.15·fisioterapista) × (1 − 0.10·forma_fisica) × f_età × ε
+    ε ~ LogNormale(0, 0.18)          // variabilità individuale
+
+| Esempio di tipo           | Gravità     | Base (giorni)                  |
+|---------------------------|-------------|--------------------------------|
+| Contusione, abrasioni     | lieve       | 3–8                            |
+| Frattura dito / mano      | media       | 14–28                          |
+| Frattura clavicola        | media       | 21–42                          |
+| Frattura polso / caviglia | grave       | 35–70                          |
+| Frattura femore / bacino  | molto grave | 70–150                         |
+| Commozione cerebrale      | variabile   | 7–21 (protocollo obbligatorio) |
+
+Dai giorni si ricavano le **gare a rischio**: per ogni evento in
+calendario la probabilità che il pilota non sia idoneo. Esempio mostrato
+all'utente: "salterà con certezza R7 e R8, probabile R9 (70%), possibile
+R10 (30%)". Il risultato può essere 1, 2, 3, 4, 5 o più gare.
+
+### 1.3 Idoneità sportiva
+
+Il pilota rientra solo dopo la **visita medica di idoneità** prima
+dell'evento. Se manca poco al recupero completo può tentare il rientro
+anticipato: passa la visita con una probabilità che dipende dai giorni
+mancanti; se corre non al 100% ha prestazioni ridotte e rischio di
+ricaduta.
+
+## 2. Decisione del Team Principal
+
+Quando un titolare è dichiarato non idoneo, il manager riceve una
+notifica e apre la **schermata infortunio**. Tre opzioni, decise **per
+ogni evento** e modificabili fino alla scadenza d'iscrizione.
+
+### A — Schierare il collaudatore
+
+- Corre con la moto (o le moto A/B in Premier) e lo staff del titolare.
+- Rendimento secondo i suoi attributi; ottiene punti, esperienza e
+  reputazione.
+- Resta sotto il suo contratto (eventuale bonus per le gare disputate
+  previsto nel contratto).
+- Al rientro del titolare torna collaudatore, salvo nuove decisioni.
+- Deve rispettare licenza, età e requisiti di partecipazione.
+- Mentre corre, i test previsti con lui sono sospesi (costo opportunità
+  per lo sviluppo).
+
+### B — Ingaggiare un sostituto
+
+- Candidati: piloti senza contratto, piloti esperti, ex titolari
+  (ritirati da ≤ 2 anni, forma ridotta), piloti di categorie inferiori
+  (con il permesso della loro squadra e senza conflitti di calendario),
+  giovani dell'accademia idonei, piloti disponibili tramite accordi
+  temporanei (es. collaudatore del costruttore per un team satellite).
+- **Contratto temporaneo**: 1 gara, più gare, oppure fino al rientro del
+  titolare; compenso per gara, bonus (punti, top 10, podio), clausole
+  (rilascio anticipato al rientro del titolare, opzione di estensione,
+  costo di liberazione/prestito verso la squadra di provenienza).
+- Confronto dei candidati: velocità, esperienza, **adattamento alla
+  moto** (conosce il costruttore o la categoria?), condizione fisica,
+  costo totale, compatibilità con lo staff del titolare, disponibilità
+  (quante gare).
+- Le squadre IA usano lo stesso mercato: un candidato può essere
+  ingaggiato da un rivale prima di te.
+
+### C — Non schierare nessuno
+
+- Il posto resta **vacante**; la squadra corre solo con gli altri piloti
+  disponibili.
+- Il pilota assente non ottiene punti; il campionato prosegue
+  normalmente.
+- Conseguenze possibili: punti mancati nel campionato squadre, obiettivi
+  stagionali più difficili, insoddisfazione degli sponsor (secondo le
+  clausole di visibilità), perdita di visibilità, riduzione della quota
+  di partecipazione Premier, **nessuna penalità se il regolamento non la
+  prevede**.
+- Vantaggio: nessun costo d'ingaggio; nessuna usura delle moto del
+  titolare; staff disponibile per altri lavori (es. preparazione
+  dell'altra moto, analisi).
+- Possibile solo se `vacancyAllowed` della categoria lo consente.
+
+### 2.1 Anteprima delle conseguenze (prima della conferma)
+
+Per ogni opzione la schermata mostra stime, non certezze:
+
+- **Sportive**: punti attesi per la squadra (dal rendimento stimato del
+  pilota schierato), effetto sulla posizione nel campionato squadre e
+  sugli obiettivi.
+- **Economiche**: costo d'ingaggio e stipendio temporaneo, bonus attesi,
+  riduzione quota partecipazione, rischio di penali sponsor, costi di
+  riparazione attesi.
+- **Regolamentari**: idoneità del sostituto (licenza, età), scadenza
+  d'iscrizione, penalità previste (se presenti).
+- **Squadra**: morale del titolare (vede chi lo sostituisce), fiducia
+  dello staff, test sospesi.
+
+## 3. Rientro del titolare
+
+1.  Notifica al manager quando la data di recupero si avvicina.
+2.  Visita medica di idoneità prima dell'evento.
+3.  Il titolare torna a correre.
+4.  Il sostituto termina l'incarico (clausola di rilascio) o torna al
+    suo ruolo (collaudatore, accademia, categoria inferiore).
+5.  Le assegnazioni dello staff tornano a quelle del titolare (il
+    rapporto con il sostituto resta nello storico).
+6.  Lo storico registra gare saltate, sostituti, punti ottenuti dai
+    sostituti e costi.
+
+## 4. Collaudatori
+
+### 4.1 Dati
+
+Ritratto (fotografia o ritratto illustrato, vedi
+[UI_DESIGN.md](UI_DESIGN.md)), nome, cognome, nazionalità, età,
+attributi di guida (gli stessi dei piloti), esperienza (km di test,
+anni), **feedback tecnico**, **capacità di sviluppo** (quanto le sue
+prove fanno avanzare e validare i progetti R&D), contratto (ruolo,
+disponibilità come sostituto, bonus per gara), stipendio.
+
+### 4.2 Effetti
+
+    qualità_dati_test   = 0.5·FeedbackTecnico + 0.3·Costanza + 0.2·Esperienza_test
+    avanzamento_validazione_R&D ∝ CapacitàSviluppo · km_test · livello_centro_simulazione
+    rumore_osservazioni ∝ (1 − qualità_dati_test)
+
+Un buon collaudatore rende più affidabili i confronti tra configurazioni
+e più rapida l'omologazione dei nuovi componenti; un collaudatore veloce
+ma poco preciso produce dati più rumorosi.
+
+## 5. Sessioni di test
+
+- Pre-stagione e in stagione (Premier circa ogni 5 GP, compatibilmente
+  con calendario e regolamento).
+- Il manager sceglie collaudatore e/o titolari (se consentito),
+  componenti da provare, programma (giri per obiettivo), analizza
+  telemetria, confronta configurazioni, raccoglie feedback e fa i
+  briefing.
+- Moto disponibili: Premier sistema A/B + moto da test consentite;
+  categorie inferiori una moto per pilota.
+
+## 6. Intelligenza artificiale
+
+Le squadre IA scelgono fra le stesse tre opzioni con una valutazione di
+utilità:
+
+    U(opzione) = valore_punti(posizione, obiettivi) · punti_attesi
+               + impatto_sponsor + impatto_reputazione
+               − costo · (1 / solidità_budget) − rischio
+
+Fattori: budget, obiettivi, gravità e durata dell'assenza, qualità dei
+collaudatori, disponibilità sul mercato, posizione in campionato,
+regolamento. Una squadra in difficoltà economica può lasciare il posto
+vacante; una squadra in lotta per il titolo costruttori tende a
+schierare il miglior sostituto possibile.
+
 # Architettura tecnica
 
 > Stato: **PROPOSTA — in attesa di approvazione** (Fase 0). Nessun
@@ -1046,7 +1370,14 @@ Category      { id, tier: 'lightweight'|'intermediate'|'premier'|'feeder', name,
 Regulation    { id, categoryId, season, points: number[], sprintPoints: number[],
                 weekendFormat: SessionSpec[], engineAllocation, tyreAllocation,
                 minWeight, fuelCapacity, techLimits, devFreezes, concessions,
-                radioPolicy: 'none'|'dashboard'|'full', penaltiesTable, budgetCap? }
+                radioPolicy: 'none'|'dashboard'|'full', penaltiesTable, budgetCap?,
+                // revisione Fase 0 (REGULATIONS.md)
+                bikesPerRider: 1|2, flagToFlag: boolean, testBikesPerTeam, rebuildAllowedBetweenSessions,
+                riderAge: { min, max, rookieMax? }, licenseRequired,
+                substitution: { allowed: 'yes'|'organizerReserveOnly'|'no', vacancyAllowed: boolean,
+                                vacancyPenalty?: Penalty, participationFeeReductionPerRound?: number,
+                                entryDeadline: { weekday, hour }, testerLicenseWaiverKm? },
+                inSeasonTests: { everyRounds?: number, sessions?: number } }
 RegulationProposal { id, proposedBy, change, voteDeadline, votes: Record<Id,'yes'|'no'|'abstain'>, status }
 Season        { id, year, categoryId, roundIds[], status, championRiderId?, championTeamId? }
 Round         { id, seasonId, circuitId, startDay, sessionIds[], pressConferenceId? }
@@ -1076,7 +1407,24 @@ Rider extends Person {
   setupPreferences, crewChiefId?, trackEngineerId?, role: 'race'|'test'|'reserve'|'academy',
   careerStats, seasonStats
 }
-Injury        { type, bodyPart, startDay, expectedReturnDay, severity, fitToRideRisk }
+Injury        { id, riderId, type, bodyPart, severity, cause: 'race'|'practice'|'test'|'training'|'relapse',
+                startDay, recoveryDaysEstimate: [min, max], expectedReturnDay, fitToRideRisk,
+                medicalAssessment: { staffId, confidence, note } }
+Fitness       { riderId, status: 'fit'|'unfit'|'pendingCheck'|'fitReduced', checkDay?, performanceFactor }
+RiderAbsence  { id, riderId, teamId, injuryId, roundIds[], decisions: Record<RoundId, SeatDecisionId> }
+SeatDecision  { id, teamId, seatRiderId, roundId, option: 'tester'|'substitute'|'vacant',
+                replacementRiderId?, contractId?, decidedBy: 'player'|'ai', deadlineDay,
+                expected: { points, cost, sponsorImpact, participationFeeLoss, penalty? },
+                actual?: { points, cost, sponsorImpact } }
+TemporaryContract extends Contract { kind: 'substitute', scope: 'singleRound'|'multiRound'|'untilReturn',
+                roundIds[], feePerRound, signingCost, loanFeeToOriginTeam?, earlyReleaseOnReturn: boolean,
+                extensionOption? }
+TestRider extends Rider { role: 'test', testExperienceKm, developmentSkill, substituteAvailable: boolean,
+                lentTo?: TeamId }      // collaudatore del costruttore prestato a un satellite
+TestSession   { id, seasonId, circuitId, days[], categoryIds[], participants: { teamId, riderIds[], bikeIds[] }[],
+                program: SessionRunPlan[] }
+RookiesEntry  { riderId, seasonId, selectionRank, originChampionship, reserve: boolean }
+NationalChampionship { id, country, ageRange, simulated: 'statistical', seasonResults[] }
 
 StaffMember extends Person {
   role: 'technicalDirector'|'crewChief'|'trackEngineer'|'engineEngineer'|'electronicsEngineer'|
@@ -1125,6 +1473,7 @@ Bike          { id, teamId, riderId, slot: 'A'|'B', label: 'reference'|'experime
                 categoryId, season, components: Record<Slot, ComponentId>,   // Slot include 'accessories'
                 setupId, mileageKm, wear, reliabilityNow, damage: Damage[], maintenance: MaintenanceState,
                 readiness (0..1), availability: 'ready'|'preparing'|'damaged'|'notAllowed' }
+                // slot 'B' esiste solo se Regulation.bikesPerRider = 2; le moto da test hanno label 'test'
 EngineAllocation { riderId, season, allowed, usedEngineIds[] }   // condivisa fra Moto A e B
 Damage          { componentId, severity, repairHours, cause, day }
 MaintenanceState{ hoursSinceService, pendingJobs: Job[] }
@@ -1186,6 +1535,16 @@ PressConference { id, roundId, questions: { text, options: Answer[] }[], effects
 RecordEntry   { kind, categoryId, holderId, value, day }
 SeasonArchive { seasonId, finalStandings, rounds summary, champions, awards, transfers }
 CareerStats   { starts, wins, podiums, poles, fastestLaps, points, dnfs, titles, perSeason[] }
+```
+
+### Ritratti e aspetto (ADR-0004)
+
+``` ts
+Appearance    { personId, seed, skinTone, faceShape, hairStyle, hairColor, eyeColor, features[],
+                ageVisualOffset }                        // identità visiva fissa
+PortraitAsset { personId, kind: 'generated'|'photo', path?, sizeVariants: ('xs'|'s'|'m'|'l'|'xl')[] }
+Outfit        { personId, teamId, type: 'racesuit'|'polo'|'formal', colors: [primary, secondary],
+                number?, sponsorDecals[] }               // cambia con la squadra
 ```
 
 ## 4. Conoscenza e nebbia di guerra
@@ -1504,6 +1863,12 @@ dashboard.
   (briefing semplificato), con modello verità/osservazioni già attivo.
 - **Una sola moto per pilota** in gara (lo schema dati prevede già Moto
   A/B: nessuna migrazione futura).
+- `bikesPerRider` già presente nel regolamento (Premier = 2 attivato in
+  Fase 3).
+- **Infortuni base**: durata in giorni, gare saltate calcolate dal
+  calendario, idoneità; scelta fra collaudatore e **posto vacante**
+  (opzioni A e C) con anteprima delle conseguenze; storico delle
+  assenze.
 - Classifiche piloti/squadre/costruttori, risultati di ogni sessione.
 - Finanze base con bilancio reale derivato dalle transazioni.
 - Salvataggi su slot e autosalvataggio.
@@ -1529,8 +1894,15 @@ giocabili, serie feeder simulate.
   formazione.
 - M3.x **Rapporti pilota-staff**: fiducia, comunicazione, compatibilità,
   comprensione dello stile; riassegnazioni.
-- M3.x **Moto A / Moto B**: due moto per pilota, stato individuale,
-  lavori e prontezza, condivisione dei motori.
+- M3.x **Moto A / Moto B**: due moto per pilota (solo Premier), stato
+  individuale, lavori e prontezza, condivisione dei motori.
+- M3.x **Sostituti dal mercato** (opzione B): contratti temporanei,
+  prestiti da altre categorie, confronto candidati; IA sulle tre
+  opzioni.
+- M3.x **Collaudatori e sessioni di test**: capacità di sviluppo,
+  programma test, validazione R&D.
+- M3.x **Velocity Rookies Cup** e campionati nazionali giovanili
+  (simulati), selezioni annuali, storie di carriera.
 
 ## Fase 4 — Simulazione avanzata
 
@@ -1798,7 +2170,83 @@ con le azioni del manager, reparti specialistici con carico di lavoro,
 tecnici promuovibili dall'interno e **anteprima degli effetti** di una
 riassegnazione prima della conferma.
 
-## 7. Altre schermate chiave (linee guida)
+## 7. Categorie, infortuni e sostituti (revisione Fase 0)
+
+### 7.1 Garage per categoria
+
+![Garage moto unica](../images/garage-single.png)
+
+La schermata Garage si adatta a `Regulation.bikesPerRider`:
+
+- **Premier (2 moto)** → Garage A/B (§6.1).
+- **Lightweight, Intermediate (1 moto)** → garage a moto unica: vista
+  grafica della moto con livrea, numero e costruttore (laterale,
+  frontale, posteriore, dall'alto; il 3D è previsto come funzione
+  avanzata), stato tecnico, componenti con ciò che il regolamento
+  consente (regolabile, omologato, sigillato), aggiornamenti del
+  costruttore, assetto confrontato **fra sessioni** (prima/dopo una
+  modifica), lavori, ricambi.
+- **Velocity Rookies Cup** → versione ridotta: moto monomarca, solo
+  assetto entro intervalli e stato tecnico. Nessun pulsante, colonna o
+  sezione dedicata alla seconda moto compare se il regolamento non la
+  prevede.
+
+### 7.2 Gestione infortunio
+
+![Gestione infortunio](../images/injury.png)
+
+Ritratto del pilota con numero, tipo e gravità dell'infortunio, prognosi
+in giorni, rientro previsto, valutazione dello staff medico; calendario
+con la **probabilità di assenza per ogni GP**; le tre opzioni
+(collaudatore, sostituto, nessun pilota) con dettagli; tabella delle
+**conseguenze previste** (sportive, economiche, regolamentari, squadra)
+per confrontarle prima di decidere; decisione **per evento** con le
+scadenze d'iscrizione.
+
+### 7.3 Scelta del sostituto
+
+![Scelta del sostituto](../images/substitute.png)
+
+Candidati da tutte le fonti (senza contratto, ex titolari, categorie
+inferiori, accademia, prestiti) con ritratto, velocità, esperienza,
+adattamento alla moto, forma fisica, compatibilità con lo staff,
+disponibilità, costo e idoneità regolamentare; confronto diretto fra due
+candidati; parere dello staff; costruttore del **contratto temporaneo**
+(1 GP, più GP, fino al rientro; compenso, bonus, clausole).
+
+## 8. Ritratti dei personaggi e immagini delle moto
+
+Ogni pilota e membro dello staff ha un **ritratto fotografico
+realistico**; ogni moto ha una **foto/render realistico** con la livrea
+della squadra. Il sistema separa tre livelli (vedi
+[ADR-0004](adr/0004-portraits.md)):
+
+1.  **Identità** — dati fissi del personaggio (aspetto descritto: età,
+    capelli, carnagione, tratti), invariati per tutta la carriera.
+2.  **Ritratto** — fotografia associata al personaggio
+    (`assets/portraits/<id>.jpg`).
+3.  **Abbigliamento** — tuta (piloti) o polo (staff) nei colori della
+    squadra: quando il personaggio cambia squadra si usa la variante con
+    i nuovi colori, il volto resta lo stesso.
+
+Finché una foto non è disponibile l'interfaccia mostra un **segnaposto
+fotografico neutro** (sagoma con i colori della squadra e la scritta
+FOTO), mai un disegno. Le istruzioni per generare le immagini sono in
+[ART_PROMPTS.md](ART_PROMPTS.md).
+
+Dimensioni per contesto: **XL** intestazione scheda pilota/infortunio (≈
+10 rem), **L** briefing e confronti (≈ 6–7 rem), **M** card della
+dashboard e squadra tecnica (≈ 4 rem), **S** tabelle di mercato (≈ 2,4
+rem), **XS** classifiche e notizie (≈ 1,6 rem, facoltativo per non
+ridurre la leggibilità).
+
+> Nota sulla revisione: i ritratti illustrati generati dal codice sono
+> stati scartati perché non abbastanza realistici. In questo ambiente
+> non è disponibile un generatore di immagini fotorealistiche: le foto
+> si producono con uno strumento esterno seguendo ART_PROMPTS.md e si
+> caricano nel progetto.
+
+## 9. Altre schermate chiave (linee guida)
 
 - **Tabelle**: intestazioni fisse, ordinamento, filtri salvabili,
   colonne configurabili, virtualizzazione oltre 100 righe, confronto di
@@ -1811,11 +2259,84 @@ riassegnazione prima della conferma.
 - **Telemetria**: grafici a traccia sovrapposta per distanza (velocità,
   gas, freno, piega), delta-tempo, confronto pilota A/B, selettore giro.
 
-## 8. Accessibilità
+## 10. Accessibilità
 
 Contrasto minimo AA sul testo, stati mai indicati solo dal colore,
 dimensione testo regolabile, modalità per daltonici sui colori di gomme
 e squadre, riduzione animazioni.
+
+# Schede per le immagini realistiche (ritratti e moto)
+
+> Da usare con uno strumento di generazione immagini (es. ChatGPT). Ogni
+> immagine generata va salvata con il **nome file indicato** e caricata
+> nel progetto: i mockup la mostrano automaticamente
+> (`docs/mockups/assets/portraits/` e `docs/mockups/assets/bikes/`).
+> Tutti i personaggi, le squadre e le moto sono immaginari: le immagini
+> non devono somigliare a persone, moto o marchi reali.
+
+## 1. Regole comuni
+
+**Ritratti — aggiungere a ogni richiesta:**
+
+> Fotografia ritratto realistica, stile servizio fotografico ufficiale
+> di un campionato motociclistico. Inquadratura dalla testa al petto,
+> leggermente di tre quarti, sguardo in camera. Luce da studio morbida,
+> sfondo grigio scuro sfumato. Obiettivo 85 mm, alta definizione, colori
+> naturali. Formato verticale 4:5, 1024×1280. Persona immaginaria, non
+> somigliante a nessuna persona reale. Nessun logo o marchio reale,
+> nessun testo leggibile tranne il numero indicato.
+
+**Abbigliamento:**
+
+- Piloti: tuta da gara in pelle con colli e spalle nei colori della
+  squadra, numero di gara sul petto.
+- Staff: polo tecnica della squadra nei colori indicati, eventuale
+  cuffia radio al collo.
+
+**Moto — aggiungere a ogni richiesta:**
+
+> Fotografia realistica in studio di una moto da corsa prototipo
+> immaginaria, vista laterale destra completa, sfondo scuro con
+> pavimento riflettente, luci da studio. Nessun marchio reale: solo i
+> nomi immaginari indicati. Formato orizzontale 16:9, 1920×1080.
+
+## 2. Piloti
+
+| File                             | Descrizione                                                                                                                                                                             |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `teo-varriale.jpg`               | Uomo italiano, 24 anni, capelli castano scuro corti e mossi, carnagione olivastra, barba di un giorno, espressione sicura e determinata. Tuta blu (#2a6cf0) e blu notte, numero **27**. |
+| `rafa-oyarzun.jpg`               | Uomo spagnolo, 21 anni, capelli neri corti, carnagione chiara-olivastra, viso giovane, sorriso timido. Tuta blu e blu notte, numero **61**.                                             |
+| `fabrizio-vitellino.jpg`         | Ragazzo italiano, 16 anni, capelli castani ricci, viso da adolescente, sorriso entusiasta. Tuta giallo (#ffd23f) e blu, numero **44** (Lupo Blu Junior, Lightweight).                   |
+| `fabrizio-vitellino-rookies.jpg` | Lo stesso ragazzo a 14–15 anni con la tuta identica della Velocity Rookies Cup (grigio antracite e arancione, uguale per tutti), bandiera italiana sulla spalla.                        |
+| `sven-jansen-tester.jpg`         | Uomo olandese, 36 anni, capelli biondo scuro corti con qualche capello bianco, viso magro, espressione calma e concentrata. Tuta blu, scritta "TEST" e numero **T1**.                   |
+| `marc-vidal-free.jpg`            | Uomo spagnolo, 31 anni, capelli scuri pettinati all'indietro, barba curata, sguardo esperto. Tuta neutra grigio scuro senza squadra (pilota senza contratto).                           |
+| `ryo-ishikawa-tester.jpg`        | Uomo giapponese, 33 anni, capelli neri corti, viso serio. Tuta rossa e nera del costruttore immaginario Ardena, scritta "TEST".                                                         |
+| `dawid-kowalczyk.jpg`            | Uomo polacco, 22 anni, capelli biondo cenere rasati ai lati, occhi chiari. Tuta turchese e verde scuro (Team Nordvik, Intermediate).                                                    |
+| `luca-bianchet-ex.jpg`           | Uomo italiano, 34 anni, capelli castani corti con stempiatura leggera, rughe d'espressione, sorriso rilassato. Giacca da paddock grigia (ex pilota).                                    |
+| `tom-whitlock.jpg`               | Uomo australiano, 27 anni, capelli biondi spettinati, abbronzato, lentiggini. Tuta grigia e bianca senza squadra.                                                                       |
+| `giulio-ferraro-academy.jpg`     | Ragazzo italiano, 19 anni, capelli neri corti, viso giovane. Tuta giallo e blu dell'accademia Lupo Blu.                                                                                 |
+| `noa-lindgren.jpg`               | Ragazzo svedese, 18 anni, capelli biondo chiaro, carnagione chiara. Tuta giallo e blu, numero **9**.                                                                                    |
+
+## 3. Staff
+
+| File                  | Descrizione                                                                                                                                                       |
+|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `anja-kessler.jpg`    | Donna austriaca, 34 anni, capelli castano chiaro raccolti, occhiali sottili, espressione analitica. Polo blu Lupo Blu, cuffia radio al collo. Ingegnere di pista. |
+| `marco-doria.jpg`     | Uomo italiano, 51 anni, capelli brizzolati corti, barba grigia corta, viso segnato, aria esperta e cordiale. Polo blu Lupo Blu. Capotecnico.                      |
+| `franco-cattaneo.jpg` | Uomo italiano, 46 anni, calvo, baffi scuri, robusto. Polo blu Lupo Blu. Capotecnico.                                                                              |
+| `karl-lindqvist.jpg`  | Uomo svedese, 39 anni, capelli biondi corti, barba bionda, espressione severa. Polo blu Lupo Blu. Ingegnere di pista.                                             |
+| `lucia-ferreyra.jpg`  | Donna argentina, 27 anni, capelli neri lunghi legati, sguardo sveglio. Polo viola della sua squadra Intermediate. Ingegnere di pista emergente.                   |
+| `dr-elena-moreau.jpg` | Donna francese, 47 anni, capelli castani a caschetto, camice medico sopra la polo blu. Medico della squadra.                                                      |
+| `hans-bruckner.jpg`   | Uomo tedesco, 55 anni, capelli bianchi corti, occhiali, aria autorevole. Camicia e giacca blu notte. Direttore tecnico.                                           |
+
+## 4. Moto
+
+| File                                | Descrizione                                                                                                                                                                                                                       |
+|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ardena-premier-lupoblu-27-a.jpg`   | Prototipo Premier 1000 cc del costruttore immaginario **Ardena**, carena con alette aerodinamiche, livrea blu (#2a6cf0) e blu notte con filetti bianchi, numero **27** sul cupolino e sul codone, sponsor immaginario "VOLTARIS". |
+| `ardena-premier-lupoblu-27-b.jpg`   | Stessa moto, configurazione sperimentale: forcellone in carbonio a vista, adesivo "TEST" sul codone.                                                                                                                              |
+| `hoshiro-hr250-lupoblu-44-side.jpg` | Moto Lightweight 250 cc del costruttore immaginario **Hoshiro**, più piccola e snella, livrea giallo (#ffd23f) e blu, numero **44**, sponsor "VOLTARIS".                                                                          |
+| `lysander-r250-rookies.jpg`         | Moto monomarca della Velocity Rookies Cup (costruttore immaginario **Lysander**), livrea grigio antracite e arancione uguale per tutti, numero **12**.                                                                            |
 
 # ADR-0001 — Stack tecnologico
 
@@ -1936,17 +2457,68 @@ simulazione deve conoscere lo stato reale.
 
 - (+) Briefing e scouting diventano vere meccaniche; le IA competono
   alla pari.
-
 - (+) Test semplici: si verifica la calibrazione (es. ingegnere con
   Diagnosi 80 → ~75% diagnosi corrette).
-
 - (−) Più tipi e più dati da salvare (storico delle ipotesi): gestito
   con archivio per stagione.
 
+# ADR-0004 — Ritratti dei personaggi
+
+- **Stato**: Proposto (in attesa di approvazione)
+- **Data**: 2026-11-01
+
+## Contesto
+
+Ogni pilota e membro dello staff deve avere un volto riconoscibile,
+costante per tutta la carriera, con l'abbigliamento della squadra
+attuale. Il mondo contiene centinaia di personaggi generati e ne crea di
+nuovi ogni stagione (es. Velocity Rookies Cup). L'ambiente di sviluppo
+non dispone di uno strumento di generazione di fotografie.
+
+## Decisione
+
+- Separare **identità visiva** (`Appearance`, generata dal seme del
+  personaggio), **ritratto** (`PortraitAsset`: illustrato generato dal
+  gioco oppure fotografia) e **abbigliamento** (`Outfit`, legato alla
+  squadra).
+- I ritratti sono **fotografie realistiche** (cartella
+  `assets/portraits/<personId>.jpg` o content pack); le varianti di
+  dimensione vengono create all'importazione.
+- Senza foto si mostra un **segnaposto fotografico neutro**. Il ritratto
+  illustrato generato dal codice è stato valutato e **scartato** in
+  revisione perché non abbastanza realistico.
+- Per i personaggi generati in grandi quantità (es. nuovi Rookies ogni
+  stagione) servirà una pipeline di generazione immagini (servizio
+  esterno o modello locale): da decidere prima della Fase 3.
+- Il ritratto si compone a strati: sfondo → abbigliamento (colori
+  squadra) → volto → capelli. Cambiando squadra cambia solo lo strato
+  abbigliamento (per le foto: cornice e sfondo nei colori squadra).
+- Linee guida per i contenuti: nessuna somiglianza intenzionale con
+  persone reali; controllo dei nomi già previsto in
+  `tools/content-check`.
+
+## Alternative considerate
+
+- **Solo fotografie**: impossibile coprire i personaggi generati ogni
+  stagione senza un servizio di generazione immagini integrato (costi,
+  licenze, dipendenza esterna).
+- **Solo illustrazioni**: meno immersivo per i personaggi principali.
+
+## Conseguenze
+
+- (+) Volto stabile per tutta la carriera; abbigliamento separato dal
+  volto.
+
+- (−) Le foto sono un lavoro di contenuti separato; finché mancano
+  compare un segnaposto.
+
+- (−) Serve una soluzione per generare automaticamente foto dei
+  personaggi creati durante la carriera.
+
 # Appendice — Galleria screenshot
 
-Tutte le immagini sono mockup HTML renderizzati con Chromium in
-1920×1080; i dati sono illustrativi.
+Mockup HTML renderizzati con Chromium in 1920×1080; dati illustrativi. I
+riquadri "FOTO" sono segnaposto per le fotografie realistiche.
 
 ![main menu](../images/main-menu.png)
 
@@ -1966,50 +2538,19 @@ Tutte le immagini sono mockup HTML renderizzati con Chromium in
 
 ![tech staff](../images/tech-staff.png)
 
-![main menu dettaglio](../images/main-menu-dettaglio.png)
+![garage single](../images/garage-single.png)
 
-![dashboard topbar](../images/dashboard-topbar.png)
+![injury](../images/injury.png)
 
-![dashboard sidebar](../images/dashboard-sidebar.png)
-
-![dashboard widget 1 prossimo
-evento](../images/dashboard-widget-1-prossimo-evento.png)
+![substitute](../images/substitute.png)
 
 ![dashboard widget 2 piloti](../images/dashboard-widget-2-piloti.png)
 
-![dashboard widget 3
-classifica](../images/dashboard-widget-3-classifica.png)
-
-![dashboard widget 4 finanze](../images/dashboard-widget-4-finanze.png)
-
-![dashboard widget 5 sviluppo](../images/dashboard-widget-5-sviluppo.png)
-
-![dashboard widget 6 decisioni](../images/dashboard-widget-6-decisioni.png)
-
-![dashboard widget 7 obiettivi](../images/dashboard-widget-7-obiettivi.png)
-
-![dashboard widget 8 notizie](../images/dashboard-widget-8-notizie.png)
-
 ![race view mappa 2d](../images/race-view-mappa-2d.png)
-
-![race view classifica live](../images/race-view-classifica-live.png)
-
-![race view controlli piloti](../images/race-view-controlli-piloti.png)
-
-![race view velocita
-simulazione](../images/race-view-velocita-simulazione.png)
 
 ![rider profile intestazione](../images/rider-profile-intestazione.png)
 
 ![rider profile attributi](../images/rider-profile-attributi.png)
-
-![rider profile relazioni](../images/rider-profile-relazioni.png)
-
-![rider profile assetto](../images/rider-profile-assetto.png)
-
-![main menu 1440p](../images/main-menu-1440p.png)
-
-![dashboard 1440p](../images/dashboard-1440p.png)
 
 ![main menu 4k](../images/main-menu-4k.png)
 
