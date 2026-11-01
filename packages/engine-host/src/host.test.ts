@@ -23,7 +23,11 @@ describe('engine host + client', () => {
     const events = await client.dispatch({ type: 'ContinueToNextEvent' });
     expect(events.map((e) => e.type)).toContain('RoundReached');
     const after = await client.query('careerSummary');
-    expect(after.roundsDone).toBe(1);
+    expect(after.roundsDone).toBe(0);
+    expect(await client.availableCommands()).toContain('RunRace');
+    await client.dispatch({ type: 'RunRace', strategies: {} });
+    expect((await client.query('careerSummary')).roundsDone).toBe(1);
+    expect((await client.replay())!.frames.length).toBeGreaterThan(10);
 
     const meta = await client.save('slot-1');
     expect(meta).toMatchObject({ slot: 'slot-1', teamName: 'Scuderia Lupo Blu', savedAt: 42 });

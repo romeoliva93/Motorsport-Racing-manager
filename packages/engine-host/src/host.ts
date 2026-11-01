@@ -65,6 +65,8 @@ export function createEngineHost(opts: EngineHostOptions) {
       }
       case 'availableCommands':
         return engine ? engine.availableCommands() : [];
+      case 'replay':
+        return engine?.lastReplay ?? null;
       case 'save': {
         const record = createSaveRecord(current().state as GameState, req.slot, now());
         await opts.store.put(record);

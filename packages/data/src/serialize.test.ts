@@ -25,9 +25,13 @@ describe('serializzazione', () => {
     };
     v1.schemaVersion = 1;
     delete v1.tables.negotiations;
+    delete v1.tables.sessionResults;
+    delete v1.tables.news;
     const migrated = deserializeState(JSON.stringify(v1));
     expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
     expect(migrated.tables.negotiations).toEqual({});
+    expect(migrated.tables.sessionResults).toEqual({});
+    expect(migrated.tables.news).toEqual({});
   });
 
   it('applica le migrazioni in sequenza', () => {

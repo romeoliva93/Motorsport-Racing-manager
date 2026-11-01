@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@lean-angle/core": "0.0.0",
-    "@lean-angle/data": "0.0.0"
+    "@lean-angle/data": "0.0.0",
+    "@lean-angle/sim": "0.0.0"
   }
 }

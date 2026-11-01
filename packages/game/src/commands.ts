@@ -18,7 +18,19 @@ export type Command =
   /** Accetta la controproposta del pilota nell'ultima risposta della trattativa. */
   | { type: 'AcceptCounter'; riderId: RiderId; replaceRiderId: RiderId | null }
   /** Chiude una trattativa aperta. */
-  | { type: 'WithdrawNegotiation'; riderId: RiderId };
+  | { type: 'WithdrawNegotiation'; riderId: RiderId }
+  /** Qualifiche del weekend di oggi (tutte le categorie). */
+  | { type: 'RunQualifying' }
+  /** Gara del weekend di oggi con la strategia scelta per i propri piloti. */
+  | {
+      type: 'RunRace';
+      strategies: Record<
+        string,
+        { compound: 'soft' | 'medium' | 'hard'; mode: 'conservative' | 'normal' | 'attack' }
+      >;
+    }
+  /** Chiude la stagione conclusa e apre la successiva. */
+  | { type: 'StartNextSeason' };
 
 export type CommandType = Command['type'];
 
@@ -37,4 +49,7 @@ export type GameEvents = {
   };
   RiderReleased: { riderId: RiderId; teamId: TeamId };
   AiRiderSigned: { riderId: RiderId; teamId: TeamId };
+  QualifyingDone: { roundId: string };
+  RaceDone: { roundId: string; summary: string };
+  SeasonStarted: { year: number };
 };

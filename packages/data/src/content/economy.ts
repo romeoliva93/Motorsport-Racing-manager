@@ -73,3 +73,39 @@ export const STAFF_SALARY_SCALE: Record<CategoryTier, number> = {
   lightweight: 0.25,
   rookies: 0.2,
 };
+
+/** Entrate mensili degli sponsor per una squadra con reputazione 70 (scalate in proporzione). */
+export const SPONSOR_MONTHLY: Record<CategoryTier, number> = {
+  premier: 1_200_000,
+  intermediate: 220_000,
+  lightweight: 90_000,
+  rookies: 0,
+};
+/** Premio per ogni punto conquistato in gara. */
+export const PRIZE_PER_POINT: Record<CategoryTier, number> = {
+  premier: 40_000,
+  intermediate: 8_000,
+  lightweight: 3_000,
+  rookies: 0,
+};
+/** Diritti commerciali per ogni Gran Premio disputato (per squadra). */
+export const RACE_FEE: Record<CategoryTier, number> = {
+  premier: 300_000,
+  intermediate: 60_000,
+  lightweight: 25_000,
+  rookies: 0,
+};
+/** Trasferte e logistica per ogni Gran Premio (per squadra): viaggi, trasporto moto, hospitality. */
+export const TRAVEL_COST: Record<CategoryTier, number> = {
+  premier: 160_000,
+  intermediate: 35_000,
+  lightweight: 15_000,
+  rookies: 0,
+};
+/** Costi fissi mensili di gestione (sede, officina, magazzino ricambi, utenze). */
+export const RUNNING_COST_MONTHLY: Record<CategoryTier, number> = {
+  premier: 420_000,
+  intermediate: 80_000,
+  lightweight: 35_000,
+  rookies: 0,
+};

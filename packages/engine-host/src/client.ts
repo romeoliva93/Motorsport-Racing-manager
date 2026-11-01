@@ -1,7 +1,7 @@
 /**
  * Lato interfaccia del protocollo: richieste con Promise, notifiche di cambiamento.
  */
-import type { Command, CommandType, QueryArgs, QueryName, QueryResult } from '@lean-angle/game';
+import type { Command, CommandType, QueryArgs, QueryName, QueryResult, ReplayData } from '@lean-angle/game';
 import type { SaveMeta } from '@lean-angle/persistence';
 import type { HostMessage, Request, Transport } from './protocol.ts';
 
@@ -68,6 +68,10 @@ export class EngineClient {
   }
   query<N extends QueryName>(name: N, ...args: QueryArgs<N>): Promise<QueryResult<N>> {
     return this.request<QueryResult<N>>({ op: 'query', name, args });
+  }
+  /** Dati per rivedere l'ultima gara del giocatore (null se non disponibile). */
+  replay() {
+    return this.request<ReplayData | null>({ op: 'replay' });
   }
   availableCommands() {
     return this.request<CommandType[]>({ op: 'availableCommands' });

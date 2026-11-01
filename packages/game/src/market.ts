@@ -68,7 +68,8 @@ export function marketOpen(s: GameState): boolean {
   if (!entry) return false;
   const season = s.tables.seasons[entry.seasonId]!;
   const first = Math.min(...season.roundIds.map((id) => s.tables.rounds[id]!.startDay));
-  return s.meta.currentDay < first;
+  // Aperto prima del primo GP e nella finestra di fine stagione (rinnovi e firme per l'anno dopo).
+  return s.meta.currentDay < first || season.status === 'finished';
 }
 
 /** Valore di mercato del pilota per una squadra della categoria indicata (stipendio annuo in euro). */

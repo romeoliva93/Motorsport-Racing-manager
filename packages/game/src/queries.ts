@@ -22,6 +22,7 @@ import {
   type TeamId,
   type TeamType,
 } from '@lean-angle/data';
+import { championship, financeView, newsFeed, seasonReview, weekendView } from './views.ts';
 import { activeRiderContract, askingSalary, buyoutFor, ineligibility, marketOpen } from './market.ts';
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
@@ -162,7 +163,7 @@ export function careerSummary(s: GameState): CareerSummary {
   const rounds = season
     ? season.roundIds.map((id) => s.tables.rounds[id]!).sort((a, b) => a.startDay - b.startDay)
     : [];
-  const next = rounds.find((r) => r.startDay > s.meta.currentDay);
+  const next = rounds.find((r) => r.startDay >= s.meta.currentDay && r.status !== 'raced');
   const circuit = next ? s.tables.circuits[next.circuitId]! : undefined;
   return {
     saveName: s.meta.saveName,
@@ -184,7 +185,7 @@ export function careerSummary(s: GameState): CareerSummary {
           }
         : null,
     roundsTotal: rounds.length,
-    roundsDone: rounds.filter((r) => r.startDay <= s.meta.currentDay).length,
+    roundsDone: rounds.filter((r) => r.status === 'raced').length,
   };
 }
 
@@ -699,6 +700,11 @@ export const QUERIES = {
   marketRiders,
   negotiationView,
   createTeamOptions,
+  weekendView,
+  championship,
+  financeView,
+  newsFeed,
+  seasonReview,
 } as const;
 export type QueryName = keyof typeof QUERIES;
 export type QueryArgs<N extends QueryName> = (typeof QUERIES)[N] extends (

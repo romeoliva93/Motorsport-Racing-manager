@@ -9,6 +9,7 @@ export type Request =
   | { id: number; op: 'dispatch'; command: Command }
   | { id: number; op: 'query'; name: QueryName; args: unknown[] }
   | { id: number; op: 'availableCommands' }
+  | { id: number; op: 'replay' }
   | { id: number; op: 'save'; slot: string }
   | { id: number; op: 'load'; slot: string }
   | { id: number; op: 'listSaves' }

@@ -6,9 +6,10 @@ import type { Bike, Component, Facility } from './tech.ts';
 import type { Contract } from './contracts.ts';
 import type { FinanceAccount, Transaction } from './finance.ts';
 import type { Negotiation } from './market.ts';
+import type { NewsItem, SessionResult } from './results.ts';
 
 /** Versione dello schema dei salvataggi: va incrementata a ogni modifica incompatibile (con migrazione). */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export type Table<T extends { id: string }> = Record<T['id'], T>;
 
@@ -48,6 +49,8 @@ export interface GameState {
     facilities: Table<Facility>;
     transactions: Table<Transaction>;
     negotiations: Table<Negotiation>;
+    sessionResults: Table<SessionResult>;
+    news: Table<NewsItem>;
   };
   /** Relazioni senza ID proprio. */
   staffAssignments: StaffAssignment[];
@@ -83,6 +86,8 @@ export function createEmptyGameState(meta: GameMeta): GameState {
       facilities: {},
       transactions: {},
       negotiations: {},
+      sessionResults: {},
+      news: {},
     },
     staffAssignments: [],
     bonds: [],

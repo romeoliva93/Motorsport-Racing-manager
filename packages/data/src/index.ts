@@ -5,6 +5,7 @@ export * from './schema/tech.ts';
 export * from './schema/contracts.ts';
 export * from './schema/finance.ts';
 export * from './schema/market.ts';
+export * from './schema/results.ts';
 export * from './schema/state.ts';
 export * from './tables.ts';
 export * from './validate.ts';
@@ -19,4 +20,12 @@ export {
   SALARY_GROWTH_PER_POINT,
   OPENING_BALANCE,
   NAMES as NAMES_CONTENT,
+  SPONSOR_MONTHLY,
+  PRIZE_PER_POINT,
+  RACE_FEE,
+  TRAVEL_COST,
+  RUNNING_COST_MONTHLY,
+  STAFF_NATIONALITY_WEIGHTS,
+  RIDER_NATIONALITY_WEIGHTS,
+  isBlockedSurname,
 } from './content/index.ts';

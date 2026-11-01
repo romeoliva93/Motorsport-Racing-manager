@@ -13,6 +13,14 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
     const tables = (s.tables ?? {}) as Record<string, unknown>;
     return { ...s, tables: { ...tables, negotiations: tables.negotiations ?? {} } };
   },
+  /** v2 → v3: risultati delle sessioni e notizie. */
+  2: (s) => {
+    const tables = (s.tables ?? {}) as Record<string, unknown>;
+    return {
+      ...s,
+      tables: { ...tables, sessionResults: tables.sessionResults ?? {}, news: tables.news ?? {} },
+    };
+  },
 };
 
 export class SaveFormatError extends Error {}

@@ -19,6 +19,7 @@ import {
 import type { Command, CommandType, GameEvents } from './commands.ts';
 import {
   activeRiderContract,
+  aiFillVacancy,
   buyoutFor,
   clampOffer,
   entryOf,
@@ -27,6 +28,10 @@ import {
   ineligibility,
   marketOpen,
 } from './market.ts';
+import { monthlyFinance } from './economy.ts';
+import { playerRoundToday, runQualifyingDay, runRaceDay, type ReplayData } from './weekend.ts';
+import { addNews } from './news.ts';
+import { seasonFinished, startNextSeason } from './season.ts';
 
 export interface NewCareerOptions {
   seed: string;
@@ -45,6 +50,8 @@ export class GameEngine {
   private streams: RngStreams;
   /** Incrementato a ogni modifica: l'interfaccia lo usa per sapere quando rileggere i dati. */
   version = 0;
+  /** Dati per rivedere l'ultima gara del giocatore (solo in memoria, non salvati). */
+  lastReplay: ReplayData | null = null;
 
   private constructor(state: GameState) {
     this.stateValue = state;
@@ -76,10 +83,20 @@ export class GameEngine {
 
   /** Comandi eseguibili ora: l'interfaccia mostra attivi solo questi (niente pulsanti finti). */
   availableCommands(): CommandType[] {
-    if (this.stateValue.meta.playerTeamId === null) return ['SetPlayerTeam', 'CreateTeam'];
-    const out: CommandType[] = ['AdvanceDays'];
-    if (this.nextRound()) out.push('ContinueToNextEvent');
-    if (marketOpen(this.stateValue)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
+    const s = this.stateValue;
+    if (s.meta.playerTeamId === null) return ['SetPlayerTeam', 'CreateTeam'];
+    const out: CommandType[] = [];
+    const today = playerRoundToday(s);
+    if (today && today.status !== 'raced') {
+      if (!today.status) out.push('RunQualifying');
+      out.push('RunRace');
+    } else if (seasonFinished(s)) {
+      out.push('StartNextSeason');
+    } else {
+      out.push('AdvanceDays');
+      if (this.nextRound()) out.push('ContinueToNextEvent');
+    }
+    if (marketOpen(s)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
     return out;
   }
 
@@ -156,12 +173,15 @@ export class GameEngine {
       }
       case 'AdvanceDays':
         if (s.meta.playerTeamId === null) return err('Scegli prima una squadra');
+        if (this.raceDue()) return err('Prima corri il Gran Premio di oggi');
+        if (seasonFinished(s)) return err('Stagione finita: inizia la nuova stagione');
         if (!Number.isInteger(cmd.days) || cmd.days < 1 || cmd.days > MAX_ADVANCE_DAYS) {
           return err(`Numero di giorni non valido (1–${MAX_ADVANCE_DAYS})`);
         }
         return ok(true);
       case 'ContinueToNextEvent':
         if (s.meta.playerTeamId === null) return err('Scegli prima una squadra');
+        if (this.raceDue()) return err('Prima corri il Gran Premio di oggi');
         if (!this.nextRound()) return err('Nessun altro evento in calendario per questa stagione');
         return ok(true);
       case 'MakeOffer':
@@ -182,6 +202,23 @@ export class GameEngine {
         return this.openNegotiation(cmd.riderId)
           ? ok(true)
           : err('Nessuna trattativa aperta con questo pilota');
+      case 'RunQualifying': {
+        const r = playerRoundToday(s);
+        if (!r) return err("Oggi non c'è un Gran Premio");
+        return r.status ? err('Qualifiche già disputate') : ok(true);
+      }
+      case 'RunRace': {
+        const r = playerRoundToday(s);
+        if (!r) return err("Oggi non c'è un Gran Premio");
+        if (r.status === 'raced') return err('Gara già disputata');
+        for (const st of Object.values(cmd.strategies)) {
+          if (!['soft', 'medium', 'hard'].includes(st.compound)) return err('Mescola non valida');
+          if (!['conservative', 'normal', 'attack'].includes(st.mode)) return err('Ritmo non valido');
+        }
+        return ok(true);
+      }
+      case 'StartNextSeason':
+        return seasonFinished(s) ? ok(true) : err('La stagione non è ancora finita');
     }
   }
 
@@ -220,7 +257,51 @@ export class GameEngine {
       case 'WithdrawNegotiation':
         this.openNegotiation(cmd.riderId)!.status = 'withdrawn';
         return;
+      case 'RunQualifying':
+        runQualifyingDay(s, this.ids);
+        this.events.emit('QualifyingDone', s.meta.currentDay, { roundId: playerRoundToday(s)!.id });
+        return;
+      case 'RunRace': {
+        const round = playerRoundToday(s)!;
+        this.lastReplay = runRaceDay(s, this.ids, this.streams.get('race-ai'), cmd.strategies);
+        this.events.emit('RaceDone', s.meta.currentDay, { roundId: round.id, summary: '' });
+        return;
+      }
+      case 'StartNextSeason': {
+        const year = startNextSeason(s, this.ids, this.streams.get('season'));
+        this.events.emit('SeasonStarted', s.meta.currentDay, { year });
+        return;
+      }
     }
+  }
+
+  /**
+   * Rete di sicurezza: se al via di un GP la squadra del giocatore ha un posto vuoto, il direttore sportivo
+   * ingaggia il miglior pilota libero che il budget consente (contratto fino a fine anno).
+   */
+  private fillEmptySeats(): void {
+    const s = this.stateValue;
+    const teamId = s.meta.playerTeamId;
+    const entry = teamId ? rows(s, 'teamEntries').find((e) => e.teamId === teamId) : undefined;
+    if (!entry) return;
+    for (const seat of entry.seats) {
+      if (seat.riderId !== null) continue;
+      const id = aiFillVacancy(s, entry.teamId, this.ids, this.streams.get('market-ai'));
+      if (!id) continue;
+      const r = s.tables.riders[id]!;
+      addNews(s, this.ids, {
+        day: s.meta.currentDay,
+        tag: 'mercato',
+        mine: true,
+        title: `Posto vuoto: arriva ${r.firstName} ${r.lastName}`,
+        body: 'La moto era senza pilota: il direttore sportivo ha ingaggiato il miglior pilota libero disponibile.',
+      });
+    }
+  }
+
+  private raceDue(): boolean {
+    const r = playerRoundToday(this.stateValue);
+    return !!r && r.status !== 'raced';
   }
 
   private handleOffer(riderId: string, offer: ContractOffer): void {
@@ -288,8 +369,11 @@ export class GameEngine {
     const s = this.stateValue;
     const from = s.meta.currentDay;
     const rounds = this.playerRounds();
+    let reached = target;
     for (let day = from + 1; day <= target; day++) {
       s.meta.currentDay = day;
+      monthlyFinance(s, this.ids);
+      if (rounds.some((r) => r.startDay === day)) reached = day;
       for (const r of rounds) {
         if (r.startDay === day) {
           const season = s.tables.seasons[r.seasonId]!;
@@ -301,11 +385,16 @@ export class GameEngine {
           });
         }
       }
+      if (reached === day) {
+        this.fillEmptySeats();
+        break; // ci si ferma al Gran Premio: va corso prima di proseguire
+      }
     }
+    const to = s.meta.currentDay;
     // Le trattative ancora aperte all'inizio del campionato decadono.
     if (!marketOpen(s))
       for (const n of rows(s, 'negotiations')) if (n.status === 'open') n.status = 'withdrawn';
-    this.events.emit('TimeAdvanced', target, { from, to: target });
+    this.events.emit('TimeAdvanced', to, { from, to });
   }
 
   /** Round della categoria in cui corre la squadra del giocatore, in ordine di data. */

@@ -34,11 +34,15 @@ export default tseslint.config(
   },
   { files: ['packages/core/src/**/*.ts'], rules: boundary([]) },
   { files: ['packages/data/src/**/*.ts'], rules: boundary(['core']) },
-  { files: ['packages/game/src/**/*.ts'], rules: boundary(['core', 'data']) },
+  { files: ['packages/sim/src/**/*.ts'], rules: boundary(['core']) },
+  { files: ['packages/game/src/**/*.ts'], rules: boundary(['core', 'data', 'sim']) },
   { files: ['packages/persistence/src/**/*.ts'], rules: boundary(['core', 'data']) },
-  { files: ['packages/engine-host/src/**/*.ts'], rules: boundary(['core', 'data', 'game', 'persistence']) },
+  {
+    files: ['packages/engine-host/src/**/*.ts'],
+    rules: boundary(['core', 'data', 'sim', 'game', 'persistence']),
+  },
   {
     files: ['apps/client/src/**/*.{ts,tsx}'],
-    rules: boundary(['engine-host', 'game', 'persistence', 'data', 'core']),
+    rules: boundary(['engine-host', 'game', 'sim', 'persistence', 'data', 'core']),
   },
 );

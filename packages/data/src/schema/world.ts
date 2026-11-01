@@ -79,6 +79,8 @@ export interface Round {
   circuitId: CircuitId;
   /** Primo giorno dell'evento (giovedì: conferenza stampa). */
   startDay: GameDay;
+  /** Avanzamento del weekend: assente = non ancora disputato. */
+  status?: 'qualified' | 'raced';
 }
 
 export interface Circuit {
