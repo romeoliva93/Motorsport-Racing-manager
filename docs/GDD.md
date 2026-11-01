@@ -274,3 +274,27 @@ Specifiche: [REGULATIONS.md](REGULATIONS.md) e [INJURIES_AND_TESTERS.md](INJURIE
   capotecnico, ingegnere di pista e moto riassegnati; la squadra che perde un pilota ingaggia il miglior libero idoneo.
 - **Crea la tua squadra**: nome, sigla, nazionalità, sede, colori, categoria, tipologia (privata, indipendente,
   satellite) e costruttore; staff tecnico di partenza e due posti liberi da riempire al mercato.
+
+
+## 19. Moto, upgrade e sponsor con obiettivo (implementato)
+
+**Upgrade.** Sette componenti, livello 0 (di serie) → 3. Il livello *n* costa *n* × costo base della categoria
+(MotoGP 0,9 mln, Moto2 0,18 mln, Moto3 0,07 mln) e si paga subito alla voce "Sviluppo". Ogni livello aggiunge
+alla qualità della moto (scala 0–1): motore 0,020, freni 0,012, telaio 0,012, aerodinamica 0,012,
+sospensioni 0,010 (+5% gestione gomme), elettronica 0,006 (+2,5% affidabilità), scarico 0,006.
+In gara la prestazione è 0,6 × pilota + 0,4 × moto. Sul disegno la moto di serie è nera e ogni componente
+potenziato si accende del suo colore. Le squadre IA comprano un upgrade il 1° del mese con probabilità 35%
+se hanno in cassa almeno 4 volte il costo.
+
+**Sponsor con obiettivo.** Prima del primo GP si sceglie una fra tre offerte; l'obiettivo è la posizione nella
+classifica squadre, calcolata dalla posizione attesa (classifica per reputazione):
+
+| Offerta | Obiettivo | Rata mensile | Premio finale |
+|---|---|---|---|
+| Prudente | attesa + 2 | 15% della rata sponsor base | 1 × rata base |
+| Equilibrata | attesa | 30% | 2,5 × |
+| Ambiziosa | attesa − 2 | 55% | 5 × |
+
+**Caschi.** Ogni scuderia ha un casco con un disegno proprio (motivo grafico e tinta della visiera ricavati dal
+nome) e i colori ufficiali; il numero cambia per pilota. Sostituiscono i monogrammi finché non ci saranno
+fotografie.

@@ -27,6 +27,24 @@ simulazione, design system e mockup di menu principale e dashboard.
 - Restano per la Fase 3: mercato in stagione, offerte delle squadre IA ai piloti del giocatore, contratti
   con clausole avanzate, mercato dello staff.
 
+## Fase 2 — Stato attuale (giocabile)
+Implementato e testato (unit + e2e):
+- **Weekend di gara** per tutte le categorie nello stesso giorno: qualifiche, strategia (gomma e ritmo con
+  consiglio dell'ingegnere), gara simulata con vista 2D dall'alto (pausa, 1×–16×, classifica live, eventi),
+  risultati e punti. Il tempo si ferma al GP finché non si corre.
+- **Classifiche** piloti, squadre, costruttori; elenco gare con vincitori.
+- **Economia**: stipendi, costi di gestione, sponsor mensili, diritti TV, premi per punto, trasferte;
+  schermata Finanze con previsione di fine anno e grafico del saldo.
+- **Moto e upgrade**: 7 componenti a 3 livelli (motore, freni, sospensioni, telaio, aerodinamica, elettronica,
+  scarico) con effetto reale in gara; le squadre IA investono ogni mese.
+- **Sponsor con obiettivo stagionale**: tre offerte (prudente / equilibrata / ambiziosa) prima del primo GP.
+- **Notizie** generate dagli eventi; **fine stagione** con campioni, contratti in scadenza, nuova stagione
+  (crescita/declino, ritiri, nuovi rookie, squadre IA che riempiono i posti).
+- **Nuova grafica**: sfondo animato, caschi per scuderia, moto illustrata, spiegazioni per chi non è esperto.
+
+Ancora da fare in Fase 2: prove libere e assetto con briefing (M2.5b), infortuni in gara, Moto A/B,
+bilanciamento fine (`tools/balance`), autosalvataggio.
+
 ## Fase 2 — Prima stagione giocabile (v0.1)
 
 | Milestone | Contenuto |

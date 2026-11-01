@@ -1,10 +1,19 @@
+import { Helmet } from '../../design-system/Helmet.tsx';
 import { useState } from 'react';
 import { formatMoney } from '@lean-angle/core';
 import { useQuery } from '../../engine/hooks.ts';
-import { Bar, Card, Monogram, Row, ratingTone } from '../../design-system/components.tsx';
+import { Bar, Card, Row, ratingTone } from '../../design-system/components.tsx';
 import { RIDER_ATTR, RIDER_ROLE, country } from '../../i18n/it.ts';
 
-export function RidersScreen({ teamId, colors }: { teamId: string; colors: { primary: string } }) {
+export function RidersScreen({
+  teamId,
+  teamName,
+  colors,
+}: {
+  teamId: string;
+  teamName: string;
+  colors: { primary: string; secondary: string };
+}) {
   const q = useQuery('teamRiders', teamId as `tem_${string}`);
   const [selected, setSelected] = useState<string | null>(null);
   if (q.status !== 'ready') return <div className="loading">Caricamento…</div>;
@@ -47,12 +56,20 @@ export function RidersScreen({ teamId, colors }: { teamId: string; colors: { pri
           </tbody>
         </table>
       </Card>
-      {current && <RiderDetailPanel riderId={current} color={colors.primary} />}
+      {current && <RiderDetailPanel riderId={current} teamName={teamName} colors={colors} />}
     </div>
   );
 }
 
-function RiderDetailPanel({ riderId, color }: { riderId: string; color: string }) {
+function RiderDetailPanel({
+  riderId,
+  teamName,
+  colors,
+}: {
+  riderId: string;
+  teamName: string;
+  colors: { primary: string; secondary: string };
+}) {
   const q = useQuery('riderDetail', riderId);
   if (q.status !== 'ready' || !q.data) return <div className="loading">Caricamento…</div>;
   const r = q.data;
@@ -60,8 +77,7 @@ function RiderDetailPanel({ riderId, color }: { riderId: string; color: string }
     <div className="detail">
       <Card>
         <div className="hero">
-          <Monogram name={r.name} color={color} size={4.4} />
-          {r.number !== null && <span className="num">{r.number}</span>}
+          <Helmet team={teamName} colors={colors} number={r.number} size={7} />
           <div>
             <div className="nm">{r.name}</div>
             <div className="muted" style={{ fontSize: '.8rem', marginTop: '.3rem' }}>

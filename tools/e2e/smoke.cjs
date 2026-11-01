@@ -81,6 +81,23 @@ async function waitForServer(url, ms = 20000) {
       step(`schermata ${label}`);
     }
 
+    await page.locator('.nav').getByRole('button', { name: 'Sponsor' }).click();
+    await page.locator('.offers .btn.primary').waitFor();
+    await shot('16-sponsor');
+    await page.locator('.offers .btn.primary').click();
+    await page.getByText('Sponsor della stagione').waitFor();
+    step('sponsor con obiettivo firmato');
+
+    await page.locator('.nav').getByRole('button', { name: 'Moto e upgrade' }).click();
+    await page
+      .getByRole('button', { name: /Potenzia al livello 1/ })
+      .first()
+      .click();
+    await page.getByText(/potenziato al livello 1/).waitFor();
+    await page.getByText('liv. 1').first().waitFor();
+    await shot('17-moto');
+    step('upgrade della moto');
+
     await page.locator('.nav').getByRole('button', { name: 'Mercato piloti' }).click();
     await page.getByText('Contratto attuale').waitFor();
     await page.locator('.mk-table tbody tr', { hasText: 'Team Meridian' }).first().click();

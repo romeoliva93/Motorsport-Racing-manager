@@ -1,10 +1,11 @@
+import { Helmet } from '../design-system/Helmet.tsx';
 import { useEffect, useMemo, useState } from 'react';
 import type { CategoryTab, CreateTeamOptionsView, TeamCard } from '@lean-angle/game';
 import type { ManufacturerId } from '@lean-angle/data';
 import { engine } from '../engine/engine.ts';
 import { useQuery } from '../engine/hooks.ts';
 import type { AppScreen } from '../App.tsx';
-import { Card, Money, Monogram, Row, TeamBadge, ratingTone } from '../design-system/components.tsx';
+import { Card, Money, Row, TeamBadge, ratingTone } from '../design-system/components.tsx';
 import { TEAM_TYPE, country } from '../i18n/it.ts';
 import './newCareer.css';
 
@@ -271,7 +272,7 @@ function SelectedTeam({
       <Card title="Piloti">
         {team.riders.map((r) => (
           <div key={r.id} className="row" style={{ justifyContent: 'flex-start', gap: '.7rem' }}>
-            <Monogram name={r.name} color={team.colors.primary} size={2.2} />
+            <Helmet team={team.name} colors={team.colors} number={r.number} size={3.2} />
             <span style={{ flex: 1 }}>
               <b>
                 #{r.number} {r.name}

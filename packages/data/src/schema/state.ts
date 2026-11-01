@@ -1,3 +1,4 @@
+import type { PartKey, SponsorDeal } from './upgrades.ts';
 import type { GameDay, RngState } from '@lean-angle/core';
 import type { Category, Circuit, Federation, Regulation, Round, Season } from './world.ts';
 import type { Injury, Rider, RiderStaffBond, StaffMember } from './people.ts';
@@ -9,7 +10,7 @@ import type { Negotiation } from './market.ts';
 import type { NewsItem, SessionResult } from './results.ts';
 
 /** Versione dello schema dei salvataggi: va incrementata a ogni modifica incompatibile (con migrazione). */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export type Table<T extends { id: string }> = Record<T['id'], T>;
 
@@ -51,11 +52,14 @@ export interface GameState {
     negotiations: Table<Negotiation>;
     sessionResults: Table<SessionResult>;
     news: Table<NewsItem>;
+    sponsorDeals: Table<SponsorDeal>;
   };
   /** Relazioni senza ID proprio. */
   staffAssignments: StaffAssignment[];
   bonds: RiderStaffBond[];
   accounts: FinanceAccount[];
+  /** Livello degli upgrade montati sulle moto di ogni squadra. */
+  upgrades: Record<string, Partial<Record<PartKey, number>>>;
 }
 
 export type TableName = keyof GameState['tables'];
@@ -88,9 +92,11 @@ export function createEmptyGameState(meta: GameMeta): GameState {
       negotiations: {},
       sessionResults: {},
       news: {},
+      sponsorDeals: {},
     },
     staffAssignments: [],
     bonds: [],
     accounts: [],
+    upgrades: {},
   };
 }

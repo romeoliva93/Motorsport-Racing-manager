@@ -2,12 +2,22 @@
  * Motore di gioco puro (nessuna dipendenza da browser o UI). Esegue i comandi sullo stato e
  * registra gli eventi di dominio. Il pacchetto engine-host lo fa girare in un Web Worker.
  */
-import { EventLog, IdFactory, RngStreams, err, ok, type DomainEvent, type Result } from '@lean-angle/core';
+import {
+  EventLog,
+  GameCalendar,
+  IdFactory,
+  RngStreams,
+  err,
+  ok,
+  type DomainEvent,
+  type Result,
+} from '@lean-angle/core';
 import {
   createCustomTeam,
   generateWorld,
   rows,
   teamBalance,
+  PART_KEYS,
   validateCustomTeam,
   type ContractOffer,
   type GameState,
@@ -31,6 +41,8 @@ import {
 import { monthlyFinance } from './economy.ts';
 import { playerRoundToday, runQualifyingDay, runRaceDay, type ReplayData } from './weekend.ts';
 import { addNews } from './news.ts';
+import { aiUpgrades, buyUpgrade, upgradeCost } from './upgrades.ts';
+import { dealWindowOpen, signDeal } from './sponsors.ts';
 import { seasonFinished, startNextSeason } from './season.ts';
 
 export interface NewCareerOptions {
@@ -97,6 +109,8 @@ export class GameEngine {
       if (this.nextRound()) out.push('ContinueToNextEvent');
     }
     if (marketOpen(s)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
+    out.push('BuyUpgrade');
+    if (dealWindowOpen(s)) out.push('SignSponsorDeal');
     return out;
   }
 
@@ -219,6 +233,20 @@ export class GameEngine {
       }
       case 'StartNextSeason':
         return seasonFinished(s) ? ok(true) : err('La stagione non è ancora finita');
+      case 'BuyUpgrade': {
+        const teamId = s.meta.playerTeamId;
+        if (!teamId) return err('Scegli prima una squadra');
+        if (!PART_KEYS.includes(cmd.part)) return err('Componente sconosciuto');
+        const cost = upgradeCost(s, teamId, cmd.part);
+        if (cost === null) return err('Componente già al livello massimo');
+        if (cost > teamBalance(s, teamId)) return err('Soldi insufficienti per questo upgrade');
+        return ok(true);
+      }
+      case 'SignSponsorDeal':
+        if (!['safe', 'balanced', 'ambitious'].includes(cmd.risk)) return err('Offerta non valida');
+        return dealWindowOpen(s)
+          ? ok(true)
+          : err('Lo sponsor si sceglie prima del primo Gran Premio, una volta a stagione');
     }
   }
 
@@ -272,6 +300,17 @@ export class GameEngine {
         this.events.emit('SeasonStarted', s.meta.currentDay, { year });
         return;
       }
+      case 'BuyUpgrade':
+        buyUpgrade(s, this.ids, s.meta.playerTeamId!, cmd.part);
+        this.events.emit('UpgradeBought', s.meta.currentDay, {
+          part: cmd.part,
+          level: s.upgrades[s.meta.playerTeamId!]![cmd.part]!,
+        });
+        return;
+      case 'SignSponsorDeal':
+        signDeal(s, this.ids, cmd.risk);
+        this.events.emit('SponsorSigned', s.meta.currentDay, { risk: cmd.risk });
+        return;
     }
   }
 
@@ -373,6 +412,8 @@ export class GameEngine {
     for (let day = from + 1; day <= target; day++) {
       s.meta.currentDay = day;
       monthlyFinance(s, this.ids);
+      if (new GameCalendar(s.meta.startYear).toDate(day).day === 1)
+        aiUpgrades(s, this.ids, this.streams.get('ai-upgrades'));
       if (rounds.some((r) => r.startDay === day)) reached = day;
       for (const r of rounds) {
         if (r.startDay === day) {

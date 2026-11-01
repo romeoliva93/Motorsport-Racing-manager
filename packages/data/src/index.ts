@@ -6,6 +6,7 @@ export * from './schema/contracts.ts';
 export * from './schema/finance.ts';
 export * from './schema/market.ts';
 export * from './schema/results.ts';
+export * from './schema/upgrades.ts';
 export * from './schema/state.ts';
 export * from './tables.ts';
 export * from './validate.ts';
@@ -23,6 +24,10 @@ export {
   SPONSOR_MONTHLY,
   PRIZE_PER_POINT,
   RACE_FEE,
+  PARTS,
+  UPGRADE_BASE_COST,
+  SPONSOR_DEAL_RISK,
+  SPONSORS,
   TRAVEL_COST,
   RUNNING_COST_MONTHLY,
   STAFF_NATIONALITY_WEIGHTS,

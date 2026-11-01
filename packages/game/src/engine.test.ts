@@ -29,6 +29,8 @@ describe('GameEngine', () => {
       'MakeOffer',
       'AcceptCounter',
       'WithdrawNegotiation',
+      'BuyUpgrade',
+      'SignSponsorDeal',
     ]);
   });
 

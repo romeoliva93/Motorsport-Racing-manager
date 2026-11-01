@@ -13,6 +13,8 @@ import { WeekendScreen } from '../screens/game/Weekend.tsx';
 import { ChampionshipScreen } from '../screens/game/Championship.tsx';
 import { FinanceScreen } from '../screens/game/Finance.tsx';
 import { NewsScreen } from '../screens/game/News.tsx';
+import { BikeScreen } from '../screens/game/BikeScreen.tsx';
+import { SponsorsScreen } from '../screens/game/Sponsors.tsx';
 
 export type Section =
   | 'overview'
@@ -24,7 +26,9 @@ export type Section =
   | 'finance'
   | 'calendar'
   | 'championship'
-  | 'news';
+  | 'news'
+  | 'bike'
+  | 'sponsors';
 
 const I = (d: string) => (
   <svg
@@ -50,6 +54,8 @@ const ICON: Record<Section, ReactNode> = {
   calendar: I('M4 6h16v15H4zM4 10h16M8 3v4M16 3v4'),
   championship: I('M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4'),
   news: I('M4 5h13v14H6a2 2 0 0 1-2-2zM17 9h3v8a2 2 0 0 1-2 2M8 9h5M8 13h5'),
+  bike: I('M5 17a3 3 0 1 0 0-.01M19 17a3 3 0 1 0 0-.01M5 17l4-7h5l3 7M9 10l-1-3h3M14 10l2-3h3'),
+  sponsors: I('M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z'),
 };
 
 /** Voci attive (collegate a dati reali). */
@@ -59,6 +65,7 @@ const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
     items: [
       { id: 'overview', label: 'Home' },
       { id: 'riders', label: 'Piloti' },
+      { id: 'bike', label: 'Moto e upgrade' },
       { id: 'staff', label: 'Personale tecnico' },
       { id: 'team', label: 'Scuderia' },
     ],
@@ -75,6 +82,7 @@ const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
     group: 'Affari',
     items: [
       { id: 'market', label: 'Mercato piloti' },
+      { id: 'sponsors', label: 'Sponsor' },
       { id: 'finance', label: 'Finanze' },
       { id: 'news', label: 'Notizie' },
     ],
@@ -199,6 +207,9 @@ export function Shell({
                   {ICON[i.id]}
                   {i.label}
                   {i.id === 'weekend' && (raceDay || seasonOver) && <span className="badge">!</span>}
+                  {i.id === 'sponsors' && commands.includes('SignSponsorDeal') && (
+                    <span className="badge">!</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -253,7 +264,7 @@ export function Shell({
         ) : section === 'team' ? (
           <TeamScreen teamId={team.id} />
         ) : section === 'riders' ? (
-          <RidersScreen teamId={team.id} colors={team.colors} />
+          <RidersScreen teamId={team.id} teamName={team.name} colors={team.colors} />
         ) : section === 'staff' ? (
           <StaffScreen teamId={team.id} colors={team.colors} />
         ) : section === 'market' ? (
@@ -266,6 +277,10 @@ export function Shell({
           <FinanceScreen />
         ) : section === 'news' ? (
           <NewsScreen />
+        ) : section === 'bike' ? (
+          <BikeScreen notify={notify} />
+        ) : section === 'sponsors' ? (
+          <SponsorsScreen notify={notify} />
         ) : null}
       </main>
       {toast && (

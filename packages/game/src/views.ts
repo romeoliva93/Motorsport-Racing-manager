@@ -7,8 +7,12 @@ import {
   RACE_FEE,
   TRAVEL_COST,
   PRIZE_PER_POINT,
+  MAX_PART_LEVEL,
+  PARTS,
+  SPONSOR_DEAL_RISK,
   rows,
   teamBalance,
+  type PartKey,
   type GameState,
   type NewsItem,
   type Round,
@@ -17,6 +21,14 @@ import {
   type TransactionCategory,
 } from '@lean-angle/data';
 import { payrollMonthly, runningCostMonthly, sponsorMonthly } from './economy.ts';
+import { partLevel, upgradeBonus, upgradeCost } from './upgrades.ts';
+import {
+  currentDeal,
+  dealWindowOpen,
+  expectedPosition,
+  sponsorOffers,
+  type SponsorOffer,
+} from './sponsors.ts';
 import { RACE_FORMAT, standings, trackFor, type StandingsView, type Strategy } from './weekend.ts';
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
@@ -414,5 +426,111 @@ export function seasonReview(s: GameState): SeasonReview | null {
         ? { position: ti + 1, of: st.teams.length, points: st.teams[ti]!.points, wins: st.teams[ti]!.wins }
         : null,
     myRiders,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+export interface BikeView {
+  team: string;
+  colors: { primary: string; secondary: string };
+  numbers: number[];
+  balance: number;
+  manufacturer: string;
+  /** Qualità della moto 0–100 con gli upgrade montati, e media delle avversarie di categoria. */
+  rating: number;
+  rivalsAvg: number;
+  parts: {
+    key: PartKey;
+    name: string;
+    what: string;
+    effect: string;
+    color: string;
+    level: number;
+    max: number;
+    nextCost: number | null;
+    affordable: boolean;
+  }[];
+}
+
+export function bikeView(s: GameState): BikeView | null {
+  const entry = playerEntry(s);
+  if (!entry) return null;
+  const team = s.tables.teams[entry.teamId]!;
+  const balance = teamBalance(s, entry.teamId);
+  const rating = (teamId: string) => {
+    const e = rows(s, 'teamEntries').find((x) => x.teamId === teamId)!;
+    const m = s.tables.manufacturers[e.manufacturerId]!;
+    return Math.round(m.engineeringStrength + upgradeBonus(s, teamId).bike * 100);
+  };
+  const rivals = rows(s, 'teamEntries').filter(
+    (e) => e.seasonId === entry.seasonId && e.teamId !== entry.teamId,
+  );
+  return {
+    team: team.name,
+    colors: team.colors,
+    numbers: entry.seats.map((x) => x.number),
+    balance,
+    manufacturer: s.tables.manufacturers[entry.manufacturerId]!.name,
+    rating: rating(entry.teamId),
+    rivalsAvg: Math.round(rivals.reduce((t, e) => t + rating(e.teamId), 0) / Math.max(1, rivals.length)),
+    parts: PARTS.map((p) => {
+      const cost = upgradeCost(s, entry.teamId, p.key);
+      return {
+        key: p.key,
+        name: p.name,
+        what: p.what,
+        effect: p.effect,
+        color: p.color,
+        level: partLevel(s, entry.teamId, p.key),
+        max: MAX_PART_LEVEL,
+        nextCost: cost,
+        affordable: cost !== null && cost <= balance,
+      };
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+export interface SponsorView {
+  windowOpen: boolean;
+  offers: SponsorOffer[];
+  baseMonthly: number;
+  expected: { position: number; of: number };
+  deal: {
+    sponsorName: string;
+    risk: string;
+    label: string;
+    targetPosition: number;
+    monthly: number;
+    bonus: number;
+    status: 'active' | 'met' | 'missed';
+    /** Posizione attuale della squadra nella classifica squadre (null prima della prima gara). */
+    currentPosition: number | null;
+  } | null;
+}
+
+export function sponsorView(s: GameState): SponsorView | null {
+  const entry = playerEntry(s);
+  if (!entry) return null;
+  const d = currentDeal(s);
+  const st = standings(s, entry.seasonId);
+  const idx = st.teams.findIndex((t) => t.teamId === entry.teamId);
+  return {
+    windowOpen: dealWindowOpen(s),
+    offers: sponsorOffers(s),
+    baseMonthly: sponsorMonthly(s, entry.teamId),
+    expected: expectedPosition(s, entry.teamId),
+    deal: d
+      ? {
+          sponsorName: d.sponsorName,
+          risk: d.risk,
+          label: SPONSOR_DEAL_RISK[d.risk].label,
+          targetPosition: d.targetPosition,
+          monthly: d.monthly,
+          bonus: d.bonus,
+          status: d.status,
+          currentPosition: st.racesDone > 0 && idx >= 0 ? idx + 1 : null,
+        }
+      : null,
   };
 }

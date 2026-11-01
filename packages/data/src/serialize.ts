@@ -21,6 +21,15 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       tables: { ...tables, sessionResults: tables.sessionResults ?? {}, news: tables.news ?? {} },
     };
   },
+  /** v3 → v4: upgrade dei componenti e sponsor con obiettivo stagionale. */
+  3: (s) => {
+    const tables = (s.tables ?? {}) as Record<string, unknown>;
+    return {
+      ...s,
+      upgrades: s.upgrades ?? {},
+      tables: { ...tables, sponsorDeals: tables.sponsorDeals ?? {} },
+    };
+  },
 };
 
 export class SaveFormatError extends Error {}

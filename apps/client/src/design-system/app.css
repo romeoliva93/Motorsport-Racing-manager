@@ -805,3 +805,60 @@ table.std tbody tr.mine td:first-child {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* --- Moto e sponsor -------------------------------------------------------- */
+.bike-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.bike-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-size: 0.85rem;
+}
+.bike-legend i,
+.part-head > i {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  margin-right: 0.35rem;
+}
+.part-head {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 1.05rem;
+}
+.pips {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 0.25rem;
+}
+.pips span {
+  width: 1.3rem;
+  height: 0.45rem;
+  border-radius: 999px;
+}
+.part-card p {
+  margin: 0.5rem 0 0.4rem;
+  font-size: 0.9rem;
+  min-height: 2.6em;
+}
+.offers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+.deal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2.4rem;
+  align-items: flex-end;
+}
+.deal b {
+  font-size: 1.15rem;
+}

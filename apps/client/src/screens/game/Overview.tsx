@@ -1,9 +1,10 @@
+import { Helmet } from '../../design-system/Helmet.tsx';
 import { formatMoney } from '@lean-angle/core';
 import { useQuery } from '../../engine/hooks.ts';
-import { Card, Explain, Help, Monogram, Pos, ratingTone } from '../../design-system/components.tsx';
+import { Card, Explain, Help, Pos, ratingTone } from '../../design-system/components.tsx';
 import { country } from '../../i18n/it.ts';
 import type { Section } from '../../shell/Shell.tsx';
-import { TrackMap } from './Weekend.tsx';
+import { Bike } from '../../design-system/Bike.tsx';
 
 type Next = { label: string; hint: string; action: () => void } | null;
 
@@ -14,12 +15,16 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
   const ch = useQuery('championship');
   const fin = useQuery('financeView');
   const news = useQuery('newsFeed', 'all', 5);
+  const bq = useQuery('bikeView');
+  const sq = useQuery('sponsorView');
   if (sum.status !== 'ready') return <div className="loading">Caricamento…</div>;
   const s = sum.data;
   const team = s.team!;
   const w = wk.status === 'ready' ? wk.data : null;
   const c = ch.status === 'ready' ? ch.data : null;
   const f = fin.status === 'ready' ? fin.data : null;
+  const bike = bq.status === 'ready' ? bq.data : null;
+  const sp = sq.status === 'ready' ? sq.data : null;
   const firstTime = s.roundsDone === 0;
   const empty = 2 - team.riders.length;
 
@@ -98,22 +103,46 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
         }
         className="s8"
       >
-        <RiderCards teamId={team.id} color={team.colors.primary} standings={c} />
+        <RiderCards teamId={team.id} teamName={team.name} colors={team.colors} standings={c} />
       </Card>
 
-      <Card title="Prossima pista" className="s4">
-        {w?.round && w.track ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.5rem' }}>
-            <TrackMap points={w.track} size={13} />
-            <b>{w.round.circuit}</b>
+      <Card
+        title="La tua moto"
+        aside={
+          <button className="btn ghost" onClick={() => go('bike')}>
+            Upgrade
+          </button>
+        }
+        className="s4"
+      >
+        {bike ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.4rem' }}>
+            <Bike
+              team={bike.team}
+              colors={bike.colors}
+              number={bike.numbers[0] ?? null}
+              levels={Object.fromEntries(bike.parts.map((p) => [p.key, p.level]))}
+              partColors={Object.fromEntries(bike.parts.map((p) => [p.key, p.color]))}
+              width={19}
+            />
             <span className="muted">
-              {w.round.laps} giri · {w.round.lengthKm.toFixed(2).replace('.', ',')} km · {w.round.turns} curve
+              Qualità {bike.rating} · media avversarie {bike.rivalsAvg}
             </span>
           </div>
-        ) : (
-          <p className="muted">Nessuna gara in programma.</p>
-        )}
+        ) : null}
       </Card>
+
+      {sp?.windowOpen && (
+        <div className="nextstep s12" style={{ marginBottom: 0 }}>
+          <div className="what">
+            <small>Prima del primo Gran Premio</small>
+            <b>Scegli lo sponsor della stagione: più soldi in cambio di un obiettivo</b>
+          </div>
+          <button className="btn primary" onClick={() => go('sponsors')}>
+            Vedi le offerte ▸
+          </button>
+        </div>
+      )}
 
       <Card
         title="Classifica"
@@ -219,11 +248,13 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
 
 function RiderCards({
   teamId,
-  color,
+  teamName,
+  colors,
   standings,
 }: {
   teamId: string;
-  color: string;
+  teamName: string;
+  colors: { primary: string; secondary: string };
   standings: { riders: { riderId: string; points: number }[] } | null;
 }) {
   const q = useQuery('teamRiders', teamId as `tem_${string}`);
@@ -238,7 +269,7 @@ function RiderCards({
           <div key={r.id} className="tile rider-tile">
             <span className="ghost-num">{r.number}</span>
             <div style={{ display: 'flex', gap: '.8rem', alignItems: 'center' }}>
-              <Monogram name={r.name} color={color} size={3.2} />
+              <Helmet team={teamName} colors={colors} number={r.number} size={5.2} />
               <div>
                 <div className="display" style={{ fontSize: '1.2rem' }}>
                   {r.name}

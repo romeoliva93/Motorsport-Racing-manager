@@ -1,10 +1,11 @@
+import { Helmet } from '../../design-system/Helmet.tsx';
 import { useEffect, useState } from 'react';
 import { formatMoney } from '@lean-angle/core';
 import type { MarketFilter, NegotiationView } from '@lean-angle/game';
 import type { RiderId } from '@lean-angle/data';
 import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
-import { Card, Money, Monogram, Row, ratingTone } from '../../design-system/components.tsx';
+import { Card, Money, Row, ratingTone } from '../../design-system/components.tsx';
 import { RIDER_ROLE, country } from '../../i18n/it.ts';
 import './market.css';
 
@@ -203,7 +204,12 @@ function NegotiationForm({
     <div className="detail">
       <Card>
         <div className="hero">
-          <Monogram name={r.name} color={r.teamColors?.primary ?? '#5a6170'} size={4} />
+          <Helmet
+            team={r.team ?? ''}
+            colors={r.teamColors ?? { primary: '#6b6e75', secondary: '#3a3c42' }}
+            number={r.number ?? null}
+            size={6}
+          />
           <div>
             <div className="nm">{r.name}</div>
             <div className="muted" style={{ fontSize: '.8rem', marginTop: '.3rem' }}>

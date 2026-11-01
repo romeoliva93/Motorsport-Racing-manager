@@ -22,7 +22,15 @@ import {
   type TeamId,
   type TeamType,
 } from '@lean-angle/data';
-import { championship, financeView, newsFeed, seasonReview, weekendView } from './views.ts';
+import {
+  bikeView,
+  championship,
+  financeView,
+  newsFeed,
+  seasonReview,
+  sponsorView,
+  weekendView,
+} from './views.ts';
 import { activeRiderContract, askingSalary, buyoutFor, ineligibility, marketOpen } from './market.ts';
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
@@ -507,6 +515,8 @@ export interface MarketRow {
   age: number;
   team: string | null;
   teamColors: { primary: string; secondary: string } | null;
+  /** Numero di gara se ha un posto in griglia. */
+  number: number | null;
   category: string | null;
   tier: CategoryTier | null;
   role: RiderRole;
@@ -529,6 +539,9 @@ export function marketRiders(s: GameState, filter: MarketFilter = 'all', search 
   const c = cal(s);
   const teamId = s.meta.playerTeamId;
   const q = search.trim().toLowerCase();
+  const seatNo = new Map<string, number>();
+  for (const e of rows(s, 'teamEntries'))
+    for (const seat of e.seats) if (seat.riderId) seatNo.set(seat.riderId, seat.number);
   return rows(s, 'riders')
     .filter((r) => r.status !== 'retired')
     .map((r) => {
@@ -547,6 +560,7 @@ export function marketRiders(s: GameState, filter: MarketFilter = 'all', search 
         age: c.ageOn(r.birthDay, s.meta.currentDay),
         team: team ? team.name : null,
         teamColors: team ? { primary: team.colors.primary, secondary: team.colors.secondary } : null,
+        number: seatNo.get(r.id) ?? null,
         category: r.categoryId ? s.tables.categories[r.categoryId]!.name : null,
         tier,
         role: r.role,
@@ -705,6 +719,8 @@ export const QUERIES = {
   financeView,
   newsFeed,
   seasonReview,
+  bikeView,
+  sponsorView,
 } as const;
 export type QueryName = keyof typeof QUERIES;
 export type QueryArgs<N extends QueryName> = (typeof QUERIES)[N] extends (

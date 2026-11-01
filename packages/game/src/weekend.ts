@@ -29,6 +29,8 @@ import {
   type RaceRider,
 } from '@lean-angle/sim';
 import { addNews } from './news.ts';
+import { upgradeBonus } from './upgrades.ts';
+import { settleDeals } from './sponsors.ts';
 
 export interface Strategy {
   compound: Compound;
@@ -90,7 +92,11 @@ function bikeOf(
   const satellitePenalty =
     team.type === 'factory' ? 0 : team.type === 'satellite' ? 1.5 : team.type === 'independent' ? 2.5 : 3.5;
   const score = m.engineeringStrength + (avg - 3) * 1.5 - satellitePenalty;
-  return { bike: Math.min(1, score / 100), reliability: Math.min(0.99, (m.engineeringStrength + 8) / 100) };
+  const up = upgradeBonus(s, teamId);
+  return {
+    bike: Math.min(1, score / 100 + up.bike),
+    reliability: Math.min(0.995, (m.engineeringStrength + 8) / 100 + up.reliability),
+  };
 }
 
 interface Entrant {
@@ -131,7 +137,7 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy): RaceRider {
     consistency: unit(a.consistency),
     concentration: unit(a.concentration),
     aggression: unit(a.aggression),
-    tyreManagement: unit(a.tyreManagement),
+    tyreManagement: Math.min(1, unit(a.tyreManagement) + upgradeBonus(s, e.teamId).tyreCare),
     bike,
     reliability,
     compound: strat.compound,
@@ -357,6 +363,12 @@ export function runRaceDay(
     const last = Math.max(...season.roundIds.map((rid) => s.tables.rounds[rid]!.startDay));
     if (round.startDay === last) {
       season.status = 'finished';
+      settleDeals(
+        s,
+        ids,
+        season.id,
+        standings(s, season.id).teams.map((t) => t.teamId),
+      );
       const champ = standings(s, season.id).riders[0];
       if (champ) {
         const r = s.tables.riders[champ.riderId as RiderId]!;

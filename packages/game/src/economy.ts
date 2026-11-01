@@ -4,6 +4,7 @@
  * Premi e diritti commerciali si incassano dopo ogni gara (weekend.ts).
  */
 import { GameCalendar, type IdFactory } from '@lean-angle/core';
+import { dealMonthly } from './sponsors.ts';
 import { RUNNING_COST_MONTHLY, SPONSOR_MONTHLY, rows, type GameState, type TeamId } from '@lean-angle/data';
 
 export function sponsorMonthly(s: GameState, teamId: TeamId): number {
@@ -36,6 +37,7 @@ export function monthlyFinance(s: GameState, ids: IdFactory): void {
     for (const [amount, category, note] of [
       [-pay, 'salaries', 'Stipendi di piloti e staff'],
       [spon, 'sponsor', 'Rata mensile degli sponsor'],
+      [dealMonthly(s, acc.teamId), 'sponsor', 'Rata dello sponsor con obiettivo'],
       [-runningCostMonthly(s, acc.teamId), 'facilities', 'Costi di gestione (sede, officina, ricambi)'],
     ] as const) {
       if (amount === 0) continue;

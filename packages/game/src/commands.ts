@@ -1,3 +1,4 @@
+import type { PartKey, SponsorRisk } from '@lean-angle/data';
 /**
  * Comandi: l'unico modo per modificare lo stato (ARCHITECTURE.md §3.2). Giocatore e IA usano gli stessi.
  * Ogni comando viene validato prima di essere applicato; un comando non valido non modifica nulla.
@@ -30,7 +31,11 @@ export type Command =
       >;
     }
   /** Chiude la stagione conclusa e apre la successiva. */
-  | { type: 'StartNextSeason' };
+  | { type: 'StartNextSeason' }
+  /** Compra il livello successivo di un componente della moto. */
+  | { type: 'BuyUpgrade'; part: PartKey }
+  /** Firma l'offerta dello sponsor con obiettivo stagionale. */
+  | { type: 'SignSponsorDeal'; risk: SponsorRisk };
 
 export type CommandType = Command['type'];
 
@@ -52,4 +57,6 @@ export type GameEvents = {
   QualifyingDone: { roundId: string };
   RaceDone: { roundId: string; summary: string };
   SeasonStarted: { year: number };
+  UpgradeBought: { part: string; level: number };
+  SponsorSigned: { risk: string };
 };
