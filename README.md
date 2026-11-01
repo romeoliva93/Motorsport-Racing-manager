@@ -28,6 +28,8 @@ gioco è ancora implementato**.
 | [docs/UI_DESIGN.md](docs/UI_DESIGN.md) | Proposta grafica, menu principale, dashboard |
 | [docs/adr/](docs/adr) | Decisioni tecniche (Architecture Decision Records) |
 | [docs/mockups/](docs/mockups) | Mockup HTML statici (dati illustrativi) |
+| [docs/report/](docs/report) | Report completo scaricabile (PDF e Markdown) |
+| [docs/images/collage-tutti-i-mockup.jpg](docs/images/collage-tutti-i-mockup.jpg) | Tutti i mockup in un’unica immagine |
 
 ## Tecnologia proposta
 
