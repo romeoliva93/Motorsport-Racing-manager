@@ -44,7 +44,6 @@ npm run worldgen:report -- <seme>   # riepilogo del mondo generato da un seme
 |---|---|
 | `packages/core` | `Rng`/`RngStreams` (SFC32 con seme), `IdFactory`, `GameCalendar`, `EventLog`, `Result`, denaro intero, utilità matematiche |
 | `packages/data` | entità (mondo, persone, squadre, moto, contratti, finanze), `GameState` normalizzato, `validateGameState`, serializzazione con migrazioni, contenuti originali (`content/`) e `generateWorld` (`worldgen/`) |
-
 | `packages/game` | `GameEngine` (comandi validati, avanzamento del tempo, eventi) e viste per l'interfaccia con filtro delle informazioni nascoste |
 | `packages/persistence` | formato dei salvataggi, `SaveStore`, archivio in memoria |
 | `packages/engine-host` | protocollo motore ↔ interfaccia, host (Worker) e client con Promise |
