@@ -199,20 +199,22 @@ export function runRace(setup: RaceSetup): RaceOutcome {
           v = vAhead * 0.995;
         }
       }
+      const prev = s.dist;
       s.dist += v * dt;
-      // Traguardo e nuovo giro.
+      // Traguardo e nuovo giro (istante esatto del passaggio, interpolato nel passo).
       const lapNow = Math.floor(s.dist / L);
       if (lapNow > s.lap) {
-        const lt = t + dt - s.lapStart;
+        const tc = t + dt * Math.min(1, Math.max(0, (lapNow * L - prev) / (s.dist - prev || 1)));
+        const lt = tc - s.lapStart;
         if (s.lap > 0) {
           s.best = Math.min(s.best, lt);
           if (lt < fastest.time) fastest = { riderId: s.r.id, time: lt };
         }
         s.lap = lapNow;
-        s.lapStart = t + dt;
+        s.lapStart = tc;
         if (s.lap >= laps || leaderDone) {
           s.finished = true;
-          s.finishTime = t + dt;
+          s.finishTime = tc;
           if (!leaderDone) events.push({ t, lap: s.lap, kind: 'finish', riderId: s.r.id });
           leaderDone = true;
           continue;

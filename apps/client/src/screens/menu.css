@@ -3,9 +3,8 @@
   height: 100%;
   overflow: hidden;
   background:
-    radial-gradient(1200px 700px at 78% 45%, rgba(229, 50, 45, 0.16), transparent 60%),
-    radial-gradient(900px 600px at 95% 100%, rgba(255, 122, 26, 0.1), transparent 60%),
-    linear-gradient(180deg, #0b0c10, #07080a);
+    radial-gradient(1100px 700px at 78% 45%, rgba(106, 168, 255, 0.1), transparent 60%),
+    linear-gradient(180deg, #121316, #0d0e10);
 }
 .menu-grid {
   position: absolute;
@@ -27,7 +26,7 @@
 }
 .menu-track .base {
   fill: none;
-  stroke: #1f2430;
+  stroke: #2a2c31;
   stroke-width: 22;
   stroke-linejoin: round;
 }
@@ -60,82 +59,80 @@
   gap: 2rem;
 }
 .brand .kicker {
-  color: var(--orange);
-  font: 600 0.75rem var(--font-ui);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
+  color: var(--signal);
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 .brand h1 {
-  margin: 0.4rem 0 0;
-  font: 800 5.2rem/0.9 var(--font-display);
-  text-transform: uppercase;
-  font-style: italic;
+  margin: 0.3rem 0 0;
+  font: 900 5.6rem/0.88 var(--font-display);
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
 }
 .brand h1 span {
-  background: var(--accent-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--signal);
 }
 .brand p {
-  margin: 0.6rem 0 0;
+  margin: 0.9rem 0 0;
   color: var(--text-2);
-  font-size: 1rem;
+  font-size: 1.1rem;
+  max-width: 28rem;
 }
 .continue-card {
-  padding: 1rem;
+  padding: 1rem 1.1rem;
   border-radius: var(--r-3);
-  background: rgba(21, 24, 33, 0.75);
+  background: var(--glass);
   border: 1px solid var(--line);
 }
 .continue-card .nm {
-  font: 700 1.1rem var(--font-display);
-  text-transform: uppercase;
+  font: 800 1.15rem var(--font-display);
+  font-stretch: 110%;
 }
 .menu-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 .menu-nav .item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.95rem 1.1rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: none;
+  gap: 1rem;
+  padding: 0.95rem 1.2rem;
+  border-radius: var(--r-2);
+  border: 1px solid var(--line);
+  background: rgba(24, 25, 29, 0.7);
   color: var(--text-1);
-  font: 700 1.35rem var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font: 700 1.2rem var(--font-display);
+  font-stretch: 110%;
   text-align: left;
+  cursor: pointer;
 }
 .menu-nav .item small {
-  font: 500 0.78rem var(--font-ui);
+  font: 500 0.85rem var(--font-ui);
   color: var(--text-3);
-  text-transform: none;
-  letter-spacing: 0;
 }
 .menu-nav .item:hover:not(:disabled) {
-  background: var(--bg-2);
-  border-color: var(--line);
+  background: var(--bg-3);
+  border-color: var(--line-strong);
 }
 .menu-nav .item.primary {
-  background: linear-gradient(90deg, rgba(229, 50, 45, 0.22), rgba(255, 122, 26, 0.06));
-  border-color: rgba(255, 122, 26, 0.45);
-  box-shadow: inset 3px 0 0 var(--orange);
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.menu-nav .item.primary small {
+  color: rgba(23, 21, 12, 0.7);
 }
 .menu-nav .item:disabled {
   color: var(--text-3);
+  cursor: not-allowed;
 }
 .menu-nav .soon,
 .soon {
-  font: 600 0.62rem var(--font-ui);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 3px 6px;
-  border-radius: 3px;
+  font: 600 0.72rem var(--font-ui);
+  padding: 2px 7px;
+  border-radius: 999px;
   border: 1px solid var(--line-strong);
   color: var(--text-3);
 }

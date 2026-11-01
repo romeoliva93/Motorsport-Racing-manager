@@ -60,29 +60,28 @@ async function waitForServer(url, ms = 20000) {
     step('scelta squadra con dati del mondo generato');
 
     await page.getByRole('button', { name: /Inizia la carriera/ }).click();
-    await page.locator('.topbar h2', { hasText: 'Panoramica' }).waitFor();
-    await page.getByText('Anja Kessler').first().waitFor();
+    await page.locator('.topbar h2', { hasText: 'Home' }).waitFor();
+    await page.getByText('Teo Varriale').first().waitFor();
     if (!(await page.locator('.topbar').innerText()).includes('mln'))
       throw new Error('Il saldo non è espresso in milioni');
-    await shot('03-panoramica');
-    step('panoramica con piloti e staff reali');
+    await page.getByText('Come si gioca').waitFor();
+    await shot('03-home');
+    step('home con piloti reali e guida per iniziare');
 
     for (const [label, expect, name] of [
       ['Scuderia', 'Strutture', '04-scuderia'],
       ['Piloti', 'Attributi', '05-piloti'],
-      ['Personale', 'Competenze', '06-personale'],
+      ['Personale tecnico', 'Competenze', '06-personale'],
       ['Calendario', 'Calendario della stagione', '07-calendario'],
+      ['Finanze', 'Soldi in cassa', '10-finanze'],
     ]) {
-      await page.locator('.nav button', { hasText: label }).click();
-      await page.getByText(expect).first().waitFor();
+      await page.locator('.nav').getByRole('button', { name: label, exact: true }).click();
+      await page.locator('.main').getByText(expect).first().waitFor();
       await shot(name);
       step(`schermata ${label}`);
     }
-    if (!(await page.locator('.nav button', { hasText: 'Finanze' }).isDisabled()))
-      throw new Error('Le Finanze dovrebbero essere disabilitate (non sviluppate)');
-    step('voci non sviluppate disabilitate');
 
-    await page.locator('.nav button', { hasText: 'Mercato' }).click();
+    await page.locator('.nav').getByRole('button', { name: 'Mercato piloti' }).click();
     await page.getByText('Contratto attuale').waitFor();
     await page.locator('.mk-table tbody tr', { hasText: 'Team Meridian' }).first().click();
     await page.getByText('Clausola rescissoria').first().waitFor();
@@ -92,34 +91,58 @@ async function waitForServer(url, ms = 20000) {
     await shot('08-mercato');
     step('mercato: ' + (await page.locator('.mk-round').first().innerText()).split('\n').pop());
 
-    const dateBefore = await page.locator('.topbar .kpi', { hasText: 'Data' }).locator('b').innerText();
-    await page.getByRole('button', { name: /Continua/ }).click();
-    await page.getByText(/Arrivati al round 1/).waitFor();
-    await page.waitForFunction(
-      (before) => {
-        const k = [...document.querySelectorAll('.topbar .kpi')].find((e) =>
-          e.textContent.startsWith('Data'),
-        );
-        return k && !k.textContent.includes(before);
-      },
-      dateBefore,
-      { timeout: 5000 },
-    );
-    const dateAfter = await page.locator('.topbar .kpi', { hasText: 'Data' }).locator('b').innerText();
+    // Weekend di gara completo.
+    const today = () => page.locator('.topbar .kpi', { hasText: 'Oggi' }).locator('b').innerText();
+    const dateBefore = await today();
+    await page
+      .locator('.topbar')
+      .getByRole('button', { name: /Vai al Gran Premio/ })
+      .click();
+    await page.getByRole('button', { name: 'Corri le qualifiche' }).waitFor();
+    const dateAfter = await today();
     if (dateAfter === dateBefore) throw new Error('La data non è avanzata');
-    await page.locator('.nav button', { hasText: 'Calendario' }).click();
-    await page.getByText('Raggiunto').first().waitFor();
-    step(`avanzamento del tempo: ${dateBefore} → ${dateAfter}`);
+    step(`avanzamento al Gran Premio: ${dateBefore} → ${dateAfter}`);
+    await page.getByRole('button', { name: 'Corri le qualifiche' }).click();
+    await page.getByText('Griglia di partenza').waitFor();
+    await page.getByText('Consiglio dell’ingegnere').first().waitFor();
+    await page.locator('.choice button', { hasText: 'Dura' }).first().click();
+    await shot('11-strategia');
+    step('qualifiche e strategia');
+    await page.getByRole('button', { name: 'Via alla gara!' }).click();
+    await page.locator('.rv-canvas').waitFor();
+    await page.getByRole('button', { name: '16×' }).click();
+    await page.waitForFunction(
+      () => /Giro [2-9]/.test(document.querySelector('.rv-head')?.textContent ?? ''),
+      null,
+      {
+        timeout: 20000,
+      },
+    );
+    await shot('12-gara');
+    step('gara in 2D: ' + (await page.locator('.rv-head b').innerText()));
+    await page.getByRole('button', { name: 'Salta alla fine' }).click();
+    await page.getByText('Ordine d’arrivo').waitFor();
+    await shot('13-risultati');
+    step('risultati della gara');
+
+    await page.locator('.nav button', { hasText: 'Classifiche' }).click();
+    await page.getByText('Classifica piloti').waitFor();
+    if ((await page.locator('table.std tbody tr').count()) < 10) throw new Error('Classifica vuota');
+    await shot('14-classifiche');
+    await page.locator('.nav button', { hasText: 'Notizie' }).click();
+    await page.getByText(/vince/).first().waitFor();
+    await shot('15-notizie');
+    step('classifiche e notizie aggiornate');
 
     await page.getByRole('button', { name: 'Salva' }).click();
     await page.getByText(/Partita salvata/).waitFor();
-    await page.getByRole('button', { name: 'Menu' }).click();
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
     await page.getByRole('button', { name: /Continua carriera/ }).click();
-    await page.locator('.kpi', { hasText: 'Data' }).getByText(dateAfter).waitFor();
+    await page.locator('.kpi', { hasText: 'Oggi' }).getByText(dateAfter).waitFor();
     step('salvataggio e caricamento dal menu');
 
     // Crea la tua squadra
-    await page.getByRole('button', { name: 'Menu' }).click();
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
     await page.getByRole('button', { name: /Crea la tua squadra/ }).click();
     await page.locator('#team-name').fill('Racing Team Vesuvio');
     await page.locator('#team-city').fill('Napoli');
@@ -143,6 +166,7 @@ async function waitForServer(url, ms = 20000) {
     console.log('E2E OK');
   } catch (e) {
     console.error('E2E FALLITO:', e.message);
+    if (errors.length) console.error('Errori in pagina:\n' + errors.join('\n'));
     if (page) await page.screenshot({ path: path.join(ROOT, 'e2e-failure.png') }).catch(() => {});
     process.exitCode = 1;
   } finally {

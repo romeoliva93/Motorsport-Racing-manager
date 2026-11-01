@@ -1,86 +1,105 @@
-/* Design tokens di LEAN ANGLE (da docs/mockups/tokens.css, approvati in Fase 0). */
+/*
+ * Design tokens di LEAN ANGLE — versione 2 ("muretto box").
+ *
+ * Idea: grafite calda come l'asfalto, testo chiaro leggibile, un solo colore d'azione (il giallo dei
+ * cartelli dei box) e il colore della squadra del giocatore come firma (--team, impostato dalla shell).
+ * Niente sfumature rosso-arancio né maiuscolo spaziato: etichette normali, frasi brevi, numeri grandi.
+ */
 :root {
   /* Superfici */
-  --bg-0: #08090c;
-  --bg-1: #0e1015;
-  --bg-2: #151821;
-  --bg-3: #1c202b;
-  --line: #262b37;
-  --line-strong: #353b4a;
+  --bg-0: #101113;
+  --bg-1: #16171a;
+  --bg-2: #1c1d21;
+  --bg-3: #24262b;
+  --glass: rgba(24, 25, 29, 0.82);
+  --line: #2c2e34;
+  --line-strong: #3c3f47;
 
   /* Testo */
-  --text-1: #eef0f4;
-  --text-2: #a9b0bf;
-  --text-3: #6b7385;
+  --text-1: #f3f1ec;
+  --text-2: #bdb9b0;
+  --text-3: #8a867e;
 
-  /* Accenti */
-  --red: #e5322d;
-  --red-deep: #b3201c;
-  --orange: #ff7a1a;
-  --amber: #ffb020;
-  --accent-grad: linear-gradient(90deg, var(--red) 0%, var(--orange) 100%);
+  /* Azione e identità */
+  --signal: #ffd21f; /* cartello box: azioni principali */
+  --signal-ink: #17150c;
+  --team: #3d7bfd; /* sostituito dalla shell con il colore della squadra */
+  --orange: var(--signal);
+  --accent-grad: linear-gradient(90deg, var(--signal), var(--signal));
 
   /* Stati */
-  --ok: #2fbf71;
-  --warn: #ffb020;
-  --bad: #ff4d4f;
-  --info: #4aa3ff;
+  --ok: #4cc38a;
+  --warn: #f0b429;
+  --bad: #ef5b4f;
+  --info: #6aa8ff;
 
   /* Gomme (convenzione di gioco) */
-  --tyre-soft: #ff4d4f;
-  --tyre-medium: #ffd23f;
-  --tyre-hard: #f2f2f2;
-  --tyre-wet: #4aa3ff;
+  --tyre-soft: #ef5b4f;
+  --tyre-medium: #f7d046;
+  --tyre-hard: #e9e7e2;
 
   /* Tipografia */
-  --font-ui: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-display: 'Barlow Condensed', 'Oswald', 'Arial Narrow', 'Segoe UI', sans-serif;
+  --font-ui: 'Archivo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Archivo', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
-  /* Spaziatura e raggi (base 4 px, scalata con la root) */
+  /* Spaziatura e raggi */
   --s-1: 0.25rem;
   --s-2: 0.5rem;
   --s-3: 0.75rem;
   --s-4: 1rem;
   --s-6: 1.5rem;
   --s-8: 2rem;
-  --r-1: 4px;
-  --r-2: 8px;
-  --r-3: 12px;
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 16px;
 
-  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-1: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-/* Scala: 1080p = 16px, 1440p = 20px, 2160p (4K) = 32px */
+/* Scala: 1080p = 16px, 1440p+ = 18px, 4K = 30px */
 html {
   font-size: 16px;
 }
 @media (min-width: 2400px) {
   html {
-    font-size: 20px;
+    font-size: 19px;
   }
 }
 @media (min-width: 3600px) {
   html {
-    font-size: 32px;
+    font-size: 30px;
   }
 }
 
 * {
   box-sizing: border-box;
 }
+html,
+body,
+#root {
+  height: 100%;
+}
 body {
   margin: 0;
   background: var(--bg-0);
   color: var(--text-1);
   font-family: var(--font-ui);
-  font-size: 0.875rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
 }
-.display {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 700;
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+a {
+  color: var(--info);
+}
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
 }

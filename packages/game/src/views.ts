@@ -79,6 +79,8 @@ function resultView(s: GameState, res: SessionResult | undefined): ResultRowView
 export interface WeekendView {
   /** today = si corre oggi; upcoming = prossimo GP; seasonOver = stagione conclusa; none = niente squadra. */
   state: 'none' | 'today' | 'upcoming' | 'seasonOver';
+  /** La stagione della squadra del giocatore è conclusa (anche nel giorno dell'ultima gara). */
+  seasonFinished: boolean;
   round: {
     id: string;
     number: number;
@@ -112,6 +114,7 @@ export function weekendView(s: GameState): WeekendView {
   const entry = playerEntry(s);
   const empty: WeekendView = {
     state: 'none',
+    seasonFinished: false,
     round: null,
     track: null,
     qualifying: null,
@@ -140,7 +143,8 @@ export function weekendView(s: GameState): WeekendView {
           race: resultView(s, lastRes)!,
         }
       : null;
-  if (!current) return { ...empty, state: 'seasonOver', last };
+  const seasonFinished = season.status === 'finished';
+  if (!current) return { ...empty, state: 'seasonOver', seasonFinished, last };
 
   const circuit = s.tables.circuits[current.circuitId]!;
   const quali = rows(s, 'sessionResults').find((x) => x.roundId === current.id && x.kind === 'qualifying');
@@ -171,6 +175,7 @@ export function weekendView(s: GameState): WeekendView {
   });
   return {
     state: current.startDay === today ? 'today' : 'upcoming',
+    seasonFinished,
     round: {
       id: current.id,
       number: current.number,

@@ -21,7 +21,7 @@
   gap: 0.3rem;
   font-size: 0.72rem;
   color: var(--text-3);
-  text-transform: uppercase;
+
   letter-spacing: 0.08em;
 }
 .field input {
@@ -80,7 +80,7 @@
   border-color: var(--orange);
   box-shadow:
     0 0 0 1px var(--orange) inset,
-    0 8px 30px rgba(255, 122, 26, 0.12);
+    0 8px 30px rgba(255, 210, 31, 0.12);
 }
 .nc-team .stripe {
   position: absolute;
@@ -98,7 +98,7 @@
 .nc-team .head b {
   display: block;
   font: 700 1.08rem var(--font-display);
-  text-transform: uppercase;
+
   letter-spacing: 0.03em;
 }
 .nc-team .head span {
