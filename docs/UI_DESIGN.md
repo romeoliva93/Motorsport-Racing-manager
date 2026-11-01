@@ -200,7 +200,8 @@ Dimensioni per contesto: **XL** intestazione scheda pilota/infortunio (≈ 10 re
 
 > Nota sulla revisione: i ritratti illustrati generati dal codice sono stati scartati perché non abbastanza
 > realistici. In questo ambiente non è disponibile un generatore di immagini fotorealistiche: le foto si
-> producono con uno strumento esterno seguendo ART_PROMPTS.md e si caricano nel progetto.
+> generano con **ChatGPT** seguendo ART_PROMPTS.md; le immagini vengono poi passate a Claude, che le integra
+> nei mockup e nel report (procedura in ART_PROMPTS.md §0).
 
 ## 9. Altre schermate chiave (linee guida)
 

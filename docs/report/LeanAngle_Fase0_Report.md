@@ -16,7 +16,7 @@ implementato; i mockup usano dati illustrativi.
 | Prima versione giocabile (v0.1)     | stagione Premier completa con squadra esistente, gara 2D da pausa a 16×, prove/qualifiche/gara, classifiche, finanze base, salvataggi                                                                                                                                                                                                  |
 | Squadra tecnica (revisione 2)       | Moto A/B per pilota con confronto corretto e cambio flag-to-flag; briefing tecnico come meccanica di gioco (verità vs osservazioni vs ipotesi); mercato, attributi, crescita e rapporti degli ingegneri; IA con gli stessi sistemi. MVP: 1 capotecnico + 1 ingegnere per pilota, feedback e prime modifiche all'assetto, una sola moto |
 | Categorie e infortuni (revisione 3) | Moto per pilota: Rookies Cup 1, Lightweight 1, Intermediate 1, Premier 2 (A/B); infortuni in giorni confrontati col calendario; per ogni GP il Team Principal sceglie collaudatore, sostituto con contratto temporaneo o posto vacante; collaudatori e sessioni di test; Velocity Rookies Cup; IA con le stesse scelte                 |
-| Immagini                            | Ritratti e moto come fotografie realistiche (schede in ART_PROMPTS.md); segnaposto neutri finché mancano                                                                                                                                                                                                                               |
+| Immagini                            | Ritratti e moto come fotografie realistiche. **Procedura**: ChatGPT genera le foto seguendo le schede di ART_PROMPTS.md → le immagini vengono passate a Claude → Claude le integra in mockup, screenshot e report. Segnaposto neutri finché mancano                                                                                    |
 | Primo modulo                        | infrastruttura + `packages/core` + schema dati (M1.1–M1.3) e spike del tempo sul giro                                                                                                                                                                                                                                                  |
 
 **Decisioni richieste**: (1) stack tecnologico; (2) titolo e nomi
@@ -2243,8 +2243,9 @@ ridurre la leggibilità).
 > Nota sulla revisione: i ritratti illustrati generati dal codice sono
 > stati scartati perché non abbastanza realistici. In questo ambiente
 > non è disponibile un generatore di immagini fotorealistiche: le foto
-> si producono con uno strumento esterno seguendo ART_PROMPTS.md e si
-> caricano nel progetto.
+> si generano con **ChatGPT** seguendo ART_PROMPTS.md; le immagini
+> vengono poi passate a Claude, che le integra nei mockup e nel report
+> (procedura in ART_PROMPTS.md §0).
 
 ## 9. Altre schermate chiave (linee guida)
 
@@ -2273,6 +2274,30 @@ e squadre, riduzione animazioni.
 > (`docs/mockups/assets/portraits/` e `docs/mockups/assets/bikes/`).
 > Tutti i personaggi, le squadre e le moto sono immaginari: le immagini
 > non devono somigliare a persone, moto o marchi reali.
+
+## 0. Procedura concordata
+
+1.  **ChatGPT genera le immagini.** Il Team (tu) incolla in ChatGPT le
+    regole comuni del §1 insieme alla descrizione di un personaggio o di
+    una moto (§2–§4) e chiede la foto realistica.
+2.  **Controllo.** Si verifica che l'immagine rispetti la scheda: età,
+    aspetto, colori della squadra, numero, nessun logo reale, nessuna
+    somiglianza con persone reali. Se serve si chiede a ChatGPT una
+    nuova versione.
+3.  **Salvataggio con il nome file indicato** nella tabella (es.
+    `teo-varriale.jpg`).
+4.  **Le immagini vengono passate a Claude** (allegate nella sessione di
+    Claude Code o caricate nel repository).
+5.  **Claude le integra**: le copia in `docs/mockups/assets/portraits/`
+    (ritratti) o `docs/mockups/assets/bikes/` (moto), ottimizza
+    dimensioni e formato, rigenera screenshot, collage e report e
+    aggiorna la Pull Request.
+6.  I mockup mostrano la foto al posto del segnaposto "FOTO" senza altre
+    modifiche.
+
+Per i personaggi generati durante la carriera (es. nuovi Rookies ogni
+stagione) servirà in seguito una soluzione automatica, da decidere prima
+della Fase 3 (vedi ADR-0004).
 
 ## 1. Regole comuni
 

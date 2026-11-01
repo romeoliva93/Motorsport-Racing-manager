@@ -6,6 +6,21 @@
 > Tutti i personaggi, le squadre e le moto sono immaginari: le immagini non devono somigliare a persone,
 > moto o marchi reali.
 
+## 0. Procedura concordata
+
+1. **ChatGPT genera le immagini.** Il Team (tu) incolla in ChatGPT le regole comuni del §1 insieme alla
+   descrizione di un personaggio o di una moto (§2–§4) e chiede la foto realistica.
+2. **Controllo.** Si verifica che l'immagine rispetti la scheda: età, aspetto, colori della squadra,
+   numero, nessun logo reale, nessuna somiglianza con persone reali. Se serve si chiede a ChatGPT una nuova versione.
+3. **Salvataggio con il nome file indicato** nella tabella (es. `teo-varriale.jpg`).
+4. **Le immagini vengono passate a Claude** (allegate nella sessione di Claude Code o caricate nel repository).
+5. **Claude le integra**: le copia in `docs/mockups/assets/portraits/` (ritratti) o `docs/mockups/assets/bikes/` (moto),
+   ottimizza dimensioni e formato, rigenera screenshot, collage e report e aggiorna la Pull Request.
+6. I mockup mostrano la foto al posto del segnaposto "FOTO" senza altre modifiche.
+
+Per i personaggi generati durante la carriera (es. nuovi Rookies ogni stagione) servirà in seguito una
+soluzione automatica, da decidere prima della Fase 3 (vedi ADR-0004).
+
 ## 1. Regole comuni
 
 **Ritratti — aggiungere a ogni richiesta:**
