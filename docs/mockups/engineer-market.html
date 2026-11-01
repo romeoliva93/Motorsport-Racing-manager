@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Mercato ingegneri</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  main { display: grid; grid-template-columns: 1fr 27rem; grid-template-rows: auto 1fr; gap: .85rem; height: calc(100vh - 3.75rem); }
+  .filters { grid-column: 1 / 3; display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .search { background: var(--bg-2); border: 1px solid var(--line-strong); border-radius: 6px; padding: .5rem .8rem; width: 18rem; color: var(--text-3); font-size: .8rem; }
+  .chip { background: var(--bg-2); border: 1px solid var(--line-strong); border-radius: 16px; padding: .35rem .75rem; font-size: .74rem; color: var(--text-2); }
+  .chip.on { border-color: var(--orange); color: var(--orange); background: rgba(255,122,26,.08); }
+  .chip b { color: var(--text-1); }
+  .tabs { display: flex; gap: 1.2rem; border-bottom: 1px solid var(--line); margin: -.2rem 0 .5rem; }
+  .tabs span { padding: .45rem 0; font-size: .78rem; color: var(--text-3); font-weight: 600; }
+  .tabs span.on { color: var(--text-1); box-shadow: inset 0 -2px 0 var(--orange); }
+  .nm { display: flex; align-items: center; gap: .55rem; }
+  .nm .avatar { width: 1.8rem; height: 1.8rem; font-size: .62rem; }
+  .nm b { display: block; font-size: .78rem; }
+  .nm small { color: var(--text-3); font-size: .64rem; }
+  .flag { display: inline-block; width: 1.1rem; height: .75rem; border-radius: 2px; vertical-align: middle; margin-right: .3rem; }
+  .rng { display: flex; align-items: center; gap: .4rem; width: 8rem; }
+  .rng .range { height: 5px; }
+  .rng b { font-size: .7rem; width: 2.8rem; text-align: right; color: var(--text-2); }
+  .scout { display: flex; align-items: center; gap: .35rem; font-size: .66rem; color: var(--text-3); }
+  .scout .bar { width: 3rem; flex: none; }
+  .preview .head { display: flex; gap: .8rem; align-items: center; }
+  .preview .avatar { width: 3.6rem; height: 3.6rem; font-size: 1.1rem; }
+  .preview .big { font: 800 1.35rem/1 var(--font-display); text-transform: uppercase; }
+  .attr { display: grid; grid-template-columns: 9.5rem 1fr 3.4rem; gap: .5rem; align-items: center; font-size: .72rem; padding: .17rem 0; }
+  .attr b { text-align: right; font-size: .7rem; color: var(--text-2); }
+  .side { display: flex; flex-direction: column; gap: .85rem; min-height: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="team"><div class="logo">LB</div><div><b>Scuderia Lupo Blu</b><span>Premier · Satellite Ardena</span></div></div>
+    <div class="nav">
+      <div class="grp">Squadra</div><a>Panoramica</a><a>Scuderia</a><a>Piloti</a><a class="on">Personale</a><a class="sub">Squadra tecnica</a><a class="sub" style="color:var(--orange)">Mercato ingegneri</a><a class="sub">Formazione</a>
+      <div class="grp">Tecnica</div><a>Moto</a><a>Sviluppo</a><a>Strutture</a>
+      <div class="grp">Persone e affari</div><a>Accademia</a><a>Mercato</a><a>Sponsor</a><a>Finanze</a>
+      <div class="grp">Competizione</div><a>Calendario</a><a>Campionato</a><a>Statistiche</a>
+      <div class="grp">Mondo</div><a>Notizie</a><a>Archivio</a>
+    </div>
+  </aside>
+  <header>
+    <h2>Mercato ingegneri</h2>
+    <span class="crumb">Personale · 214 profili conosciuti · 38 osservati dagli scout</span>
+    <div class="spacer"></div>
+    <div class="kpi"><small>Budget stipendi staff</small><b>₡ 6,1 M / 7,0 M</b></div>
+    <div class="kpi"><small>Scout del personale</small><b>2 attivi · 1 libero</b></div>
+    <button class="btn primary">Nuovo incarico di scouting</button>
+  </header>
+  <main>
+    <div class="filters">
+      <div class="search">🔍 Cerca per nome, squadra, nazionalità…</div>
+      <span class="chip on">Ruolo: <b>Ingegnere di pista</b></span>
+      <span class="chip">Specializzazione: <b>tutte</b></span>
+      <span class="chip">Età: <b>22–45</b></span>
+      <span class="chip">Stipendio max: <b>₡ 900 k</b></span>
+      <span class="chip on">Disponibilità: <b>liberi + in scadenza</b></span>
+      <span class="chip">Compatibilità con: <b>#27 Varriale</b></span>
+      <span class="chip">Solo osservati</span>
+      <div class="spacer"></div>
+      <span class="chip">Colonne ▾</span><span class="chip">Salva filtro</span>
+    </div>
+
+    <section class="card" style="overflow:hidden">
+      <div class="tabs"><span class="on">Risultati (24)</span><span>Shortlist (5)</span><span>Trattative (1)</span><span>Offerte ricevute dai miei tecnici (2)</span></div>
+      <table class="std">
+        <tr><th>Ingegnere</th><th>Specializzazione</th><th class="r">Età</th><th>Attuale</th><th>Potenziale</th><th>Diagnosi</th><th class="r">Stagioni</th><th class="r">Richiesta</th><th>Contratto</th><th>Compat. #27</th><th>Scouting</th></tr>
+        <tr class="hl"><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#7b5cff,#1b1040)">LF</div><div><b>Lucía Ferreyra</b><small><span class="flag" style="background:linear-gradient(#74acdf 33%,#fff 33% 66%,#74acdf 66%)"></span>ARG</small></div></div></td><td>telemetria</td><td class="r">27</td><td><span class="stars">★★★<i>★★</i></span></td><td><span class="stars">★★★★½</span></td><td><div class="rng"><div class="range"><span style="left:58%;width:20%"></span></div><b>58–78</b></div></td><td class="r">3</td><td class="r">₡ 420 k</td><td>Intermediate · 2027</td><td><span class="ok">alta</span></td><td><div class="scout"><div class="bar g"><span style="width:70%"></span></div>70%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#2fbf71,#0d3020)">HN</div><div><b>Hiroshi Nagase</b><small><span class="flag" style="background:radial-gradient(circle,#bc002d 35%,#fff 36%)"></span>JPN</small></div></div></td><td>elettronica</td><td class="r">44</td><td><span class="stars">★★★★<i>★</i></span></td><td><span class="stars">★★★★</span></td><td><div class="rng"><div class="range"><span style="left:76%;width:8%"></span></div><b>76–84</b></div></td><td class="r">17</td><td class="r">₡ 880 k</td><td><span class="ok">libero</span></td><td><span class="warn">media</span></td><td><div class="scout"><div class="bar g"><span style="width:100%"></span></div>100%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#ff7a1a,#3a1a05)">PB</div><div><b>Pietro Bellandi</b><small><span class="flag" style="background:linear-gradient(90deg,#009246 33%,#fff 33% 66%,#ce2b37 66%)"></span>ITA</small></div></div></td><td>telaio</td><td class="r">38</td><td><span class="stars">★★★½<i>★</i></span></td><td><span class="stars">★★★★</span></td><td><div class="rng"><div class="range"><span style="left:66%;width:14%"></span></div><b>66–80</b></div></td><td class="r">11</td><td class="r">₡ 610 k</td><td>Atlas MS · 2027</td><td><span class="ok">alta</span></td><td><div class="scout"><div class="bar y"><span style="width:45%"></span></div>45%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#4aa3ff,#0b2340)">SW</div><div><b>Sophie Whitcombe</b><small><span class="flag" style="background:linear-gradient(#012169 40%,#c8102e 40% 60%,#012169 60%)"></span>GBR</small></div></div></td><td>pneumatici</td><td class="r">31</td><td><span class="stars">★★★<i>★★</i></span></td><td><span class="stars">★★★★</span></td><td><div class="rng"><div class="range"><span style="left:55%;width:22%"></span></div><b>55–77</b></div></td><td class="r">6</td><td class="r">₡ 470 k</td><td><span class="ok">libera</span></td><td><span class="muted">?</span></td><td><div class="scout"><div class="bar r"><span style="width:20%"></span></div>20%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#ffd23f,#3a3005)">MS</div><div><b>Matthias Sauer</b><small><span class="flag" style="background:linear-gradient(#000 33%,#dd0000 33% 66%,#ffce00 66%)"></span>GER</small></div></div></td><td>motore</td><td class="r">52</td><td><span class="stars">★★★★<i>★</i></span></td><td><span class="stars">★★★★</span></td><td><div class="rng"><div class="range"><span style="left:80%;width:6%"></span></div><b>80–86</b></div></td><td class="r">24</td><td class="r">₡ 950 k</td><td>Vohrmann · 2027</td><td><span class="bad">bassa</span></td><td><div class="scout"><div class="bar g"><span style="width:100%"></span></div>100%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#00c2c7,#063536)">AR</div><div><b>Aitor Rementeria</b><small><span class="flag" style="background:linear-gradient(#aa151b 25%,#f1bf00 25% 75%,#aa151b 75%)"></span>ESP</small></div></div></td><td>sospensioni</td><td class="r">35</td><td><span class="stars">★★★<i>★★</i></span></td><td><span class="stars">★★★½</span></td><td><div class="rng"><div class="range"><span style="left:60%;width:12%"></span></div><b>60–72</b></div></td><td class="r">9</td><td class="r">₡ 500 k</td><td>Lightweight · 2027</td><td><span class="ok">alta</span> </td><td><div class="scout"><div class="bar y"><span style="width:55%"></span></div>55%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#e5322d,#3a0705)">CM</div><div><b>Claire Marchal</b><small><span class="flag" style="background:linear-gradient(90deg,#002395 33%,#fff 33% 66%,#ed2939 66%)"></span>FRA</small></div></div></td><td>strategia</td><td class="r">29</td><td><span class="stars">★★½<i>★★</i></span></td><td><span class="stars">★★★★★?</span></td><td><div class="rng"><div class="range"><span style="left:45%;width:30%"></span></div><b>45–75</b></div></td><td class="r">2</td><td class="r">₡ 260 k</td><td><span class="ok">libera</span></td><td><span class="muted">?</span></td><td><div class="scout"><div class="bar r"><span style="width:10%"></span></div>10%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#a9b0bf,#262b37)">JO</div><div><b>Jonas Østergaard</b><small><span class="flag" style="background:linear-gradient(90deg,#c8102e 30%,#fff 30% 40%,#c8102e 40%)"></span>DEN</small></div></div></td><td>telemetria</td><td class="r">41</td><td><span class="stars">★★★½<i>★</i></span></td><td><span class="stars">★★★½</span></td><td><div class="rng"><div class="range"><span style="left:68%;width:10%"></span></div><b>68–78</b></div></td><td class="r">14</td><td class="r">₡ 640 k</td><td>Akane Racing · 2028</td><td><span class="warn">media</span></td><td><div class="scout"><div class="bar g"><span style="width:85%"></span></div>85%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#2fbf71,#0d3020)">TB</div><div><b>Tiago Barros</b><small><span class="flag" style="background:linear-gradient(90deg,#006600 40%,#ff0000 40%)"></span>POR</small></div></div></td><td>aerodinamica</td><td class="r">24</td><td><span class="stars">★★<i>★★★</i></span></td><td><span class="stars">★★★★?</span></td><td><div class="rng"><div class="range"><span style="left:40%;width:26%"></span></div><b>40–66</b></div></td><td class="r">1</td><td class="r">₡ 140 k</td><td><span class="ok">libero</span></td><td><span class="muted">?</span></td><td><div class="scout"><div class="bar r"><span style="width:15%"></span></div>15%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#7b5cff,#1b1040)">YK</div><div><b>Yuna Kurosawa</b><small><span class="flag" style="background:radial-gradient(circle,#bc002d 35%,#fff 36%)"></span>JPN</small></div></div></td><td>elettronica</td><td class="r">33</td><td><span class="stars">★★★½<i>★</i></span></td><td><span class="stars">★★★★</span></td><td><div class="rng"><div class="range"><span style="left:64%;width:14%"></span></div><b>64–78</b></div></td><td class="r">8</td><td class="r">₡ 560 k</td><td>Hoshiro RW · 2027</td><td><span class="warn">media</span></td><td><div class="scout"><div class="bar y"><span style="width:50%"></span></div>50%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#4aa3ff,#0b2340)">EV</div><div><b>Elias Varga</b><small>HUN</small></div></div></td><td>telaio</td><td class="r">47</td><td><span class="stars">★★★<i>★★</i></span></td><td><span class="stars">★★★</span></td><td><div class="rng"><div class="range"><span style="left:62%;width:8%"></span></div><b>62–70</b></div></td><td class="r">19</td><td class="r">₡ 380 k</td><td><span class="ok">libero</span></td><td><span class="ok">alta</span></td><td><div class="scout"><div class="bar g"><span style="width:90%"></span></div>90%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#ff7a1a,#3a1a05)">RN</div><div><b>Rania Nasser</b><small>EGY</small></div></div></td><td>telemetria</td><td class="r">30</td><td><span class="stars">★★★<i>★★</i></span></td><td><span class="stars">★★★★</span></td><td><div class="rng"><div class="range"><span style="left:56%;width:18%"></span></div><b>56–74</b></div></td><td class="r">5</td><td class="r">₡ 390 k</td><td>Équipe Bastide · 2027</td><td><span class="warn">media</span></td><td><div class="scout"><div class="bar y"><span style="width:40%"></span></div>40%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#2fbf71,#0d3020)">DO</div><div><b>Daniel Okafor</b><small>NGR</small></div></div></td><td>strategia</td><td class="r">36</td><td><span class="stars">★★★½<i>★</i></span></td><td><span class="stars">★★★½</span></td><td><div class="rng"><div class="range"><span style="left:63%;width:12%"></span></div><b>63–75</b></div></td><td class="r">10</td><td class="r">₡ 520 k</td><td><span class="ok">libero</span></td><td><span class="warn">media</span></td><td><div class="scout"><div class="bar g"><span style="width:75%"></span></div>75%</div></td></tr>
+        <tr><td><div class="nm"><div class="avatar" style="background:linear-gradient(160deg,#a9b0bf,#262b37)">GL</div><div><b>Giulia Lanfranchi</b><small>ITA</small></div></div></td><td>pneumatici</td><td class="r">26</td><td><span class="stars">★★½<i>★★</i></span></td><td><span class="stars">★★★★?</span></td><td><div class="rng"><div class="range"><span style="left:48%;width:22%"></span></div><b>48–70</b></div></td><td class="r">2</td><td class="r">₡ 210 k</td><td>Accademia Lupo Blu</td><td><span class="ok">alta</span></td><td><div class="scout"><div class="bar g"><span style="width:100%"></span></div>interna</div></td></tr>
+      </table>
+      <div class="muted" style="font-size:.68rem;margin-top:.6rem">Le stelle e gli intervalli dipendono dalle osservazioni dei tuoi scout: più osservazioni → intervalli più stretti. "?" = dato non ancora stimabile.</div>
+    </section>
+
+    <div class="side">
+      <section class="card preview">
+        <div class="head">
+          <div class="avatar" style="background:linear-gradient(160deg,#7b5cff,#1b1040)">LF</div>
+          <div><div class="big">Lucía Ferreyra</div><div class="muted" style="font-size:.72rem">Ingegnere di pista · 27 anni · Argentina</div>
+            <div style="margin-top:.3rem"><span class="pill or">TALENTO EMERGENTE</span> <span class="pill info">AMBIZIOSA</span></div></div>
+        </div>
+        <h3 style="margin-top:.7rem">Attributi stimati <small>scouting 70% · R. Lindgren</small></h3>
+        <div class="attr"><span>Analisi telemetrica</span><div class="range"><span style="left:72%;width:12%"></span></div><b>72–84</b></div>
+        <div class="attr"><span>Interpretazione feedback</span><div class="range"><span style="left:55%;width:15%"></span></div><b>55–70</b></div>
+        <div class="attr"><span>Capacità diagnostica</span><div class="range"><span style="left:58%;width:20%"></span></div><b>58–78</b></div>
+        <div class="attr"><span>Conoscenza assetti</span><div class="range"><span style="left:50%;width:14%"></span></div><b>50–64</b></div>
+        <div class="attr"><span>Conoscenza pneumatici</span><div class="range"><span style="left:60%;width:12%"></span></div><b>60–72</b></div>
+        <div class="attr"><span>Adattamento al meteo</span><div class="range"><span style="left:48%;width:20%"></span></div><b>48–68</b></div>
+        <div class="attr"><span>Comunicazione</span><div class="range"><span style="left:66%;width:12%"></span></div><b>66–78</b></div>
+        <div class="attr"><span>Problem solving</span><div class="range"><span style="left:70%;width:14%"></span></div><b>70–84</b></div>
+        <div class="attr"><span>Capacità di apprendimento</span><div class="range"><span style="left:80%;width:10%"></span></div><b>80–90</b></div>
+        <div class="row" style="margin-top:.4rem"><span class="muted">Note dello scout</span><b style="text-align:right">"Legge i dati meglio di molti veterani; deve ancora imparare a parlare con i piloti."</b></div>
+        <div class="row"><span class="muted">Rivali interessati</span><b class="warn">Atlas MS, Équipe Bastide</b></div>
+        <div class="row"><span class="muted">Clausola</span><b>rescissione ₡ 300 k</b></div>
+        <div style="display:flex;gap:.4rem;margin-top:.6rem"><button class="btn primary" style="flex:1">Avvia trattativa</button><button class="btn">Osserva ancora</button><button class="btn">☆</button></div>
+      </section>
+      <section class="card" style="flex:1">
+        <h3>Incarichi di scouting <small>staff</small></h3>
+        <div class="row"><span>R. Lindgren · ingegneri di pista under 30</span><b>12 gg</b></div>
+        <div class="row"><span>P. Akande · specialisti elettronica</span><b>21 gg</b></div>
+        <div class="row"><span class="muted">Scout libero · nessun incarico</span><button class="btn" style="padding:.25rem .6rem">Assegna</button></div>
+        <h3 style="margin-top:.8rem">Movimenti recenti <small>notizie dal paddock</small></h3>
+        <div class="row"><span>Hoshiro RW ingaggia il capotecnico <b>R. Imai</b></span><b class="muted">2 gg</b></div>
+        <div class="row"><span>Atlas MS offre un ruolo a <b>P. Bellandi</b> (rumors)</span><b class="muted">4 gg</b></div>
+        <div class="row"><span>Il tuo ing. <b>K. Lindqvist</b> ha ricevuto un'offerta</span><b class="bad">azione</b></div>
+      </section>
+    </div>
+  </main>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+</body>
+</html>

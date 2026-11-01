@@ -109,7 +109,10 @@ con offerte da altre squadre in base alla reputazione del giocatore.
 
 | Sistema | Contenuto | Riferimento tecnico |
 |---|---|---|
-| Personale | 19 ruoli, attributi per ruolo, personalità, morale, compatibilità, offerte rivali | DATA_MODEL §3 |
+| Personale | 19 ruoli, attributi per ruolo, personalità, morale, compatibilità, offerte rivali | DATA_MODEL §3, TECH_TEAM §3 |
+| **Squadra tecnica** | mercato e scouting degli ingegneri, attributi per ruolo, crescita professionale, rapporti pilota-staff, conflitti | GDD §16, TECH_TEAM §3–6 |
+| **Moto A / Moto B** | due moto per pilota con stato individuale, confronto equo, preparazione, cambio flag-to-flag | GDD §16, TECH_TEAM §1 |
+| **Briefing tecnico** | sensazioni del pilota, diagnosi dello staff, decisioni del manager, sviluppo dell'assetto nel weekend | GDD §16, TECH_TEAM §2, §7–8 |
 | Piloti | 17 attributi + potenziale, crescita/declino, forma, infortuni, rivalità, ritiri, sostituti, collaudatori | SIMULATION §4 |
 | Contratti e mercato | stipendio, durata, bonus, clausole, opzioni, ruoli, obiettivi; trattative con controfferte; IA autonoma; indiscrezioni | GDD §5 |
 | Accademia | scouting internazionale, istruttori, programmi (minibike, flat track, motard, simulatore, atletica), contratti junior, prestiti, promozione | GDD §6 |
@@ -125,7 +128,7 @@ con offerte da altre squadre in base alla reputazione del giocatore.
 | Economia | entrate/uscite, bilanci, previsioni, prestiti, flussi di cassa | GDD §11 |
 | Sponsor | budget, durata, bonus, obiettivi, aspettative, attività promozionali | GDD §11 |
 | Media | conferenze, interviste, notizie, rumors, rivalità, rapporti coi costruttori | GDD §12 |
-| IA | profilo strategico per squadra, decisioni periodiche con stesse regole del giocatore | GDD §13 |
+| IA | profilo strategico per squadra, decisioni periodiche con stesse regole e stesse informazioni del giocatore (anche Moto A/B, staff e briefing) | GDD §13, TECH_TEAM §9 |
 | Regolamenti | punti, penalità, limiti tecnici, motori, congelamenti, formati, votazioni | GDD §14 |
 
 ## 5. Mercato e contratti
@@ -173,7 +176,7 @@ condizionali. Durante la gara, in base alla `radioPolicy` del regolamento:
 - `dashboard`: messaggi predefiniti sul cruscotto (es. cambio mappa, avviso bandiera, long lap);
 - `full`: comunicazione libera (prevista come opzione regolamentare futura).
 Il pilota può ignorare le indicazioni in base a personalità, morale e situazione.
-Gara flag-to-flag: cambio moto ai box se cambia il meteo.
+Gara flag-to-flag: cambio moto ai box se cambia il meteo (tempo, personale, prontezza della seconda moto, gomme, assetto ed errori sono simulati: vedi TECH_TEAM §1.6).
 
 ## 11. Economia e sponsor
 Entrate: sponsor, premi, diritti commerciali (quota per posizione nella classifica squadre),
@@ -206,3 +209,34 @@ commissione con gli interessi di ciascun membro; entrano in vigore nelle stagion
 ## 15. Salvataggi e storico
 Salvataggio manuale, autosalvataggio, slot multipli, carriere pluriennali, archivio di ogni
 stagione (classifiche, risultati, trasferimenti), storico di piloti e squadre, record e statistiche.
+
+## 16. Squadra tecnica, Moto A/B e briefing (revisione Fase 0)
+
+Obiettivo: rendere il Team Principal protagonista delle decisioni tecniche, costruendo una squadra
+competente e scegliendo come sviluppare la moto durante il weekend. Specifica completa in
+[TECH_TEAM.md](TECH_TEAM.md); qui la sintesi di design.
+
+- **Moto A / Moto B**: ogni pilota ha (se il regolamento lo prevede) due moto con componenti,
+  assetto, chilometraggio, usura, affidabilità, danni, manutenzione, prontezza e disponibilità propri.
+  Usi tipici: A di riferimento e B sperimentale, oppure A asciutto e B bagnato. Un solo motore fisico
+  per entrambe. Il confronto A/B è corretto per evoluzione della pista, carburante, gomme e temperatura
+  e mostra sempre l'incertezza.
+- **Briefing tecnico** dopo ogni sessione: il pilota descrive le sensazioni, ingegnere di pista e
+  capotecnico propongono ipotesi e soluzioni con vantaggi/svantaggi incerti; il manager accetta,
+  chiede un'altra analisi, confronta, sente il capotecnico, privilegia il pilota, mantiene o
+  sperimenta sulla Moto B. Le decisioni cambiano davvero assetto, fiducia, rapporti e tempo disponibile.
+  Delegabile.
+- **Conoscenza imperfetta**: il motore conosce il problema reale; squadra e giocatore vedono solo
+  dati, sensazioni e ipotesi. Nessuna soluzione perfetta viene rivelata automaticamente.
+- **Mercato degli ingegneri** profondo quanto quello piloti: scouting con attributi a intervallo,
+  giovani emergenti, specialisti, capotecnici, direttori tecnici; contratti con ruolo e pilota garantiti.
+- **Crescita professionale**: le competenze crescono col lavoro svolto (sessioni, diagnosi, formazione,
+  mentoring), la reputazione con i risultati. Potenziale individuale con curve diverse.
+- **Rapporti pilota-staff**: fiducia, comunicazione, compatibilità, esperienza condivisa, comprensione
+  dello stile, soddisfazione. Una coppia nuova può già funzionare bene; il tempo la migliora. Conflitti e
+  interventi del manager.
+- **Gestione in carriera**: licenziare, ingaggiare, promuovere, spostare fra piloti, rinnovare, bonus, corsi.
+- **Weekend e meteo**: assetto base dalla libreria → briefing dopo ogni sessione → briefing finale
+  pre-gara (strategia, gomme, carburante, scenari di pioggia, piano di emergenza). Previsioni incerte:
+  dedicare tempo alla preparazione da bagnato è una scommessa.
+- **IA**: le squadre avversarie usano gli stessi sistemi con le proprie risorse e informazioni.

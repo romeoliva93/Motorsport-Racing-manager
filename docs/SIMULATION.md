@@ -199,3 +199,25 @@ Le gare delle altre categorie e delle serie minori usano lo **stesso motore** se
 renderer (centinaia di volte più veloce del tempo reale). Le serie nazionali di basso
 livello usano un modello statistico semplificato a livello di gara, documentato a parte,
 perché non sono visibili in dettaglio al giocatore.
+
+## 13. Due moto per pilota
+
+La simulazione non distingue fra Moto A e Moto B: ogni moto è un'istanza di `Bike` e passa dalla
+stessa funzione `derivePerformance(bike, setup, conditions)`. Durante prove e qualifiche il pilota
+usa la moto indicata dal programma della sessione; ogni giro registra `bikeId`, così telemetria e
+confronti sono separati. Formule di confronto corretto, preparazione e cambio moto: [TECH_TEAM.md §1](TECH_TEAM.md).
+
+## 14. Problemi di assetto reali e sensazioni
+
+Dalla distanza fra assetto attuale e ideale (§9) il motore ricava, per area di guida, i **problemi
+reali** `TruthSetupIssue { area, cause, magnitude }` (es. uscita curve lente ← TC + idraulica posteriore).
+Questi influenzano direttamente il modello pilota (velocità nelle sezioni interessate, usura gomme,
+errori) e sono la sorgente dei **sintomi** riferiti dal pilota e degli **indicatori** di telemetria.
+Probabilità di sintomo corretto, diagnosi dello staff e intuizioni: [TECH_TEAM.md §2](TECH_TEAM.md).
+
+## 15. Cambio moto flag-to-flag
+
+Quando un pilota entra ai box per il cambio, il motore applica: tempo di corsia box (limitatore),
+tempo di scambio (regolamento × coordinamento meccanici), eventuali errori (dipendenti da precisione
+del capotecnico, pressione e prontezza della seconda moto), quindi il pilota riparte con le gomme e
+l'assetto della seconda moto (gomme a temperatura iniziale → fase di riscaldamento).

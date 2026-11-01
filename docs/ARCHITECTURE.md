@@ -61,7 +61,8 @@ Decisione formalizzata in [ADR-0001](adr/0001-tech-stack.md).
 5. **Eventi di dominio.** I sistemi emettono eventi (`RaceFinished`, `ContractSigned`, `ComponentFailed`…) consumati da notizie, statistiche, morale, archivio e sponsor. In questo modo i sistemi restano disaccoppiati.
 6. **Sistemi piccoli e testabili.** Ogni sistema è un modulo con input/output espliciti: `(state, ctx) => events`. Niente classi "God object".
 7. **Dati di contenuto separati dal codice.** Circuiti, costruttori, nomi, sponsor e regolamenti sono *content pack* JSON validati da script, quindi modificabili e moddabili.
-8. **Formule documentate.** Ogni formula di simulazione ha un riferimento in [SIMULATION.md](SIMULATION.md) e un test che ne fissa il comportamento.
+8. **Conoscenza separata dalla verità.** Lo stato reale (problemi di assetto, potenziale, meteo futuro) resta nel motore; UI e IA gestionale leggono solo osservazioni, sensazioni e ipotesi tramite `KnowledgeView(teamId)` ([ADR-0003](adr/0003-knowledge-model.md)).
+9. **Formule documentate.** Ogni formula di simulazione ha un riferimento in [SIMULATION.md](SIMULATION.md) e un test che ne fissa il comportamento.
 
 ## 4. Architettura a livelli
 
@@ -136,6 +137,7 @@ motorcycle-manager/
 │   ├── sim/                    # track/, bike/, rider/, tyres/, weather/, setup/,
 │   │                           #   race/, quali/, practice/, telemetry/, incidents/
 │   ├── game/                   # career/, calendar/, economy/, contracts/, market/, staff/,
+│   │                           #   briefing/, garage/ (Moto A/B, lavori, prontezza), knowledge/,
 │   │                           #   riders/, academy/, rnd/, facilities/, sponsors/, media/,
 │   │                           #   regulations/, ai/, stats/, commands/
 │   ├── engine-host/            # worker entry, scheduler, protocollo RPC

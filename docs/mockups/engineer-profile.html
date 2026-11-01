@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Scheda ingegnere</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  .app { grid-template-rows: auto 1fr; }
+  .hero { grid-column: 2; display: flex; align-items: center; gap: 1.6rem; padding: 1.1rem 1.6rem; background: linear-gradient(100deg, rgba(47,191,113,.16), rgba(14,16,21,0) 55%), var(--bg-1); border-bottom: 1px solid var(--line); }
+  .hero .avatar { width: 5.6rem; height: 5.6rem; font-size: 1.9rem; background: linear-gradient(160deg,#2fbf71,#0d3020); box-shadow: 0 0 0 3px var(--bg-1), 0 0 0 5px #2fbf71; }
+  .hero h1 { margin: 0; font: 800 2.5rem/1 var(--font-display); text-transform: uppercase; }
+  .hero .sub { color: var(--text-2); margin-top: .35rem; font-size: .9rem; }
+  .tags { display: flex; gap: .4rem; margin-top: .55rem; }
+  .kpis { margin-left: auto; display: grid; grid-template-columns: repeat(6, auto); gap: 1.8rem; }
+  .kpis small { display: block; color: var(--text-3); font-size: .6rem; text-transform: uppercase; letter-spacing: .12em; }
+  .kpis b { font: 700 1.6rem var(--font-display); }
+  .wrap { grid-column: 2; display: flex; flex-direction: column; min-height: 0; }
+  .tabsbar { display: flex; gap: 1.5rem; padding: 0 1.6rem; border-bottom: 1px solid var(--line); background: var(--bg-1); }
+  .tabsbar span { padding: .65rem 0; color: var(--text-3); font-weight: 600; font-size: .8rem; }
+  .tabsbar span.on { color: var(--text-1); box-shadow: inset 0 -2px 0 var(--orange); }
+  main { display: grid; grid-template-columns: 1.1fr 1.15fr 1fr; gap: .85rem; padding: .9rem 1.6rem; }
+  .col { display: flex; flex-direction: column; gap: .85rem; min-height: 0; }
+  .attr { display: grid; grid-template-columns: 10.5rem 1fr 2rem 2.6rem; gap: .55rem; align-items: center; font-size: .75rem; padding: .16rem 0; }
+  .attr b { text-align: right; }
+  .attr em { font-style: normal; font-size: .66rem; text-align: right; }
+  .up { color: var(--ok); } .dn { color: var(--bad); }
+  .diag { display: grid; grid-template-columns: 4.6rem 1fr 3rem 4.4rem; gap: .5rem; align-items: center; font-size: .72rem; padding: .3rem 0; border-top: 1px solid var(--line); }
+  .bond { display: grid; grid-template-columns: 9rem 1fr 2.4rem; gap: .5rem; align-items: center; font-size: .72rem; padding: .15rem 0; }
+  .bond b { text-align: right; }
+  .acts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .4rem; }
+  .acts .btn { font-size: .72rem; padding: .45rem .4rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside style="grid-row: 1 / 3">
+    <div class="team"><div class="logo">LB</div><div><b>Scuderia Lupo Blu</b><span>Premier · Satellite Ardena</span></div></div>
+    <div class="nav">
+      <div class="grp">Squadra</div><a>Panoramica</a><a>Scuderia</a><a>Piloti</a><a class="on">Personale</a><a class="sub" style="color:var(--orange)">Squadra tecnica</a><a class="sub">Mercato ingegneri</a><a class="sub">Formazione</a>
+      <div class="grp">Tecnica</div><a>Moto</a><a>Sviluppo</a><a>Strutture</a>
+      <div class="grp">Persone e affari</div><a>Accademia</a><a>Mercato</a><a>Sponsor</a><a>Finanze</a>
+      <div class="grp">Competizione</div><a>Calendario</a><a>Campionato</a><a>Statistiche</a>
+      <div class="grp">Mondo</div><a>Notizie</a><a>Archivio</a>
+    </div>
+  </aside>
+  <div class="hero">
+    <div class="avatar">AK</div>
+    <div>
+      <h1>Anja Kessler</h1>
+      <div class="sub">Ingegnere di pista · 34 anni · Austria · assegnata a #27 Varriale</div>
+      <div class="tags"><span class="pill or">SPECIALIZZAZIONE: TELEMETRIA</span><span class="pill info">CARRIERA: TARDIVA</span><span class="tag">Personalità: metodica, ambiziosa</span></div>
+    </div>
+    <div class="kpis">
+      <div><small>Valutazione</small><b>76</b></div>
+      <div><small>Potenziale (stima)</small><b>80–86</b></div>
+      <div><small>Morale</small><b class="ok">Alto</b></div>
+      <div><small>Reputazione</small><b>62 <span class="up" style="font-size:1rem">▲6</span></b></div>
+      <div><small>Valore di mercato</small><b>₡ 720 k</b></div>
+      <div><small>Stipendio</small><b>₡ 540 k</b></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="tabsbar"><span class="on">Profilo</span><span>Storico diagnosi</span><span>Crescita</span><span>Rapporti</span><span>Contratto</span><span>Formazione</span></div>
+    <main>
+      <div class="col">
+        <section class="card">
+          <h3>Attributi · ingegnere di pista <small>valore · variazione stagione</small></h3>
+          <div class="attr"><span>Analisi telemetrica</span><div class="bar"><span style="width:84%"></span></div><b>84</b><em class="up">+3</em></div>
+          <div class="attr"><span>Interpretazione feedback</span><div class="bar"><span style="width:69%"></span></div><b>69</b><em class="up">+2</em></div>
+          <div class="attr"><span>Capacità diagnostica</span><div class="bar"><span style="width:74%"></span></div><b>74</b><em class="up">+2</em></div>
+          <div class="attr"><span>Conoscenza assetti</span><div class="bar"><span style="width:72%"></span></div><b>72</b><em class="up">+1</em></div>
+          <div class="attr"><span>Gestione strategie</span><div class="bar"><span style="width:66%"></span></div><b>66</b><em class="muted">0</em></div>
+          <div class="attr"><span>Conoscenza pneumatici</span><div class="bar"><span style="width:77%"></span></div><b>77</b><em class="up">+1</em></div>
+          <div class="attr"><span>Adattamento al meteo</span><div class="bar"><span style="width:61%"></span></div><b>61</b><em class="muted">0</em></div>
+          <div class="attr"><span>Comunicazione con il pilota</span><div class="bar"><span style="width:70%"></span></div><b>70</b><em class="up">+2</em></div>
+          <div class="attr"><span>Gestione della pressione</span><div class="bar"><span style="width:73%"></span></div><b>73</b><em class="muted">0</em></div>
+          <div class="attr"><span>Problem solving</span><div class="bar"><span style="width:79%"></span></div><b>79</b><em class="up">+1</em></div>
+          <div class="attr"><span>Capacità di apprendimento</span><div class="bar"><span style="width:83%"></span></div><b>83</b><em class="muted">—</em></div>
+        </section>
+        <section class="card" style="flex:1">
+          <h3>Personalità e ambizioni</h3>
+          <div class="row"><span class="muted">Ambizione</span><div class="bar y" style="max-width:9rem"><span style="width:78%"></span></div><b>alta</b></div>
+          <div class="row"><span class="muted">Fedeltà alla squadra</span><div class="bar g" style="max-width:9rem"><span style="width:60%"></span></div><b>media</b></div>
+          <div class="row"><span class="muted">Obiettivo di carriera</span><b>capo ingegneri entro 2 anni</b></div>
+          <div class="row"><span class="muted">Rischio di partenza</span><b class="warn">medio · 2 squadre interessate</b></div>
+          <div class="row"><span class="muted">Lingue</span><b>tedesco, inglese, italiano</b></div>
+          <h3 style="margin-top:.7rem">Formazione</h3>
+          <div class="row"><span>Corso "Dinamica pneumatici" · Velgrip</span><b>in corso · 9 gg</b></div>
+          <div class="row"><span class="muted">Attributi interessati</span><b>Conoscenza pneumatici, Adattamento al meteo</b></div>
+          <div class="row"><span class="muted">Costo</span><b>₡ 35 k · assente 1 giorno di test</b></div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="card">
+          <h3>Crescita: competenze vs reputazione <small>ultime 2 stagioni</small></h3>
+          <svg viewBox="0 0 520 170" width="100%">
+            <g stroke="#262b37"><line x1="30" y1="20" x2="515" y2="20"/><line x1="30" y1="75" x2="515" y2="75"/><line x1="30" y1="130" x2="515" y2="130"/></g>
+            <g fill="#6b7385" font-size="10" font-family="Inter, sans-serif"><text x="4" y="24">80</text><text x="4" y="79">65</text><text x="4" y="134">50</text><text x="40" y="160">2026 R1</text><text x="250" y="160">2027 R1</text><text x="455" y="160">R6</text></g>
+            <polyline fill="none" stroke="#2fbf71" stroke-width="2.5" points="40,62 90,60 140,58 190,55 240,52 290,50 340,47 390,44 440,42 500,39"/>
+            <polyline fill="none" stroke="#ff7a1a" stroke-width="2.5" stroke-dasharray="6 4" points="40,118 90,118 140,112 190,112 240,108 290,108 340,96 390,94 440,80 500,78"/>
+            <circle cx="340" cy="96" r="4" fill="#ff7a1a"/><text x="300" y="115" fill="#ff7a1a" font-size="10" font-family="Inter, sans-serif">podio #27: reputazione +6</text>
+            <text x="300" y="38" fill="#2fbf71" font-size="10" font-family="Inter, sans-serif">competenze: crescita costante dal lavoro</text>
+          </svg>
+          <div style="display:flex;gap:1rem;font-size:.68rem" class="t2"><span><span style="color:#2fbf71">━</span> competenza media</span><span><span style="color:#ff7a1a">┅</span> reputazione</span></div>
+          <h3 style="margin-top:.7rem">Fonti di crescita 2027</h3>
+          <div class="row"><span>Sessioni analizzate</span><b>54 · <span class="up">+1,8</span></b></div>
+          <div class="row"><span>Diagnosi corrette</span><b>17 · <span class="up">+2,1</span></b></div>
+          <div class="row"><span>Diagnosi sbagliate (si impara anche da queste)</span><b>5 · <span class="up">+0,4</span></b></div>
+          <div class="row"><span>Affiancamento a M. Doria (capotecnico)</span><b><span class="up">+0,9</span></b></div>
+          <div class="row"><span>Corso "Telemetria avanzata" (Cortex Dynamics)</span><b><span class="up">+1,2</span></b></div>
+          <div class="row"><span class="muted">Risultati sportivi → solo reputazione e valore</span><b class="muted">0</b></div>
+        </section>
+        <section class="card" style="flex:1">
+          <h3>Storico diagnosi <small>23 corrette su 31 · 74%</small></h3>
+          <div class="diag"><span class="muted">R6 FP2</span><span>Freno motore troppo alto in C1</span><span class="t2">65%</span><span class="pill ok">corretta</span></div>
+          <div class="diag"><span class="muted">R6 FP1</span><span>Usura anteriore da pressione bassa</span><span class="t2">80%</span><span class="pill warn">parziale</span></div>
+          <div class="diag"><span class="muted">R5 Q</span><span>Rapporti lunghi nel settore 2</span><span class="t2">70%</span><span class="pill ok">corretta</span></div>
+          <div class="diag"><span class="muted">R5 FP2</span><span>Assetto anteriore rigido</span><span class="t2">75%</span><span class="pill bad">sbagliata</span></div>
+          <div class="diag"><span class="muted">R5 FP1</span><span>Mappa erogazione aggressiva</span><span class="t2">55%</span><span class="pill ok">corretta</span></div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="card">
+          <h3>Rapporto con #27 Varriale <small>2ª stagione insieme</small></h3>
+          <div class="bond"><span>Fiducia</span><div class="bar g"><span style="width:71%"></span></div><b>71</b></div>
+          <div class="bond"><span>Comunicazione</span><div class="bar g"><span style="width:66%"></span></div><b>66</b></div>
+          <div class="bond"><span>Compatibilità</span><div class="bar g"><span style="width:74%"></span></div><b>74</b></div>
+          <div class="bond"><span>Esperienza condivisa</span><div class="bar b"><span style="width:45%"></span></div><b>45</b></div>
+          <div class="bond"><span>Comprensione dello stile</span><div class="bar y"><span style="width:58%"></span></div><b>58%</b></div>
+          <div class="bond"><span>Soddisfazione</span><div class="bar g"><span style="width:76%"></span></div><b>76</b></div>
+          <div class="muted" style="font-size:.66rem;margin-top:.3rem">Attrito recente: divergenza sul freno motore (R5) — risolto</div>
+          <h3 style="margin-top:.7rem">Altri rapporti</h3>
+          <div class="row"><span>#61 Oyarzún (pilota)</span><b class="warn">compatibilità 52</b></div>
+          <div class="row"><span>M. Doria (capotecnico)</span><b class="ok">collaborazione 81</b></div>
+        </section>
+        <section class="card">
+          <h3>Contratto</h3>
+          <div class="row"><span class="muted">Scadenza</span><b>fine 2027</b></div>
+          <div class="row"><span class="muted">Ruolo garantito</span><b>ingegnere di pista pilota titolare</b></div>
+          <div class="row"><span class="muted">Bonus</span><b>₡ 15 k/podio · ₡ 40 k/vittoria</b></div>
+          <div class="row"><span class="muted">Clausola</span><b>rescissione ₡ 450 k · 3 mesi di stop</b></div>
+          <div class="row"><span class="muted">Interesse esterno</span><b class="warn">Hoshiro RW, Atlas MS</b></div>
+        </section>
+        <section class="card" style="flex:1">
+          <h3>Azioni</h3>
+          <div class="acts">
+            <button class="btn primary" style="font-size:.78rem">Rinnova</button><button class="btn">Offri bonus</button><button class="btn">Corso formazione</button>
+            <button class="btn">Sposta su #61</button><button class="btn">Promuovi</button><button class="btn">Colloquio</button>
+            <button class="btn" style="grid-column:span 3;color:var(--bad)">Licenzia · costo ₡ 270 k · morale staff −</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+</body>
+</html>

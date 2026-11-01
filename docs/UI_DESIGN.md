@@ -96,7 +96,58 @@ morale, forma, stipendio. Schede: Profilo, Risultati, Contratto, Assetto preferi
 Nel profilo: i 17 attributi con tendenza, andamento della stagione, contratto e clausole,
 relazioni con staff/compagno/rivali, preferenze di assetto ricavate dal feedback, condizione fisica.
 
-## 6. Altre schermate chiave (linee guida)
+## 6. Squadra tecnica, Moto A/B e briefing (revisione Fase 0)
+
+Schermate per i sistemi descritti in [TECH_TEAM.md](TECH_TEAM.md). Tutti i mockup sono in Full HD 1920×1080.
+
+### 6.1 Garage Moto A / Moto B
+
+![Garage Moto A/B](images/bikes-ab.png)
+
+Per ogni pilota: stato delle due moto (prontezza, disponibilità, chilometraggio, usura, affidabilità,
+danni, manutenzione, assetto), **confronto corretto** B rispetto ad A con l'incertezza e il dettaglio
+delle correzioni (evoluzione pista, carburante, gomme, temperatura), componenti e assetto affiancati
+con le differenze evidenziate, prestazioni per settore, piano dei lavori con le ore-meccanico
+disponibili e vincoli del regolamento (motori condivisi, gomme, flag-to-flag).
+
+### 6.2 Briefing tecnico
+
+![Briefing tecnico](images/briefing.png)
+
+- **Sinistra – pilota**: immagine, nome, soddisfazione, fiducia nella moto e nell'ingegnere, sensazioni riportate tra virgolette, problemi con gravità percepita, richieste personali.
+- **Centro – analisi**: telemetria A vs B nel tratto critico, comportamento per area (indicatori osservati), tempi per settore corretti, gomme, condizioni della sessione, storico delle decisioni del weekend.
+- **Destra – staff**: ingegnere di pista e capotecnico con competenze chiave, comprensione dello stile del pilota, storico diagnosi, ipotesi con **confidenza dichiarata**; programma della sessione successiva e previsioni meteo.
+- **Basso – decisioni**: soluzioni A/B/C con vantaggi e svantaggi *possibili* (non garantiti) e pulsanti Accetta modifica, Chiedi approfondimento, Prova alternativa (Moto B), Parere capotecnico, Segui il pilota, Confronta, Mantieni configurazione, Concludi briefing. Tempo del briefing sempre visibile; delega al capotecnico.
+
+### 6.3 Mercato ingegneri
+
+![Mercato ingegneri](images/engineer-market.png)
+
+Filtri (ruolo, specializzazione, età, stipendio, disponibilità, compatibilità con un pilota), tabella
+con valutazione attuale e potenziale **stimati** dagli scout (intervalli e "?"), stipendio richiesto,
+contratto, compatibilità stimata, avanzamento dello scouting; anteprima del profilo con attributi a
+intervallo, note dello scout, rivali interessati; incarichi di scouting e movimenti del mercato.
+
+### 6.4 Scheda ingegnere
+
+![Scheda ingegnere](images/engineer-profile.png)
+
+Attributi del ruolo con variazione stagionale, grafico **competenze vs reputazione** (cresce la
+reputazione con i podi, le competenze con il lavoro), fonti di crescita, storico delle diagnosi
+(corretta / parziale / sbagliata), personalità e ambizioni, formazione, rapporti con piloti e colleghi,
+contratto e azioni (rinnova, bonus, formazione, sposta, promuovi, colloquio, licenzia).
+
+### 6.5 Gestione capotecnici e ingegneri di pista
+
+![Squadra tecnica](images/tech-staff.png)
+
+Un "box" per pilota con capotecnico, ingegnere di pista, analista e meccanici; per ogni coppia
+pilota-tecnico i sei valori del rapporto (fiducia, comunicazione, compatibilità, esperienza condivisa,
+comprensione dello stile, soddisfazione). Segnalazione dei **conflitti** con le azioni del manager,
+reparti specialistici con carico di lavoro, tecnici promuovibili dall'interno e **anteprima degli
+effetti** di una riassegnazione prima della conferma.
+
+## 7. Altre schermate chiave (linee guida)
 
 - **Tabelle**: intestazioni fisse, ordinamento, filtri salvabili, colonne configurabili,
   virtualizzazione oltre 100 righe, confronto di due righe.
@@ -107,6 +158,6 @@ relazioni con staff/compagno/rivali, preferenze di assetto ricavate dal feedback
 - **Telemetria**: grafici a traccia sovrapposta per distanza (velocità, gas, freno, piega),
   delta-tempo, confronto pilota A/B, selettore giro.
 
-## 7. Accessibilità
+## 8. Accessibilità
 Contrasto minimo AA sul testo, stati mai indicati solo dal colore, dimensione testo regolabile,
 modalità per daltonici sui colori di gomme e squadre, riduzione animazioni.

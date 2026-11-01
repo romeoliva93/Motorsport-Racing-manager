@@ -7,21 +7,23 @@ integrata in `main`).
 **Stato**: solo progettazione. Nessun sistema di gioco è ancora
 implementato; i mockup usano dati illustrativi.
 
-| Tema                            | Proposta                                                                                                                                                                                                                                                                                            |
-|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Tecnologia                      | TypeScript (monorepo npm) · simulazione in pacchetti puri su Web Worker · React + Vite · Canvas 2D · Tauri 2 per PC · Vitest + Playwright                                                                                                                                                           |
-| Architettura                    | simulazione separata dalla UI; comandi validati uguali per giocatore e IA; PRNG con seme (determinismo, replay); stato relazionale in memoria; eventi di dominio                                                                                                                                    |
-| Universo                        | federazione IVF, campionato Velocity World Championship; categorie Lightweight 250 cc, Intermediate 800 cc motore unico, Premier 1000 cc; feeder Junior Velocity Cup e Continental Talent Cups; costruttori Ardena, Hoshiro, Takaido, Vohrmann, Corvane; 11 squadre Premier; 20 circuiti immaginari |
-| Simulazione                     | profilo di velocità fisico (aderenza, potenza, aria, frenata) + modello comportamentale del pilota + traffico, scia, sorpassi, errori, gomme, carburante, meteo, assetto, affidabilità                                                                                                              |
-| Prima versione giocabile (v0.1) | stagione Premier completa con squadra esistente, gara 2D da pausa a 16×, prove/qualifiche/gara, classifiche, finanze base, salvataggi                                                                                                                                                               |
-| Primo modulo                    | infrastruttura + `packages/core` + schema dati (M1.1–M1.3) e spike del tempo sul giro                                                                                                                                                                                                               |
+| Tema                            | Proposta                                                                                                                                                                                                                                                                                                                               |
+|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Tecnologia                      | TypeScript (monorepo npm) · simulazione in pacchetti puri su Web Worker · React + Vite · Canvas 2D · Tauri 2 per PC · Vitest + Playwright                                                                                                                                                                                              |
+| Architettura                    | simulazione separata dalla UI; comandi validati uguali per giocatore e IA; PRNG con seme (determinismo, replay); stato relazionale in memoria; eventi di dominio                                                                                                                                                                       |
+| Universo                        | federazione IVF, campionato Velocity World Championship; categorie Lightweight 250 cc, Intermediate 800 cc motore unico, Premier 1000 cc; feeder Junior Velocity Cup e Continental Talent Cups; costruttori Ardena, Hoshiro, Takaido, Vohrmann, Corvane; 11 squadre Premier; 20 circuiti immaginari                                    |
+| Simulazione                     | profilo di velocità fisico (aderenza, potenza, aria, frenata) + modello comportamentale del pilota + traffico, scia, sorpassi, errori, gomme, carburante, meteo, assetto, affidabilità                                                                                                                                                 |
+| Prima versione giocabile (v0.1) | stagione Premier completa con squadra esistente, gara 2D da pausa a 16×, prove/qualifiche/gara, classifiche, finanze base, salvataggi                                                                                                                                                                                                  |
+| Squadra tecnica (revisione 2)   | Moto A/B per pilota con confronto corretto e cambio flag-to-flag; briefing tecnico come meccanica di gioco (verità vs osservazioni vs ipotesi); mercato, attributi, crescita e rapporti degli ingegneri; IA con gli stessi sistemi. MVP: 1 capotecnico + 1 ingegnere per pilota, feedback e prime modifiche all'assetto, una sola moto |
+| Primo modulo                    | infrastruttura + `packages/core` + schema dati (M1.1–M1.3) e spike del tempo sul giro                                                                                                                                                                                                                                                  |
 
 **Decisioni richieste**: (1) stack tecnologico; (2) titolo e nomi
 dell'universo; (3) primo modulo e spike del tempo sul giro.
 
-**Indice**: 1 Game Design Document · 2 Architettura · 3 Modello dati · 4
-Modello di simulazione · 5 Roadmap · 6 Proposta grafica · 7 Decisioni
-tecniche (ADR) · Appendice: galleria screenshot.
+**Indice**: 1 Game Design Document · 2 Squadra tecnica, Moto A/B e
+briefing · 3 Architettura · 4 Modello dati · 5 Modello di simulazione ·
+6 Roadmap · 7 Proposta grafica · 8 Decisioni tecniche (ADR) · Appendice:
+galleria screenshot.
 
 # Game Design Document
 
@@ -163,26 +165,29 @@ giocatore.
 
 ## 4. Sistemi principali (sintesi)
 
-| Sistema             | Contenuto                                                                                                                                   | Riferimento tecnico |
-|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------|---------------------|
-| Personale           | 19 ruoli, attributi per ruolo, personalità, morale, compatibilità, offerte rivali                                                           | DATA_MODEL §3       |
-| Piloti              | 17 attributi + potenziale, crescita/declino, forma, infortuni, rivalità, ritiri, sostituti, collaudatori                                    | SIMULATION §4       |
-| Contratti e mercato | stipendio, durata, bonus, clausole, opzioni, ruoli, obiettivi; trattative con controfferte; IA autonoma; indiscrezioni                      | GDD §5              |
-| Accademia           | scouting internazionale, istruttori, programmi (minibike, flat track, motard, simulatore, atletica), contratti junior, prestiti, promozione | GDD §6              |
-| Moto                | 9 componenti, 10 caratteristiche prestazionali derivate                                                                                     | SIMULATION §2       |
-| R&D                 | progetti conservativi/equilibrati/aggressivi/sperimentali, ingegneri, budget, tempi, produzione, test, fallimenti                           | GDD §7              |
-| Strutture           | 12 strutture con livelli, costi, manutenzione, benefici                                                                                     | GDD §8              |
-| Weekend             | formato configurabile per categoria/stagione; controllo diretto di prove e qualifiche                                                       | GDD §9              |
-| Assetto             | 8 gruppi di regolazioni, preferenze pilota, proposte di capotecnico e ingegnere                                                             | SIMULATION §9       |
-| Telemetria          | tempi, settori, velocità, freno, gas, temperature, consumi, gomme, distacchi, passo; confronto piloti                                       | SIMULATION §11      |
-| Gara                | vista 2D dall'alto, velocità pausa–16×, eventi, bandiere, interruzioni                                                                      | SIMULATION          |
-| Strategie           | ritmo, aggressività, gomme, carburante, mappe; pit board / messaggi cruscotto secondo regolamento                                           | GDD §10             |
-| Meteo e gomme       | meteo dinamico, asfalto, pioggia, vento, asciugatura; mescole, temperature, usura                                                           | SIMULATION §6–8     |
-| Economia            | entrate/uscite, bilanci, previsioni, prestiti, flussi di cassa                                                                              | GDD §11             |
-| Sponsor             | budget, durata, bonus, obiettivi, aspettative, attività promozionali                                                                        | GDD §11             |
-| Media               | conferenze, interviste, notizie, rumors, rivalità, rapporti coi costruttori                                                                 | GDD §12             |
-| IA                  | profilo strategico per squadra, decisioni periodiche con stesse regole del giocatore                                                        | GDD §13             |
-| Regolamenti         | punti, penalità, limiti tecnici, motori, congelamenti, formati, votazioni                                                                   | GDD §14             |
+| Sistema              | Contenuto                                                                                                                                     | Riferimento tecnico         |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|
+| Personale            | 19 ruoli, attributi per ruolo, personalità, morale, compatibilità, offerte rivali                                                             | DATA_MODEL §3, TECH_TEAM §3 |
+| **Squadra tecnica**  | mercato e scouting degli ingegneri, attributi per ruolo, crescita professionale, rapporti pilota-staff, conflitti                             | GDD §16, TECH_TEAM §3–6     |
+| **Moto A / Moto B**  | due moto per pilota con stato individuale, confronto equo, preparazione, cambio flag-to-flag                                                  | GDD §16, TECH_TEAM §1       |
+| **Briefing tecnico** | sensazioni del pilota, diagnosi dello staff, decisioni del manager, sviluppo dell'assetto nel weekend                                         | GDD §16, TECH_TEAM §2, §7–8 |
+| Piloti               | 17 attributi + potenziale, crescita/declino, forma, infortuni, rivalità, ritiri, sostituti, collaudatori                                      | SIMULATION §4               |
+| Contratti e mercato  | stipendio, durata, bonus, clausole, opzioni, ruoli, obiettivi; trattative con controfferte; IA autonoma; indiscrezioni                        | GDD §5                      |
+| Accademia            | scouting internazionale, istruttori, programmi (minibike, flat track, motard, simulatore, atletica), contratti junior, prestiti, promozione   | GDD §6                      |
+| Moto                 | 9 componenti, 10 caratteristiche prestazionali derivate                                                                                       | SIMULATION §2               |
+| R&D                  | progetti conservativi/equilibrati/aggressivi/sperimentali, ingegneri, budget, tempi, produzione, test, fallimenti                             | GDD §7                      |
+| Strutture            | 12 strutture con livelli, costi, manutenzione, benefici                                                                                       | GDD §8                      |
+| Weekend              | formato configurabile per categoria/stagione; controllo diretto di prove e qualifiche                                                         | GDD §9                      |
+| Assetto              | 8 gruppi di regolazioni, preferenze pilota, proposte di capotecnico e ingegnere                                                               | SIMULATION §9               |
+| Telemetria           | tempi, settori, velocità, freno, gas, temperature, consumi, gomme, distacchi, passo; confronto piloti                                         | SIMULATION §11              |
+| Gara                 | vista 2D dall'alto, velocità pausa–16×, eventi, bandiere, interruzioni                                                                        | SIMULATION                  |
+| Strategie            | ritmo, aggressività, gomme, carburante, mappe; pit board / messaggi cruscotto secondo regolamento                                             | GDD §10                     |
+| Meteo e gomme        | meteo dinamico, asfalto, pioggia, vento, asciugatura; mescole, temperature, usura                                                             | SIMULATION §6–8             |
+| Economia             | entrate/uscite, bilanci, previsioni, prestiti, flussi di cassa                                                                                | GDD §11                     |
+| Sponsor              | budget, durata, bonus, obiettivi, aspettative, attività promozionali                                                                          | GDD §11                     |
+| Media                | conferenze, interviste, notizie, rumors, rivalità, rapporti coi costruttori                                                                   | GDD §12                     |
+| IA                   | profilo strategico per squadra, decisioni periodiche con stesse regole e stesse informazioni del giocatore (anche Moto A/B, staff e briefing) | GDD §13, TECH_TEAM §9       |
+| Regolamenti          | punti, penalità, limiti tecnici, motori, congelamenti, formati, votazioni                                                                     | GDD §14                     |
 
 ## 5. Mercato e contratti
 
@@ -250,7 +255,8 @@ gomme), istruzioni condizionali. Durante la gara, in base alla
 - `full`: comunicazione libera (prevista come opzione regolamentare
   futura). Il pilota può ignorare le indicazioni in base a personalità,
   morale e situazione. Gara flag-to-flag: cambio moto ai box se cambia
-  il meteo.
+  il meteo (tempo, personale, prontezza della seconda moto, gomme,
+  assetto ed errori sono simulati: vedi TECH_TEAM §1.6).
 
 ## 11. Economia e sponsor
 
@@ -296,6 +302,444 @@ successive.
 Salvataggio manuale, autosalvataggio, slot multipli, carriere
 pluriennali, archivio di ogni stagione (classifiche, risultati,
 trasferimenti), storico di piloti e squadre, record e statistiche.
+
+## 16. Squadra tecnica, Moto A/B e briefing (revisione Fase 0)
+
+Obiettivo: rendere il Team Principal protagonista delle decisioni
+tecniche, costruendo una squadra competente e scegliendo come sviluppare
+la moto durante il weekend. Specifica completa in
+[TECH_TEAM.md](TECH_TEAM.md); qui la sintesi di design.
+
+- **Moto A / Moto B**: ogni pilota ha (se il regolamento lo prevede) due
+  moto con componenti, assetto, chilometraggio, usura, affidabilità,
+  danni, manutenzione, prontezza e disponibilità propri. Usi tipici: A
+  di riferimento e B sperimentale, oppure A asciutto e B bagnato. Un
+  solo motore fisico per entrambe. Il confronto A/B è corretto per
+  evoluzione della pista, carburante, gomme e temperatura e mostra
+  sempre l'incertezza.
+- **Briefing tecnico** dopo ogni sessione: il pilota descrive le
+  sensazioni, ingegnere di pista e capotecnico propongono ipotesi e
+  soluzioni con vantaggi/svantaggi incerti; il manager accetta, chiede
+  un'altra analisi, confronta, sente il capotecnico, privilegia il
+  pilota, mantiene o sperimenta sulla Moto B. Le decisioni cambiano
+  davvero assetto, fiducia, rapporti e tempo disponibile. Delegabile.
+- **Conoscenza imperfetta**: il motore conosce il problema reale;
+  squadra e giocatore vedono solo dati, sensazioni e ipotesi. Nessuna
+  soluzione perfetta viene rivelata automaticamente.
+- **Mercato degli ingegneri** profondo quanto quello piloti: scouting
+  con attributi a intervallo, giovani emergenti, specialisti,
+  capotecnici, direttori tecnici; contratti con ruolo e pilota
+  garantiti.
+- **Crescita professionale**: le competenze crescono col lavoro svolto
+  (sessioni, diagnosi, formazione, mentoring), la reputazione con i
+  risultati. Potenziale individuale con curve diverse.
+- **Rapporti pilota-staff**: fiducia, comunicazione, compatibilità,
+  esperienza condivisa, comprensione dello stile, soddisfazione. Una
+  coppia nuova può già funzionare bene; il tempo la migliora. Conflitti
+  e interventi del manager.
+- **Gestione in carriera**: licenziare, ingaggiare, promuovere, spostare
+  fra piloti, rinnovare, bonus, corsi.
+- **Weekend e meteo**: assetto base dalla libreria → briefing dopo ogni
+  sessione → briefing finale pre-gara (strategia, gomme, carburante,
+  scenari di pioggia, piano di emergenza). Previsioni incerte: dedicare
+  tempo alla preparazione da bagnato è una scommessa.
+- **IA**: le squadre avversarie usano gli stessi sistemi con le proprie
+  risorse e informazioni.
+
+# Squadra tecnica, Moto A/B e briefing
+
+> Stato: **PROPOSTA — revisione Fase 0**. Documento di dettaglio dei
+> sistemi aggiunti: due moto per pilota, briefing tecnici, mercato e
+> crescita degli ingegneri, rapporti pilota-staff, sviluppo dell'assetto
+> nel weekend, integrazione con il meteo, IA. Valori numerici = punti di
+> partenza da calibrare con `tools/balance`.
+
+## 0. Principio guida: verità, osservazioni, ipotesi
+
+Tutti i sistemi di questo documento poggiano su un **modello di
+conoscenza a cinque livelli**:
+
+| Livello                                          | Chi lo conosce                                                 | Esempio                                                                                          |
+|--------------------------------------------------|----------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| 1\. **Problema tecnico reale**                   | solo il motore di simulazione                                  | il controllo trazione taglia troppo tardi e l'idraulica posteriore in estensione è troppo chiusa |
+| 2\. **Dati osservati**                           | squadra (telemetria, tempi, gomme)                             | slittamento posteriore +18% nelle curve lente, temperatura gomma posteriore 112 °C               |
+| 3\. **Sensazioni del pilota**                    | squadra (dal pilota)                                           | "in uscita dalle curve lente il posteriore scivola"                                              |
+| 4\. **Ipotesi dello staff**                      | squadra (dagli ingegneri)                                      | "70%: gestione della coppia; 30%: sospensione posteriore"                                        |
+| 5\. **Soluzione proposta → risultato effettivo** | proposta: squadra; risultato: emerge dalla sessione successiva | "TC +2" → −0,21 s nel settore 3, ma usura gomma +4%                                              |
+
+La UI riceve **solo i livelli 2–5**. Il livello 1 non esce mai dal
+motore (vedi [ADR-0003](adr/0003-knowledge-model.md)). Questo rende
+possibile: errori di diagnosi, ingegneri più o meno bravi, giocatori che
+imparano a leggere i dati, e IA avversarie che non barano.
+
+------------------------------------------------------------------------
+
+## 1. Sistema Moto A / Moto B
+
+### 1.1 Regole
+
+- Ogni pilota dispone di **fino a due moto** (`A` e `B`), secondo il
+  regolamento della categoria: `bikesPerRider` (Premier 2; Intermediate
+  e Lightweight 1 + telaio di scorta, configurabile) e `flagToFlag`
+  (vero solo dove il cambio moto è ammesso).
+- I limiti tecnici valgono **per pilota**, non per moto: i motori della
+  dotazione stagionale sono condivisi fra A e B, così come le mescole
+  assegnate per il weekend e i pacchetti omologati.
+- **Un solo motore fisico.** A e B sono due istanze della stessa entità
+  `Bike`: le prestazioni si ricavano con la stessa funzione
+  `derivePerformance(bike, setup, conditions)` della simulazione.
+
+### 1.2 Stato individuale di ogni moto
+
+Componenti montati (motore, telaio, forcellone, sospensioni, freni,
+elettronica, aerodinamica, cambio, accessori: serbatoio, scarico,
+dispositivo abbassamento, pedane/semimanubri), chilometraggio, usura,
+affidabilità attuale, danni, stato di manutenzione, assetto,
+**prontezza** (0–100%) e **disponibilità** per la sessione (pronta / in
+preparazione / danneggiata / non ammessa).
+
+### 1.3 Ruoli d'uso
+
+- **Moto A — configurazione principale**: riferimento conosciuto.
+- **Moto B — configurazione sperimentale**: assetto o componenti diversi
+  da provare.
+- In alternativa **A asciutto / B bagnato** quando il meteo è incerto
+  (vedi §8). I ruoli sono etichette decise dal manager, non vincoli: la
+  B può diventare la moto principale.
+
+### 1.4 Confronto equo fra A e B
+
+I tempi grezzi ingannano: pista che migliora, carburante, gomme di età
+diversa, temperatura, traffico. Il sistema stima la differenza
+**corretta** e la sua **incertezza**:
+
+    Δ_grezzo  = media(giri validi B) − media(giri validi A)
+    Δ_corretto = Δ_grezzo − Σ_k ĉ_k            k ∈ {evoluzione pista, carburante, età gomme, T asfalto, vento}
+    σ          = sqrt( σ_giro² · (1/n_A + 1/n_B) + Σ_k σ_ĉk² )
+
+- I giri "non validi" (traffico, errori, bandiere gialle, giri di
+  uscita) sono esclusi automaticamente.
+- Le correzioni `ĉ_k` sono **stime**: la loro precisione cresce con
+  l'abilità dell'analista di telemetria e dell'ingegnere di pista e con
+  il livello del centro telemetria.
+- La UI mostra ad esempio: **"B più veloce di 0,18 s ± 0,12 (confidenza
+  media)"** e segnala i confronti non affidabili ("troppi pochi giri",
+  "condizioni troppo diverse").
+- Confronto anche per **settore**, velocità di punta, consumo gomme e
+  carburante, feeling del pilota.
+
+### 1.5 Preparazione della seconda moto
+
+Ogni modifica richiede **ore-meccanico**. Tra una sessione e l'altra la
+squadra ha un budget di tempo:
+
+    ore_disponibili = n_meccanici · durata_pausa · efficienza(coordinamento capotecnico, morale)
+    prontezza_B    += ore_assegnate / ore_richieste(lavori)
+
+Lavori tipici: cambio assetto (0,5–2 h), cambio componente (1–4 h),
+cambio motore (3–6 h), riparazione dopo caduta (variabile). Se la
+prontezza è \< 100% la moto può uscire con lavori incompleti (rischio di
+errori di configurazione) oppure restare ai box.
+
+### 1.6 Cambio moto flag-to-flag
+
+    t_cambio = t_corsia_box + t_scambio
+    t_scambio = t_base(regolamento) · (1.15 − 0.3 · coordinamento_meccanici) + ritardo_errori
+    P(errore) = p0 · (1 − precisione_capotecnico) · (1 + pressione) · (1 − prontezza_B)
+
+Si considerano: personale disponibile ai box, prontezza della B, gomme
+montate e loro temperatura (gomme fredde nei primi giri), assetto della
+B, mappa elettronica impostata. Errori possibili: pressione gomme
+errata, mappa sbagliata, ritardo nello scambio, ripartenza in corsia con
+infrazione (penalità). Il giocatore decide **quando** cambiare; il
+pilota può anticipare o ritardare il rientro in base a personalità e
+fiducia.
+
+------------------------------------------------------------------------
+
+## 2. Briefing tecnico
+
+### 2.1 Quando
+
+Dopo ogni sessione di prove, dopo le qualifiche e prima della gara. Ogni
+briefing ha un **tempo limitato** (dipende dall'intervallo prima della
+sessione successiva) che si consuma con le richieste di approfondimento
+e con il lavoro sulla moto.
+
+### 2.2 Generazione delle sensazioni del pilota
+
+1.  Il motore calcola i **problemi reali**: per ogni area (frenata,
+    ingresso, centro curva, uscita lenta, uscita veloce, cambi di
+    direzione, stabilità in rettilineo, velocità di punta, gestione
+    gomme) uno scostamento ricavato da assetto, componenti, gomme e
+    condizioni.
+2.  Il pilota traduce i problemi in **sintomi** con una frase dal
+    catalogo (es. "il posteriore scivola in uscita dalle curve lente").
+    Precisione:
+        P(sintomo corretto) = 0.45 + 0.45·FeedbackTecnico + 0.10·esperienza_pista
+
+    Un pilota poco preciso può confondere l'area, esagerare un problema
+    minore o non segnalarlo. Lo stile di guida pesa: un pilota
+    "staccatore" si lamenta prima della frenata.
+3.  La telemetria produce **indicatori osservati** con rumore
+    (slittamento, instabilità in frenata, ondeggiamento, temperature,
+    velocità di percorrenza), più precisi con centro telemetria e
+    analisti migliori.
+
+### 2.3 Diagnosi dello staff
+
+Ogni membro (ingegnere di pista, capotecnico, eventuale analista)
+produce una lista di **ipotesi** con una confidenza dichiarata.
+Probabilità che la causa principale sia corretta:
+
+    q = σ( 2.2·Diagnosi + 1.0·InterpretazioneFeedback·Comprensione_stile
+           + 0.6·ln(1 + giri_analizzati/8) + 0.5·ConoscenzaPneumatici·(problema gomme)
+           − difficoltà_problema + intuizione )
+    intuizione ~ con probabilità p_i = 0.04 + 0.08·ProblemSolving + 0.04·CapacitàApprendimento
+                 si aggiunge +1.5 (l'"idea brillante", possibile anche per un giovane)
+
+La **confidenza dichiarata** non coincide con `q`: dipende anche dalla
+personalità (un ingegnere presuntuoso è sicuro anche quando sbaglia). Il
+giocatore impara col tempo quanto fidarsi di ciascuno; la scheda
+ingegnere mostra lo **storico delle diagnosi** (azzeccate / sbagliate).
+
+### 2.4 Proposte
+
+Ogni ipotesi genera 1–3 **soluzioni** (variazioni di parametri di
+assetto o di elettronica, o "raccogliere altri dati"). Ogni soluzione
+mostra **vantaggi e svantaggi attesi** espressi in modo qualitativo e
+con un intervallo ("guadagno stimato 0,05–0,25 s, possibile aumento
+usura posteriore"). Il risultato reale si vede solo provando.
+
+### 2.5 Decisioni del Team Principal
+
+| Decisione                           | Effetto                                                                                                       |
+|-------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| Accetta il consiglio dell'ingegnere | applica la soluzione; fiducia ingegnere ↔ manager aggiornata in base al risultato                             |
+| Chiedi una seconda analisi          | consuma tempo; nuova estrazione con più dati (q più alto), può confermare o ribaltare                         |
+| Confronta soluzioni                 | mostra le proposte affiancate; nessun costo ma nessuna informazione nuova                                     |
+| Parere del capotecnico              | ipotesi del capotecnico (più forte su meccanica e telaio)                                                     |
+| Privilegia il feedback del pilota   | applica la modifica richiesta dal pilota; +fiducia/morale del pilota, efficacia legata al suo FeedbackTecnico |
+| Mantieni l'assetto                  | nessun rischio; perdi tempo di sviluppo; +dati per il prossimo briefing                                       |
+| Sperimenta sulla Moto B             | la soluzione va sulla B, la A resta di riferimento (richiede prontezza della B)                               |
+
+Conseguenze reali: qualità dell'assetto (`Q_setup`), fiducia del pilota
+nella moto, rapporti (ignorare spesso il pilota → −fiducia; seguire un
+consiglio sbagliato → −fiducia verso l'ingegnere), tempo residuo,
+crescita professionale dello staff (§4).
+
+### 2.6 Delega
+
+Il manager può delegare ogni briefing al capotecnico o al direttore
+tecnico. La qualità delle scelte dipende dalle loro abilità; il
+risultato viene riassunto nella posta.
+
+------------------------------------------------------------------------
+
+## 3. Personale tecnico e mercato degli ingegneri
+
+### 3.1 Dati comuni
+
+Nome, cognome, nazionalità, età, esperienza (anni e sessioni),
+reputazione, stipendio, contratto, specializzazione, potenziale
+(nascosto), personalità, morale, fedeltà, ambizione, compatibilità con
+ciascun pilota (calcolata, §5).
+
+### 3.2 Attributi per ruolo (1–100)
+
+**Ingegnere di pista**: analisi telemetrica, interpretazione del
+feedback, capacità diagnostica, conoscenza assetti, gestione strategie,
+conoscenza pneumatici, adattamento al meteo, comunicazione con il
+pilota, gestione della pressione, problem solving, capacità di
+apprendimento.
+
+**Capotecnico**: conoscenza meccanica, preparazione moto, configurazione
+sospensioni, configurazione telaio, interpretazione del feedback,
+coordinamento meccanici, gestione del tempo, affidabilità operativa,
+precisione, problem solving.
+
+**Specialisti** (motore, elettronica, telaio, aerodinamica, telemetria):
+attributi tecnici della propria area (es. elettronica: mappature motore,
+controllo trazione, freno motore, strategie energetiche, integrazione
+sensori) + attributi trasversali (problem solving, apprendimento, lavoro
+di squadra). Fuori dalla specializzazione i valori sono tipicamente
+bassi.
+
+**Direttore tecnico**: visione tecnica, gestione progetti R&D,
+leadership, allocazione risorse, conoscenza regolamento, valutazione del
+personale.
+
+### 3.3 Scouting del personale
+
+Uguale nello spirito allo scouting dei piloti: si assegnano osservatori
+o si chiedono referenze; gli attributi appaiono come **intervalli** che
+si restringono con il tempo di osservazione e con il livello di chi
+osserva. Filtri: ruolo, specializzazione, età, stipendio richiesto,
+disponibilità, lingua/nazionalità, compatibilità stimata con i propri
+piloti.
+
+### 3.4 Profili presenti nel mondo
+
+Giovani emergenti (alto potenziale, poca esperienza), esperti,
+specialisti di motori, elettronica, telaio, telemetria, ingegneri di
+pista, capotecnici, direttori tecnici. Il generatore del mondo assicura
+per ogni categoria una distribuzione realistica e un ricambio annuale
+(laureati, ingegneri dalle serie minori, ritiri).
+
+### 3.5 Contratti e mercato
+
+Stesso sistema di negoziazione dei piloti (offerta, controfferta,
+scadenze, clausole, bonus, offerte concorrenti, rumors). Clausole
+specifiche: **ruolo garantito** (es. capotecnico di un pilota titolare),
+**pilota assegnato**, divieto di passare a un rivale per N mesi
+(gardening leave), budget di formazione.
+
+------------------------------------------------------------------------
+
+## 4. Crescita professionale
+
+### 4.1 Competenze vs reputazione
+
+Sono **due canali separati**:
+
+- **Competenze** crescono con il lavoro svolto.
+- **Reputazione, valore di mercato, richieste economiche, fiducia in se
+  stessi** crescono con i risultati sportivi (vittorie, podi, titoli).
+  Un ingegnere che vince grazie a un pilota eccezionale diventa più
+  richiesto, non automaticamente più bravo.
+
+### 4.2 Esperienza che fa crescere
+
+    Δattributo = Σ eventi · peso_evento · rilevanza(attributo, evento) · f_età · f_potenziale · (1 + 0.4·Apprendimento)
+    f_potenziale = max(0, (potenziale − valore) / potenziale)^0.7         // rallenta vicino al limite
+    f_età: curva per "tipo di carriera": precoce / regolare / tardivo
+
+Eventi: sessioni analizzate, diagnosi corrette (peso alto) e sbagliate
+(peso basso ma non nullo: si impara dagli errori), problemi risolti,
+collaborazione con piloti dal buon feedback, corsi di formazione,
+affiancamento a colleghi più esperti (mentoring: +x% se un collega
+supera di 15+ punti l'attributo), risultati dei progetti R&D,
+specializzazione (crescita più rapida nella propria area).
+
+### 4.3 Potenziale
+
+Tetto individuale nascosto + tipo di curva: alcuni crescono in fretta e
+si fermano presto, altri diventano grandi specialisti dopo molti anni.
+Con l'età avanzata gli attributi fisici/di pressione calano lievemente,
+quelli di conoscenza restano stabili.
+
+------------------------------------------------------------------------
+
+## 5. Rapporto pilota – ingegnere di pista – capotecnico
+
+### 5.1 Valori per ogni coppia pilota-membro dello staff
+
+Fiducia, comunicazione, compatibilità (in gran parte strutturale:
+personalità, lingua, stile), esperienza condivisa (sessioni insieme),
+comprensione dello stile di guida, soddisfazione lavorativa.
+
+### 5.2 Effetti
+
+    precisione_interpretazione = base(InterpretazioneFeedback) · (0.65 + 0.35·Comprensione_stile)
+    Comprensione_stile(t) = c0 + (1 − c0)·(1 − e^(−sessioni/τ))     c0 = 0.35 + 0.25·compatibilità
+
+`c0` garantisce che una coppia nuova possa lavorare bene fin da subito
+(non parte da zero); il tempo e la compatibilità la rendono eccellente.
+
+### 5.3 Conflitti
+
+Generati da: divergenze ripetute sugli assetti, risultati negativi dopo
+consigli dello staff, errori di comunicazione, preferenze personali,
+rivalità interne. Sviluppo: avviso → insoddisfazione → richiesta di
+sostituzione (dal pilota) o di trasferimento (dall'ingegnere).
+
+### 5.4 Interventi del manager
+
+Colloquio di mediazione (esito dipende da personalità e reputazione del
+manager), ridefinizione dei ruoli, attività di squadra, bonus,
+riassegnazione, formazione sulla comunicazione.
+
+------------------------------------------------------------------------
+
+## 6. Gestione dello staff in carriera
+
+Licenziare (con costo di rescissione e impatto sul morale di chi resta),
+ingaggiare, promuovere un tecnico interno (es. analista → ingegnere di
+pista: periodo di adattamento), spostare un ingegnere da un pilota
+all'altro (la comprensione dello stile riparte da `c0`, la fiducia resta
+in parte), rinnovare, offrire bonus, finanziare corsi di formazione
+(costo, durata, attributo mirato). Le squadre rivali fanno offerte ai
+migliori; un pilota può chiedere un tecnico specifico (anche portarlo
+con sé quando cambia squadra); un ingegnere può andarsene per un ruolo
+più importante.
+
+------------------------------------------------------------------------
+
+## 7. Sviluppo dell'assetto nel weekend
+
+    Assetto base  ← libreria della squadra (anno precedente sullo stesso circuito) + centro simulazione
+       FP1 ──► briefing 1 ──► modifiche (A e/o B)
+       PR  ──► briefing 2 ──► modifiche + confronto A/B corretto per le condizioni
+       FP2 ──► briefing 3 ──► scelta configurazione per qualifica
+       Q   ──► analisi post-qualifica ──► preparazione gara entro i limiti del regolamento
+       WUP ──► briefing finale pre-gara
+       GARA
+
+**Briefing finale pre-gara**: strategia, gomme (anteriore/posteriore),
+gestione carburante, scenari di pioggia, assetto finale consentito,
+piano di emergenza (es. "se piove prima del giro 10: cambio moto; dopo
+il giro 20: restare fuori"). Le istruzioni vengono convertite in **pit
+board** e messaggi consentiti dal regolamento. Ogni assetto riuscito
+viene salvato nella **libreria assetti** per gli anni successivi.
+
+Il regolamento indica se dopo le qualifiche le modifiche sono libere o
+limitate (`setupChangesAfterQuali`).
+
+------------------------------------------------------------------------
+
+## 8. Briefing e meteo
+
+- Le previsioni sono **probabilistiche** e migliorano avvicinandosi
+  all'evento (e con un buon responsabile strategia o ingegnere con
+  "adattamento al meteo" alto).
+- In ogni briefing il manager stabilisce il **programma della sessione
+  successiva**, ripartendo i giri fra: sviluppo asciutto, simulazione
+  gara, test gomme, prova della Moto B, raccolta dati in condizioni
+  miste.
+- **Dati da bagnato utilizzabili davvero**: si ottengono solo se una
+  sessione è (almeno in parte) bagnata. Se è asciutto, la preparazione
+  al bagnato passa da: assetto base da libreria, centro di simulazione,
+  mappe elettroniche dedicate, e **ore-meccanico** spese per preparare
+  la Moto B in configurazione bagnato. È tempo sottratto allo sviluppo
+  dell'asciutto: il rischio è sprecarlo se la pioggia non arriva.
+- L'ingegnere può suggerire: assetto alternativo, strategia gomme,
+  preparazione Moto B, modifiche elettroniche, priorità delle prove.
+
+------------------------------------------------------------------------
+
+## 9. Intelligenza artificiale
+
+Le squadre IA usano **gli stessi sistemi e lo stesso livello di
+informazione** del giocatore: due moto per pilota, staff con attributi
+reali, briefing con ipotesi generate dai loro ingegneri (senza accesso
+alla verità), scelte fatte dal loro direttore tecnico/capotecnico
+secondo il profilo della squadra (prudente, sperimentale…), preparazione
+alla pioggia in base alle loro previsioni, mercato e formazione del
+personale. Per rendere veloce la simulazione delle sessioni non
+visibili, il briefing IA viene risolto in forma compatta (stesse
+probabilità, nessun testo generato).
+
+------------------------------------------------------------------------
+
+## 10. Collocazione nella roadmap (sintesi)
+
+| Livello                   | Contenuto                                                                                                                                                                                                                                    |
+|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **MVP (v0.1, Fase 2)**    | 1 ingegnere di pista + 1 capotecnico per pilota, attributi di base, feedback dopo le prove (sintomi), proposte semplici di assetto (1–2 opzioni), modello verità/osservazioni già attivo, **una sola moto** (lo schema dati prevede già A/B) |
+| **Intermedio (Fasi 3–4)** | mercato completo ingegneri, contratti, scouting staff, crescita, compatibilità, briefing interattivi completi, due moto per pilota, confronto A/B corretto                                                                                   |
+| **Avanzato (Fasi 4–5)**   | diagnosi approfondite, telemetria avanzata, errori di interpretazione e confidenza "falsata", formazione specialistica, relazioni e conflitti complessi, preparazione A/B per condizioni diverse, flag-to-flag completamente simulato        |
+
+Dettagli e dipendenze in [ROADMAP.md](ROADMAP.md).
 
 # Architettura tecnica
 
@@ -386,7 +830,11 @@ Decisione formalizzata in [ADR-0001](adr/0001-tech-stack.md).
 7.  **Dati di contenuto separati dal codice.** Circuiti, costruttori,
     nomi, sponsor e regolamenti sono *content pack* JSON validati da
     script, quindi modificabili e moddabili.
-8.  **Formule documentate.** Ogni formula di simulazione ha un
+8.  **Conoscenza separata dalla verità.** Lo stato reale (problemi di
+    assetto, potenziale, meteo futuro) resta nel motore; UI e IA
+    gestionale leggono solo osservazioni, sensazioni e ipotesi tramite
+    `KnowledgeView(teamId)` ([ADR-0003](adr/0003-knowledge-model.md)).
+9.  **Formule documentate.** Ogni formula di simulazione ha un
     riferimento in [SIMULATION.md](SIMULATION.md) e un test che ne fissa
     il comportamento.
 
@@ -457,6 +905,7 @@ confini degli import (ESLint `no-restricted-imports`).
     │   ├── sim/                    # track/, bike/, rider/, tyres/, weather/, setup/,
     │   │                           #   race/, quali/, practice/, telemetry/, incidents/
     │   ├── game/                   # career/, calendar/, economy/, contracts/, market/, staff/,
+    │   │                           #   briefing/, garage/ (Moto A/B, lavori, prontezza), knowledge/,
     │   │                           #   riders/, academy/, rnd/, facilities/, sponsors/, media/,
     │   │                           #   regulations/, ai/, stats/, commands/
     │   ├── engine-host/            # worker entry, scheduler, protocollo RPC
@@ -571,6 +1020,9 @@ SQLite solo per l'archivio statistico (vedi
                                    └─ Standing (riders / teams / constructors)
 
     Manufacturer ─ supplies ─► Team ◄─ Contract ─► Person (Rider | StaffMember)
+                               │  ├─ StaffAssignment (pilota ↔ capotecnico/ingegnere) ─ RiderStaffBond
+                               │  ├─ Bike A / Bike B per pilota ─ SetupSheet ─ SetupLibraryEntry
+                               │  └─ Briefing ─ RiderFeedback / StaffHypothesis / SetupProposal / ABComparison
          │                     │  ├─ Facility[]        │
          │                     │  ├─ Bike ─ Component[] ─ ComponentDesign ◄─ RnDProject
          │                     │  ├─ FinanceAccount ─ Transaction[] / Loan[]
@@ -634,6 +1086,21 @@ StaffMember extends Person {
   skills: Record<RoleSkill, number>, experience, potential, assignedRiderId?
 }
 Relationship  { aId, bId, compatibility (−100..100), rivalry (0..100), trust, lastChangeDay }
+
+// --- Squadra tecnica (revisione Fase 0, vedi TECH_TEAM.md) ---
+StaffMember (campi aggiuntivi) {
+  specialization: 'engine'|'electronics'|'chassis'|'aero'|'telemetry'|'trackside'|'mechanics'|'management',
+  attributes: Record<StaffAttribute, number>,     // set dipendente dal ruolo (TECH_TEAM §3.2)
+  potentialCeiling (nascosto), careerCurve: 'early'|'regular'|'late',
+  ambition, loyalty, confidence, marketValue,
+  experienceLog: { sessionsAnalyzed, diagnosesCorrect, diagnosesWrong, problemsSolved, trainingsDone },
+  diagnosisHistory: Id[]                          // StaffHypothesis valutate (visibili al giocatore)
+}
+RiderStaffBond { riderId, staffId, trust, communication, compatibility, sharedSessions,
+                 styleUnderstanding, satisfaction, conflictLevel, lastEventDay }
+StaffAssignment { teamId, riderId, crewChiefId, trackEngineerId, analystId?, mechanicIds[], fromDay }
+TrainingCourse  { id, staffId, targetAttributes[], cost, startDay, endDay, provider }
+StaffScoutReport{ id, staffId, observerId, day, attributeRanges: Record<StaffAttribute,[min,max]>, notes }
 ```
 
 ### Organizzazioni
@@ -654,8 +1121,14 @@ Academy       { id, teamId, level, instructorIds[], riderIds[], programs[], budg
 ### Tecnica
 
 ``` ts
-Bike          { id, teamId, riderId, categoryId, season, components: Record<Slot, ComponentId>,
-                currentSetup, engineUsage[] }
+Bike          { id, teamId, riderId, slot: 'A'|'B', label: 'reference'|'experimental'|'dry'|'wet'|'spare',
+                categoryId, season, components: Record<Slot, ComponentId>,   // Slot include 'accessories'
+                setupId, mileageKm, wear, reliabilityNow, damage: Damage[], maintenance: MaintenanceState,
+                readiness (0..1), availability: 'ready'|'preparing'|'damaged'|'notAllowed' }
+EngineAllocation { riderId, season, allowed, usedEngineIds[] }   // condivisa fra Moto A e B
+Damage          { componentId, severity, repairHours, cause, day }
+MaintenanceState{ hoursSinceService, pendingJobs: Job[] }
+Job             { id, bikeId, kind: 'setup'|'component'|'engine'|'repair'|'service', hoursRequired, hoursDone, assignedMechanicIds[] }
 Component     { id, slot, designId, serial, mileageKm, condition, status: 'available'|'fitted'|'broken'|'sealed' }
 ComponentDesign { id, ownerId (team|manufacturer), slot, version, stats: Record<Stat, number>,
                   reliability, weight, unitCost, homologated, seasonIntroduced }
@@ -663,7 +1136,27 @@ RnDProject    { id, teamId, slot, approach: 'conservative'|'balanced'|'aggressiv
                 budget, engineerIds[], startDay, expectedEndDay, progress, risk,
                 targetStats, status: 'design'|'production'|'testing'|'done'|'failed'|'cancelled' }
 Facility      { id, teamId, type, level, upgrade?: { targetLevel, endDay, cost }, upkeepPerMonth }
-SetupSheet    { riderId, circuitId, values: Record<SetupParam, number>, notes, quality? }
+SetupSheet    { id, riderId, bikeId?, circuitId, conditions: 'dry'|'wet'|'mixed', values: Record<SetupParam, number>,
+                notes, origin: 'library'|'briefing'|'rider'|'simulator', parentId? }
+SetupLibraryEntry { teamId, circuitId, conditions, setupId, season, rating }
+
+// --- Briefing e conoscenza (ADR-0003). I tipi Truth* restano nel motore. ---
+TruthSetupIssue   (solo sim) { bikeId, area, cause: SetupParam[], magnitude }
+SessionRunPlan    { sessionId, riderId, items: { goal: 'dryDev'|'raceSim'|'tyreTest'|'bikeB'|'wetData', laps }[] }
+Observation       { id, sessionId, bikeId, kind: TelemetryIndicator, value, noise, laps }
+RiderFeedback     { id, sessionId, riderId, bikeId, symptoms: { area, phraseKey, severity }[], satisfaction }
+StaffHypothesis   { id, briefingId, staffId, area, suspectedCauses: SetupParam[], declaredConfidence,
+                    outcome?: 'correct'|'partial'|'wrong' }   // outcome calcolato dopo la prova
+SetupProposal     { id, hypothesisId, changes: Partial<Record<SetupParam, number>>, expectedGain: [min,max],
+                    expectedDrawbacks: string[], targetBike: 'A'|'B' }
+Briefing          { id, sessionId, riderId, kind: 'post'|'postQuali'|'preRace', timeBudgetMin, timeUsedMin,
+                    feedbackId, hypothesisIds[], proposalIds[], decision?: BriefingDecision, delegatedTo? }
+BriefingDecision  { type: 'accept'|'secondOpinion'|'compare'|'askCrewChief'|'riderFirst'|'keep'|'experimentB',
+                    proposalId?, day }
+ABComparison      { id, sessionId, riderId, deltaRaw, corrections: Record<string, number>, deltaCorrected,
+                    sigma, validLapsA, validLapsB, reliability: 'low'|'medium'|'high' }
+RacePlan          { riderId, roundId, tyres, fuelMode, paceTargets, rainScenarios: { condition, action }[],
+                    contingency: string[], pitBoardScript[] }
 ```
 
 ### Contratti, mercato, economia
@@ -924,6 +1417,36 @@ Le serie nazionali di basso livello usano un modello statistico
 semplificato a livello di gara, documentato a parte, perché non sono
 visibili in dettaglio al giocatore.
 
+## 13. Due moto per pilota
+
+La simulazione non distingue fra Moto A e Moto B: ogni moto è un'istanza
+di `Bike` e passa dalla stessa funzione
+`derivePerformance(bike, setup, conditions)`. Durante prove e qualifiche
+il pilota usa la moto indicata dal programma della sessione; ogni giro
+registra `bikeId`, così telemetria e confronti sono separati. Formule di
+confronto corretto, preparazione e cambio moto: [TECH_TEAM.md
+§1](TECH_TEAM.md).
+
+## 14. Problemi di assetto reali e sensazioni
+
+Dalla distanza fra assetto attuale e ideale (§9) il motore ricava, per
+area di guida, i **problemi reali**
+`TruthSetupIssue { area, cause, magnitude }` (es. uscita curve lente ←
+TC + idraulica posteriore). Questi influenzano direttamente il modello
+pilota (velocità nelle sezioni interessate, usura gomme, errori) e sono
+la sorgente dei **sintomi** riferiti dal pilota e degli **indicatori**
+di telemetria. Probabilità di sintomo corretto, diagnosi dello staff e
+intuizioni: [TECH_TEAM.md §2](TECH_TEAM.md).
+
+## 15. Cambio moto flag-to-flag
+
+Quando un pilota entra ai box per il cambio, il motore applica: tempo di
+corsia box (limitatore), tempo di scambio (regolamento × coordinamento
+meccanici), eventuali errori (dipendenti da precisione del capotecnico,
+pressione e prontezza della seconda moto), quindi il pilota riparte con
+le gomme e l'assetto della seconda moto (gomme a temperatura iniziale →
+fase di riscaldamento).
+
 # Roadmap
 
 > Stato: **PROPOSTA**. Ogni milestone corrisponde a un branch e a una
@@ -939,30 +1462,31 @@ dashboard.
 
 ## Fase 1 — Fondamenta
 
-| Milestone                               | Contenuto                                                                                                                                         | Criteri di accettazione                                                                        |
-|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
-| **M1.1 Infrastruttura**                 | workspace npm, TS strict, Vite, Vitest, ESLint/Prettier, CI GitHub Actions, controllo confini pacchetti                                           | `npm test` e `npm run build` verdi in CI                                                       |
-| **M1.2 Core**                           | PRNG con seme e flussi, ID, calendario di gioco (`GameDay`), bus eventi, `Result`, utilità matematiche                                            | test di determinismo e distribuzione del PRNG                                                  |
-| **M1.3 Schema dati**                    | tipi delle entità, validatori, `GameState` normalizzato, serializzazione                                                                          | round-trip serializzazione senza perdite                                                       |
-| **M1.4 Content e generatore del mondo** | content pack originali (costruttori, squadre, circuiti, sponsor, nomi), generatore di piloti e staff con attributi coerenti, controllo nomi reali | stesso seme → stesso mondo; invarianti (2 piloti per squadra, staff minimo, età per categoria) |
-| **M1.5 Engine host**                    | Web Worker, protocollo comandi/query, avanzamento del tempo                                                                                       | test di integrazione comando → evento                                                          |
-| **M1.6 Design system e shell**          | token, tipografia, componenti base, sidebar a 16 voci, top bar, scala Full HD/4K                                                                  | screenshot Playwright 1080p e 4K                                                               |
-| **M1.7 Menu e nuova carriera**          | menu principale, scelta squadra esistente, salvataggio iniziale                                                                                   | partita creata dal generatore e visibile nella shell                                           |
-| **M1.8 Schermate dati**                 | Scuderia, Piloti (lista + scheda), Personale (lista + scheda) collegate allo stato                                                                | nessun dato statico nelle schermate                                                            |
+| Milestone                               | Contenuto                                                                                                                                                                                         | Criteri di accettazione                                                                                                           |
+|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| **M1.1 Infrastruttura**                 | workspace npm, TS strict, Vite, Vitest, ESLint/Prettier, CI GitHub Actions, controllo confini pacchetti                                                                                           | `npm test` e `npm run build` verdi in CI                                                                                          |
+| **M1.2 Core**                           | PRNG con seme e flussi, ID, calendario di gioco (`GameDay`), bus eventi, `Result`, utilità matematiche                                                                                            | test di determinismo e distribuzione del PRNG                                                                                     |
+| **M1.3 Schema dati**                    | tipi delle entità (incluse `Bike` con slot A/B, `StaffAssignment`, `RiderStaffBond`, `Briefing`), separazione tipi `Truth*` / osservazioni, validatori, `GameState` normalizzato, serializzazione | round-trip senza perdite; test che vieta l'uso dei tipi `Truth*` fuori dal motore                                                 |
+| **M1.4 Content e generatore del mondo** | content pack originali (costruttori, squadre, circuiti, sponsor, nomi), generatore di piloti e staff con attributi per ruolo (ingegneri di pista, capotecnici, specialisti), controllo nomi reali | stesso seme → stesso mondo; invarianti (2 piloti per squadra, 1 capotecnico + 1 ingegnere di pista per pilota, età per categoria) |
+| **M1.5 Engine host**                    | Web Worker, protocollo comandi/query, avanzamento del tempo                                                                                                                                       | test di integrazione comando → evento                                                                                             |
+| **M1.6 Design system e shell**          | token, tipografia, componenti base, sidebar a 16 voci, top bar, scala Full HD/4K                                                                                                                  | screenshot Playwright 1080p e 4K                                                                                                  |
+| **M1.7 Menu e nuova carriera**          | menu principale, scelta squadra esistente, salvataggio iniziale                                                                                                                                   | partita creata dal generatore e visibile nella shell                                                                              |
+| **M1.8 Schermate dati**                 | Scuderia, Piloti (lista + scheda), Personale (lista + scheda) collegate allo stato                                                                                                                | nessun dato statico nelle schermate                                                                                               |
 
 ## Fase 2 — Prima stagione giocabile (v0.1)
 
-| Milestone               | Contenuto                                                                                     |
-|-------------------------|-----------------------------------------------------------------------------------------------|
-| M2.1 Calendario e tempo | stagione Premier, avanzamento giorni, eventi, inbox decisioni                                 |
-| M2.2 Moto e componenti  | modello componenti → parametri fisici, usura, affidabilità base                               |
-| M2.3 Motore di gara     | profilo di velocità, modello pilota, traffico, scia, sorpassi, errori/cadute base, gomme base |
-| M2.4 Vista 2D           | renderer Canvas, classifica live, velocità pausa–16×, feed eventi                             |
-| M2.5 Weekend            | FP, qualifiche, gara (formato da regolamento), risultati e punti                              |
-| M2.6 Classifiche        | piloti, squadre, costruttori; schermata Campionato                                            |
-| M2.7 Economia base      | stipendi, premi, sponsor esistenti, trasferte; schermata Finanze                              |
-| M2.8 Salvataggi         | slot multipli, manuale, autosalvataggio, migrazioni                                           |
-| M2.9 Bilanciamento      | `tools/balance`: distribuzione vittorie, distacchi e cadute verosimili                        |
+| Milestone                         | Contenuto                                                                                                                                                                                                                                      |
+|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| M2.1 Calendario e tempo           | stagione Premier, avanzamento giorni, eventi, inbox decisioni                                                                                                                                                                                  |
+| M2.2 Moto e componenti            | modello componenti → parametri fisici, usura, affidabilità base                                                                                                                                                                                |
+| M2.3 Motore di gara               | profilo di velocità, modello pilota, traffico, scia, sorpassi, errori/cadute base, gomme base                                                                                                                                                  |
+| M2.4 Vista 2D                     | renderer Canvas, classifica live, velocità pausa–16×, feed eventi                                                                                                                                                                              |
+| M2.5 Weekend                      | FP, qualifiche, gara (formato da regolamento), risultati e punti                                                                                                                                                                               |
+| **M2.5b Assetto e briefing base** | assetto base da libreria, problemi reali di assetto → sintomi del pilota, 1–2 proposte di ingegnere/capotecnico dopo ogni sessione, scelta del manager (accetta / mantieni / segui il pilota), effetto reale sulla sessione successiva; delega |
+| M2.6 Classifiche                  | piloti, squadre, costruttori; schermata Campionato                                                                                                                                                                                             |
+| M2.7 Economia base                | stipendi, premi, sponsor esistenti, trasferte; schermata Finanze                                                                                                                                                                               |
+| M2.8 Salvataggi                   | slot multipli, manuale, autosalvataggio, migrazioni                                                                                                                                                                                            |
+| M2.9 Bilanciamento                | `tools/balance`: distribuzione vittorie, distacchi e cadute verosimili                                                                                                                                                                         |
 
 **Funzionalità della prima versione giocabile (v0.1)**
 
@@ -974,6 +1498,12 @@ dashboard.
 - Gara simulata con vista 2D, velocità pausa–16×, sorpassi, errori,
   cadute, guasti base, gomme e carburante.
 - Strategia pre-gara (mescola, mappa, obiettivo) e pit board base.
+- Un capotecnico e un ingegnere di pista per pilota con attributi
+  tecnici di base.
+- Feedback del pilota dopo le prove e prime modifiche all'assetto
+  (briefing semplificato), con modello verità/osservazioni già attivo.
+- **Una sola moto per pilota** in gara (lo schema dati prevede già Moto
+  A/B: nessuna migrazione futura).
 - Classifiche piloti/squadre/costruttori, risultati di ogni sessione.
 - Finanze base con bilancio reale derivato dalle transazioni.
 - Salvataggi su slot e autosalvataggio.
@@ -989,6 +1519,19 @@ e negoziazione, accademia, strutture, ricerca e sviluppo completa,
 modalità **Crea la tua squadra**, categorie Intermediate e Lightweight
 giocabili, serie feeder simulate.
 
+**Squadra tecnica (livello intermedio)**
+
+- M3.x **Mercato ingegneri**: scouting dello staff con attributi a
+  intervallo, contratti (ruolo e pilota garantiti), offerte delle
+  squadre IA.
+- M3.x **Crescita professionale**: competenze dal lavoro svolto,
+  reputazione dai risultati, potenziale e curve di carriera, corsi di
+  formazione.
+- M3.x **Rapporti pilota-staff**: fiducia, comunicazione, compatibilità,
+  comprensione dello stile; riassegnazioni.
+- M3.x **Moto A / Moto B**: due moto per pilota, stato individuale,
+  lavori e prontezza, condivisione dei motori.
+
 ## Fase 4 — Simulazione avanzata
 
 Assetto completo con feedback e proposte dello staff, telemetria con
@@ -996,11 +1539,48 @@ grafici e confronto, strategie di gara complete, IA di gara e IA
 gestionale delle squadre, meteo dinamico con asciugatura e flag-to-flag,
 incidenti, bandiere, penalità, interruzioni.
 
+**Squadra tecnica (completamento intermedio → avanzato)**
+
+- Briefing interattivi completi (seconda analisi, confronto soluzioni,
+  parere del capotecnico, sperimentazione su Moto B) e briefing finale
+  pre-gara con scenari di pioggia.
+- Confronto A/B corretto per le condizioni, con incertezza (richiede la
+  telemetria di questa fase).
+- Programma delle sessioni e preparazione al bagnato (richiede meteo
+  dinamico).
+- **Cambio moto flag-to-flag completamente simulato** (richiede Moto A/B
+  di Fase 3 + meteo con asciugatura).
+- IA delle squadre su staff, briefing, Moto A/B e preparazione alla
+  pioggia.
+
 ## Fase 5 — Mondo dinamico
 
 Rivalità, media e conferenze, regolamenti con votazioni, evoluzione e
 crisi delle squadre, ingresso/uscita di costruttori, storia del
 campionato, record, archivio pluriennale.
+
+**Squadra tecnica (avanzato)**: diagnosi approfondite e analisi
+telemetrica avanzata, errori di interpretazione e confidenza "falsata"
+dalla personalità, formazione specialistica e mentoring, relazioni e
+conflitti complessi (richieste di sostituzione, tecnici che seguono un
+pilota), storico delle diagnosi per ingegnere.
+
+## Dipendenze dei nuovi sistemi
+
+    Schema dati con Bike A/B + Truth/Observation (Fase 1)
+       └─► Assetto + problemi reali + sintomi + briefing base (Fase 2, MVP)
+             ├─► Staff con attributi completi ─► Mercato ingegneri ─► Crescita ─► Rapporti (Fase 3)
+             ├─► Moto A/B, lavori e prontezza (Fase 3)
+             │     └─► Confronto A/B corretto (Fase 4, richiede telemetria)
+             └─► Briefing interattivi completi (Fase 4)
+    Meteo dinamico + asciugatura (Fase 4) ─┬─► Preparazione al bagnato nei briefing
+                                           └─► Flag-to-flag simulato (richiede anche Moto A/B)
+
+**Cosa resta fuori dall'MVP e perché**: seconda moto, mercato ingegneri,
+crescita e confronto A/B richiedono telemetria, meteo e mercato
+completi; inserirli nella v0.1 ritarderebbe la prima stagione giocabile.
+Lo schema dati li prevede fin dall'inizio, quindi verranno aggiunti
+senza riscritture.
 
 ## Fase 6 — Grafica avanzata
 
@@ -1145,7 +1725,80 @@ Nel profilo: i 17 attributi con tendenza, andamento della stagione,
 contratto e clausole, relazioni con staff/compagno/rivali, preferenze di
 assetto ricavate dal feedback, condizione fisica.
 
-## 6. Altre schermate chiave (linee guida)
+## 6. Squadra tecnica, Moto A/B e briefing (revisione Fase 0)
+
+Schermate per i sistemi descritti in [TECH_TEAM.md](TECH_TEAM.md). Tutti
+i mockup sono in Full HD 1920×1080.
+
+### 6.1 Garage Moto A / Moto B
+
+![Garage Moto A/B](../images/bikes-ab.png)
+
+Per ogni pilota: stato delle due moto (prontezza, disponibilità,
+chilometraggio, usura, affidabilità, danni, manutenzione, assetto),
+**confronto corretto** B rispetto ad A con l'incertezza e il dettaglio
+delle correzioni (evoluzione pista, carburante, gomme, temperatura),
+componenti e assetto affiancati con le differenze evidenziate,
+prestazioni per settore, piano dei lavori con le ore-meccanico
+disponibili e vincoli del regolamento (motori condivisi, gomme,
+flag-to-flag).
+
+### 6.2 Briefing tecnico
+
+![Briefing tecnico](../images/briefing.png)
+
+- **Sinistra – pilota**: immagine, nome, soddisfazione, fiducia nella
+  moto e nell'ingegnere, sensazioni riportate tra virgolette, problemi
+  con gravità percepita, richieste personali.
+- **Centro – analisi**: telemetria A vs B nel tratto critico,
+  comportamento per area (indicatori osservati), tempi per settore
+  corretti, gomme, condizioni della sessione, storico delle decisioni
+  del weekend.
+- **Destra – staff**: ingegnere di pista e capotecnico con competenze
+  chiave, comprensione dello stile del pilota, storico diagnosi, ipotesi
+  con **confidenza dichiarata**; programma della sessione successiva e
+  previsioni meteo.
+- **Basso – decisioni**: soluzioni A/B/C con vantaggi e svantaggi
+  *possibili* (non garantiti) e pulsanti Accetta modifica, Chiedi
+  approfondimento, Prova alternativa (Moto B), Parere capotecnico, Segui
+  il pilota, Confronta, Mantieni configurazione, Concludi briefing.
+  Tempo del briefing sempre visibile; delega al capotecnico.
+
+### 6.3 Mercato ingegneri
+
+![Mercato ingegneri](../images/engineer-market.png)
+
+Filtri (ruolo, specializzazione, età, stipendio, disponibilità,
+compatibilità con un pilota), tabella con valutazione attuale e
+potenziale **stimati** dagli scout (intervalli e "?"), stipendio
+richiesto, contratto, compatibilità stimata, avanzamento dello scouting;
+anteprima del profilo con attributi a intervallo, note dello scout,
+rivali interessati; incarichi di scouting e movimenti del mercato.
+
+### 6.4 Scheda ingegnere
+
+![Scheda ingegnere](../images/engineer-profile.png)
+
+Attributi del ruolo con variazione stagionale, grafico **competenze vs
+reputazione** (cresce la reputazione con i podi, le competenze con il
+lavoro), fonti di crescita, storico delle diagnosi (corretta / parziale
+/ sbagliata), personalità e ambizioni, formazione, rapporti con piloti e
+colleghi, contratto e azioni (rinnova, bonus, formazione, sposta,
+promuovi, colloquio, licenzia).
+
+### 6.5 Gestione capotecnici e ingegneri di pista
+
+![Squadra tecnica](../images/tech-staff.png)
+
+Un "box" per pilota con capotecnico, ingegnere di pista, analista e
+meccanici; per ogni coppia pilota-tecnico i sei valori del rapporto
+(fiducia, comunicazione, compatibilità, esperienza condivisa,
+comprensione dello stile, soddisfazione). Segnalazione dei **conflitti**
+con le azioni del manager, reparti specialistici con carico di lavoro,
+tecnici promuovibili dall'interno e **anteprima degli effetti** di una
+riassegnazione prima della conferma.
+
+## 7. Altre schermate chiave (linee guida)
 
 - **Tabelle**: intestazioni fisse, ordinamento, filtri salvabili,
   colonne configurabili, virtualizzazione oltre 100 righe, confronto di
@@ -1158,7 +1811,7 @@ assetto ricavate dal feedback, condizione fisica.
 - **Telemetria**: grafici a traccia sovrapposta per distanza (velocità,
   gas, freno, piega), delta-tempo, confronto pilota A/B, selettore giro.
 
-## 7. Accessibilità
+## 8. Accessibilità
 
 Contrasto minimo AA sul testo, stati mai indicati solo dal colore,
 dimensione testo regolabile, modalità per daltonici sui colori di gomme
@@ -1241,26 +1894,79 @@ gare) e salvare carriere pluriennali con storico e statistiche.
 ## Conseguenze
 
 - (+) Determinismo, replay, riproducibilità dei bug, test golden.
-
 - (+) Salvataggio/caricamento semplici e veloci.
-
 - (−) Lo storico cresce: archiviazione per stagione e caricamento su
   richiesta.
 
+# ADR-0003 — Modello di conoscenza (verità vs informazioni della squadra)
+
+- **Stato**: Proposto (in attesa di approvazione)
+- **Data**: 2026-11-01
+
+## Contesto
+
+Briefing tecnici, confronto Moto A/B, scouting di piloti e ingegneri e
+previsioni meteo richiedono che il giocatore (e le squadre IA) prendano
+decisioni con **informazioni incomplete e rumorose**, mentre la
+simulazione deve conoscere lo stato reale.
+
+## Decisione
+
+- Separare in `packages/sim` lo **stato reale** (`TruthState`: problemi
+  reali di assetto, potenziale reale, meteo futuro) dalle
+  **osservazioni** (`Observation`, `RiderFeedback`, `StaffHypothesis`,
+  `ScoutReport`, `Forecast`), generate da funzioni pure con PRNG
+  dedicato.
+- La UI e l'IA gestionale leggono **solo** le osservazioni, tramite
+  selettori di "conoscenza della squadra" (`KnowledgeView(teamId)`). Un
+  test di architettura vieta l'import dei tipi `Truth*` fuori da `sim` e
+  dai risolutori interni di `game`.
+- Le decisioni vengono applicate allo stato reale; i risultati tornano
+  come nuove osservazioni.
+
+## Alternative considerate
+
+- **Mostrare i valori reali con un filtro nella UI**: semplice, ma
+  fragile (basta un bug per svelare la soluzione) e non utilizzabile per
+  un'IA "onesta".
+- **Nessuna incertezza**: rende il briefing decorativo, contrario
+  all'obiettivo di gameplay.
+
+## Conseguenze
+
+- (+) Briefing e scouting diventano vere meccaniche; le IA competono
+  alla pari.
+
+- (+) Test semplici: si verifica la calibrazione (es. ingegnere con
+  Diagnosi 80 → ~75% diagnosi corrette).
+
+- (−) Più tipi e più dati da salvare (storico delle ipotesi): gestito
+  con archivio per stagione.
+
 # Appendice — Galleria screenshot
 
-Tutte le immagini sono mockup HTML renderizzati con Chromium; i dati
-sono illustrativi.
+Tutte le immagini sono mockup HTML renderizzati con Chromium in
+1920×1080; i dati sono illustrativi.
 
 ![main menu](../images/main-menu.png)
 
-![main menu dettaglio](../images/main-menu-dettaglio.png)
-
-![main menu 1440p](../images/main-menu-1440p.png)
-
-![main menu 4k](../images/main-menu-4k.png)
-
 ![dashboard](../images/dashboard.png)
+
+![race view](../images/race-view.png)
+
+![rider profile](../images/rider-profile.png)
+
+![bikes ab](../images/bikes-ab.png)
+
+![briefing](../images/briefing.png)
+
+![engineer market](../images/engineer-market.png)
+
+![engineer profile](../images/engineer-profile.png)
+
+![tech staff](../images/tech-staff.png)
+
+![main menu dettaglio](../images/main-menu-dettaglio.png)
 
 ![dashboard topbar](../images/dashboard-topbar.png)
 
@@ -1284,12 +1990,6 @@ classifica](../images/dashboard-widget-3-classifica.png)
 
 ![dashboard widget 8 notizie](../images/dashboard-widget-8-notizie.png)
 
-![dashboard 1440p](../images/dashboard-1440p.png)
-
-![dashboard 4k](../images/dashboard-4k.png)
-
-![race view](../images/race-view.png)
-
 ![race view mappa 2d](../images/race-view-mappa-2d.png)
 
 ![race view classifica live](../images/race-view-classifica-live.png)
@@ -1299,8 +1999,6 @@ classifica](../images/dashboard-widget-3-classifica.png)
 ![race view velocita
 simulazione](../images/race-view-velocita-simulazione.png)
 
-![rider profile](../images/rider-profile.png)
-
 ![rider profile intestazione](../images/rider-profile-intestazione.png)
 
 ![rider profile attributi](../images/rider-profile-attributi.png)
@@ -1308,3 +2006,11 @@ simulazione](../images/race-view-velocita-simulazione.png)
 ![rider profile relazioni](../images/rider-profile-relazioni.png)
 
 ![rider profile assetto](../images/rider-profile-assetto.png)
+
+![main menu 1440p](../images/main-menu-1440p.png)
+
+![dashboard 1440p](../images/dashboard-1440p.png)
+
+![main menu 4k](../images/main-menu-4k.png)
+
+![dashboard 4k](../images/dashboard-4k.png)

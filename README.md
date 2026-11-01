@@ -22,6 +22,7 @@ gioco è ancora implementato**.
 |---|---|
 | [docs/GDD.md](docs/GDD.md) | Game Design Document: universo, modalità, campionati, sistemi |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Analisi repository, scelta tecnologica, architettura, cartelle |
+| [docs/TECH_TEAM.md](docs/TECH_TEAM.md) | Squadra tecnica, Moto A/B, briefing, mercato e crescita degli ingegneri |
 | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) | Modello dati e convenzioni |
 | [docs/SIMULATION.md](docs/SIMULATION.md) | Modello di simulazione e formule principali |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Fasi, milestone, funzionalità della v0.1, primo modulo |

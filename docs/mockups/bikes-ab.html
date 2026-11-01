@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Garage Moto A / Moto B</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  main { display: grid; grid-template-columns: repeat(12, 1fr); gap: .85rem; align-content: start; }
+  .s4 { grid-column: span 4; } .s8 { grid-column: span 8; } .s5 { grid-column: span 5; } .s3 { grid-column: span 3; }
+  .bike { position: relative; overflow: hidden; }
+  .bike .letter { position: absolute; right: .8rem; top: -.9rem; font: 800 6.5rem/1 var(--font-display); font-style: italic; color: rgba(255,255,255,.05); }
+  .bike.a { box-shadow: inset 3px 0 0 #4aa3ff, var(--shadow-1); }
+  .bike.b { box-shadow: inset 3px 0 0 var(--orange), var(--shadow-1); }
+  .bhead { display: flex; align-items: center; gap: .9rem; margin-bottom: .5rem; }
+  .ring { width: 4.2rem; height: 4.2rem; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .ring b { width: 3.3rem; height: 3.3rem; border-radius: 50%; background: var(--bg-2); display: grid; place-items: center; font: 700 1.05rem var(--font-display); }
+  .bname { font: 700 1.25rem var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
+  .delta { text-align: center; padding: .4rem 0 .2rem; }
+  .delta .big { font: 800 2.9rem/1 var(--font-display); }
+  .delta .pm { font: 700 1.2rem var(--font-display); color: var(--text-2); }
+  .corr { display: grid; grid-template-columns: 1fr auto; gap: .15rem 1rem; font-size: .74rem; margin-top: .5rem; }
+  .corr span:nth-child(even) { text-align: right; font-family: var(--font-mono); font-size: .72rem; }
+  table.cmp td.d { color: var(--orange); font-weight: 600; }
+  table.cmp td.same { color: var(--text-3); }
+  .sbar { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 7rem; }
+  .sbar i { height: 6px; background: var(--bg-3); position: relative; }
+  .sbar i span { position: absolute; top: 0; bottom: 0; }
+  .jobs { display: grid; grid-template-columns: 11rem 1fr 6rem 6rem; gap: .35rem .8rem; align-items: center; font-size: .75rem; }
+  .jobs .hd { color: var(--text-3); font-size: .6rem; text-transform: uppercase; letter-spacing: .1em; }
+  .timeline { display: flex; height: 1.1rem; border-radius: 4px; overflow: hidden; background: var(--bg-3); }
+  .timeline span { display: grid; place-items: center; font-size: .6rem; color: #000; font-weight: 700; }
+  .tabs { display: flex; gap: .4rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="team"><div class="logo">LB</div><div><b>Scuderia Lupo Blu</b><span>Premier · Satellite Ardena</span></div></div>
+    <div class="nav">
+      <div class="grp">Squadra</div><a>Panoramica</a><a>Scuderia</a><a>Piloti</a><a>Personale</a>
+      <div class="grp">Tecnica</div><a class="on">Moto</a><a class="sub on" style="box-shadow:none;background:none;color:var(--orange)">Garage A / B</a><a class="sub">Componenti</a><a class="sub">Libreria assetti</a><a>Sviluppo<span class="cnt">2</span></a><a>Strutture</a>
+      <div class="grp">Persone e affari</div><a>Accademia</a><a>Mercato</a><a>Sponsor</a><a>Finanze</a>
+      <div class="grp">Competizione</div><a>Calendario</a><a>Campionato</a><a>Statistiche</a>
+      <div class="grp">Mondo</div><a>Notizie</a><a>Archivio</a>
+    </div>
+  </aside>
+  <header>
+    <h2>Garage · Moto A / B</h2>
+    <div class="tabs"><button class="btn sel">#27 Varriale</button><button class="btn">#61 Oyarzún</button></div>
+    <div class="kpi"><small>Momento</small><b>Brennholz-Ring · dopo FP1 · PR tra 2 h 10'</b></div>
+    <div class="kpi"><small>Meteo domenica</small><b class="warn">pioggia 40% (±15)</b></div>
+    <div class="spacer"></div>
+    <button class="btn">Scambia ruoli A/B</button>
+    <button class="btn">Copia assetto A → B</button>
+    <button class="btn primary">Pianifica lavori</button>
+  </header>
+  <main>
+    <!-- Moto A -->
+    <section class="card bike a s4">
+      <div class="letter">A</div>
+      <div class="bhead">
+        <div class="ring" style="background:conic-gradient(var(--ok) 0 100%, var(--bg-3) 0)"><b>100%</b></div>
+        <div><div class="bname">Moto A</div><div class="muted" style="font-size:.74rem">Configurazione principale · riferimento</div>
+          <div style="margin-top:.3rem"><span class="pill ok">PRONTA</span> <span class="pill info">ASCIUTTO</span></div></div>
+      </div>
+      <div class="row"><span class="muted">Chilometraggio</span><b>1.284 km · motore #3 (1.910 km)</b></div>
+      <div class="row"><span class="muted">Usura generale</span><div class="bar g" style="max-width:9rem"><span style="width:22%"></span></div><b>22%</b></div>
+      <div class="row"><span class="muted">Affidabilità stimata</span><b class="ok">96%</b></div>
+      <div class="row"><span class="muted">Danni</span><b class="ok">nessuno</b></div>
+      <div class="row"><span class="muted">Manutenzione</span><b>tagliando tra 410 km</b></div>
+      <div class="row"><span class="muted">Assetto</span><b>Lib. 2026 rev. 3 <span class="muted">(libreria)</span></b></div>
+    </section>
+
+    <!-- Confronto -->
+    <section class="card s4">
+      <h3>Confronto corretto FP1 <small>B rispetto ad A</small></h3>
+      <div class="delta"><div class="big ok">−0,18 s</div><div class="pm">± 0,12 s · <span class="warn">confidenza media</span></div>
+        <div class="muted" style="font-size:.72rem;margin-top:.2rem">Giri validi: A 7 · B 5 — esclusi 4 giri (traffico 2, bandiera gialla 1, errore 1)</div></div>
+      <div class="corr">
+        <span class="muted">Differenza grezza (medie)</span><span>−0,41 s</span>
+        <span class="muted">Evoluzione pista (B più tardi)</span><span>+0,15 s</span>
+        <span class="muted">Carburante (B più leggera)</span><span>+0,06 s</span>
+        <span class="muted">Età gomme (B gomme nuove)</span><span>+0,04 s</span>
+        <span class="muted">Temperatura asfalto (+3 °C)</span><span>−0,02 s</span>
+        <span style="font-weight:700">Differenza corretta</span><span style="font-weight:700" class="ok">−0,18 s</span>
+      </div>
+      <div class="muted" style="font-size:.68rem;margin-top:.45rem">Stima dell'analista telemetria (Analisi 71) · consiglio: 4–6 giri in più su B per confidenza alta</div>
+    </section>
+
+    <!-- Moto B -->
+    <section class="card bike b s4">
+      <div class="letter">B</div>
+      <div class="bhead">
+        <div class="ring" style="background:conic-gradient(var(--warn) 0 65%, var(--bg-3) 0)"><b>65%</b></div>
+        <div><div class="bname">Moto B</div><div class="muted" style="font-size:.74rem">Configurazione sperimentale</div>
+          <div style="margin-top:.3rem"><span class="pill warn">IN PREPARAZIONE · 1 h 05'</span> <span class="pill or">TEST FORCELLONE v3</span></div></div>
+      </div>
+      <div class="row"><span class="muted">Chilometraggio</span><b>842 km · motore #4 (620 km)</b></div>
+      <div class="row"><span class="muted">Usura generale</span><div class="bar g" style="max-width:9rem"><span style="width:14%"></span></div><b>14%</b></div>
+      <div class="row"><span class="muted">Affidabilità stimata</span><b class="warn">88% <span class="muted">(componente nuovo)</span></b></div>
+      <div class="row"><span class="muted">Danni</span><b class="warn">carena sx graffiata · 0,3 h</b></div>
+      <div class="row"><span class="muted">Manutenzione</span><b>ok</b></div>
+      <div class="row"><span class="muted">Assetto</span><b>Briefing FP1 · proposta B2</b></div>
+    </section>
+
+    <!-- Componenti -->
+    <section class="card s4">
+      <h3>Componenti <small>differenze evidenziate</small></h3>
+      <table class="std cmp">
+        <tr><th>Componente</th><th>Moto A</th><th>Moto B</th></tr>
+        <tr><td>Motore</td><td>#3 · spec. 2027</td><td>#4 · spec. 2027</td></tr>
+        <tr><td>Telaio</td><td>T-27 std</td><td class="same">T-27 std</td></tr>
+        <tr><td>Forcellone</td><td>F-v2 carbonio</td><td class="d">F-v3 carbonio</td></tr>
+        <tr><td>Sospensioni</td><td>Ölund 48 mm</td><td class="same">Ölund 48 mm</td></tr>
+        <tr><td>Freni</td><td>Ferrox 340 mm</td><td class="same">Ferrox 340 mm</td></tr>
+        <tr><td>Elettronica</td><td>mappe v5.2</td><td class="d">mappe v5.3</td></tr>
+        <tr><td>Aerodinamica</td><td>pacchetto A</td><td class="same">pacchetto A</td></tr>
+        <tr><td>Cambio</td><td>seamless r. corti</td><td class="same">seamless r. corti</td></tr>
+        <tr><td>Accessori</td><td>serbatoio 22 l</td><td class="same">serbatoio 22 l</td></tr>
+      </table>
+    </section>
+
+    <!-- Assetto -->
+    <section class="card s4">
+      <h3>Assetto <small>valori A · B</small></h3>
+      <table class="std cmp">
+        <tr><th>Parametro</th><th class="r">A</th><th class="r">B</th><th>Δ</th></tr>
+        <tr><td>Precarico post.</td><td class="r">8</td><td class="r d">6</td><td><div class="sbar"><i></i><i><span style="left:0;width:40%;background:var(--orange)"></span></i></div></td></tr>
+        <tr><td>Idraulica estens. post.</td><td class="r">12</td><td class="r d">10</td><td><div class="sbar"><i></i><i><span style="left:0;width:40%;background:var(--orange)"></span></i></div></td></tr>
+        <tr><td>Altezza post. (mm)</td><td class="r">+2</td><td class="r same">+2</td><td><div class="sbar"><i></i><i></i></div></td></tr>
+        <tr><td>Distribuzione pesi ant.</td><td class="r">52,0%</td><td class="r d">51,5%</td><td><div class="sbar"><i><span style="right:0;width:25%;background:var(--info)"></span></i><i></i></div></td></tr>
+        <tr><td>Controllo trazione</td><td class="r">5</td><td class="r d">6</td><td><div class="sbar"><i></i><i><span style="left:0;width:25%;background:var(--orange)"></span></i></div></td></tr>
+        <tr><td>Freno motore</td><td class="r">3</td><td class="r same">3</td><td><div class="sbar"><i></i><i></i></div></td></tr>
+        <tr><td>Mappa erogazione</td><td class="r">2</td><td class="r same">2</td><td><div class="sbar"><i></i><i></i></div></td></tr>
+        <tr><td>Rapporto finale</td><td class="r">15/41</td><td class="r same">15/41</td><td><div class="sbar"><i></i><i></i></div></td></tr>
+        <tr><td>Ali / aero</td><td class="r">carico medio</td><td class="r same">carico medio</td><td><div class="sbar"><i></i><i></i></div></td></tr>
+      </table>
+    </section>
+
+    <!-- Prestazioni -->
+    <section class="card s4">
+      <h3>Prestazioni FP1 <small>medie dei giri validi</small></h3>
+      <table class="std">
+        <tr><th>Dato</th><th class="r">A</th><th class="r">B</th><th class="r">Δ corr.</th></tr>
+        <tr><td>Miglior giro</td><td class="r">1:32.104</td><td class="r">1:31.880</td><td class="r ok">−0,18</td></tr>
+        <tr><td>Settore 1</td><td class="r">24.611</td><td class="r">24.640</td><td class="r muted">+0,02</td></tr>
+        <tr><td>Settore 2</td><td class="r">22.905</td><td class="r">22.870</td><td class="r muted">−0,03</td></tr>
+        <tr><td>Settore 3 (curve lente)</td><td class="r">25.190</td><td class="r">25.010</td><td class="r ok">−0,15</td></tr>
+        <tr><td>Settore 4</td><td class="r">19.398</td><td class="r">19.360</td><td class="r muted">−0,02</td></tr>
+        <tr><td>Velocità massima</td><td class="r">331,2</td><td class="r">330,4</td><td class="r muted">−0,8 km/h</td></tr>
+        <tr><td>Usura gomma post./giro</td><td class="r">2,9%</td><td class="r">2,6%</td><td class="r ok">−0,3%</td></tr>
+        <tr><td>Consumo/giro</td><td class="r">0,79 l</td><td class="r">0,80 l</td><td class="r muted">+0,01</td></tr>
+        <tr><td>Sensazione pilota</td><td class="r">6/10</td><td class="r">7/10</td><td class="r ok">meglio in uscita</td></tr>
+      </table>
+    </section>
+
+    <!-- Lavori -->
+    <section class="card s8">
+      <h3>Piano lavori prima della PR <small>ore-meccanico disponibili: 9,5 h (5 meccanici · coordinamento capotecnico 82)</small></h3>
+      <div class="timeline" style="margin-bottom:.7rem">
+        <span style="width:21%;background:#4aa3ff">Moto A · 2,0 h</span>
+        <span style="width:42%;background:var(--orange)">Moto B · 4,0 h</span>
+        <span style="width:16%;background:var(--warn)">Bagnato B · 1,5 h</span>
+        <span style="width:21%;background:transparent;color:var(--text-3)">libere 2,0 h</span>
+      </div>
+      <div class="jobs">
+        <span class="hd">Lavoro</span><span class="hd">Avanzamento</span><span class="hd">Ore</span><span class="hd">Moto</span>
+        <span>Montaggio forcellone v3</span><div class="bar"><span style="width:75%"></span></div><span>2,3 / 3,0 h</span><span class="or">B</span>
+        <span>Assetto proposta B2</span><div class="bar"><span style="width:40%"></span></div><span>0,4 / 1,0 h</span><span class="or">B</span>
+        <span>Riparazione carena</span><div class="bar"><span style="width:0%"></span></div><span>0 / 0,3 h</span><span class="or">B</span>
+        <span>Mappe bagnato (preparazione)</span><div class="bar y"><span style="width:0%"></span></div><span>0 / 1,5 h</span><span class="warn">B</span>
+        <span>Controllo freni e catena</span><div class="bar b"><span style="width:100%"></span></div><span>2,0 / 2,0 h</span><span class="info">A</span>
+      </div>
+    </section>
+
+    <!-- Regolamento -->
+    <section class="card s4">
+      <h3>Vincoli di regolamento <small>Premier 2027</small></h3>
+      <div class="row"><span class="muted">Moto per pilota</span><b>2</b></div>
+      <div class="row"><span class="muted">Motori stagione (condivisi A+B)</span><b>4 / 7 usati</b></div>
+      <div class="row"><span class="muted">Gomme posteriori rimaste</span><b>S 3 · M 4 · H 2 · Rain 5</b></div>
+      <div class="row"><span class="muted">Cambio moto in gara</span><b class="ok">flag-to-flag ammesso</b></div>
+      <div class="row"><span class="muted">Tempo minimo di scambio</span><b>—  (corsia box 60 km/h)</b></div>
+      <div class="row"><span class="muted">Componenti omologati</span><b>forcellone v3 <span class="ok">✓</span></b></div>
+    </section>
+  </main>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+</body>
+</html>

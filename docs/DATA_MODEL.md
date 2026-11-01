@@ -26,6 +26,9 @@ Federation ─┬─ Regulation(season, category) ── RegulationProposal ─�
                                └─ Standing (riders / teams / constructors)
 
 Manufacturer ─ supplies ─► Team ◄─ Contract ─► Person (Rider | StaffMember)
+                           │  ├─ StaffAssignment (pilota ↔ capotecnico/ingegnere) ─ RiderStaffBond
+                           │  ├─ Bike A / Bike B per pilota ─ SetupSheet ─ SetupLibraryEntry
+                           │  └─ Briefing ─ RiderFeedback / StaffHypothesis / SetupProposal / ABComparison
      │                     │  ├─ Facility[]        │
      │                     │  ├─ Bike ─ Component[] ─ ComponentDesign ◄─ RnDProject
      │                     │  ├─ FinanceAccount ─ Transaction[] / Loan[]
@@ -90,6 +93,21 @@ StaffMember extends Person {
   skills: Record<RoleSkill, number>, experience, potential, assignedRiderId?
 }
 Relationship  { aId, bId, compatibility (−100..100), rivalry (0..100), trust, lastChangeDay }
+
+// --- Squadra tecnica (revisione Fase 0, vedi TECH_TEAM.md) ---
+StaffMember (campi aggiuntivi) {
+  specialization: 'engine'|'electronics'|'chassis'|'aero'|'telemetry'|'trackside'|'mechanics'|'management',
+  attributes: Record<StaffAttribute, number>,     // set dipendente dal ruolo (TECH_TEAM §3.2)
+  potentialCeiling (nascosto), careerCurve: 'early'|'regular'|'late',
+  ambition, loyalty, confidence, marketValue,
+  experienceLog: { sessionsAnalyzed, diagnosesCorrect, diagnosesWrong, problemsSolved, trainingsDone },
+  diagnosisHistory: Id[]                          // StaffHypothesis valutate (visibili al giocatore)
+}
+RiderStaffBond { riderId, staffId, trust, communication, compatibility, sharedSessions,
+                 styleUnderstanding, satisfaction, conflictLevel, lastEventDay }
+StaffAssignment { teamId, riderId, crewChiefId, trackEngineerId, analystId?, mechanicIds[], fromDay }
+TrainingCourse  { id, staffId, targetAttributes[], cost, startDay, endDay, provider }
+StaffScoutReport{ id, staffId, observerId, day, attributeRanges: Record<StaffAttribute,[min,max]>, notes }
 ```
 
 ### Organizzazioni
@@ -110,8 +128,14 @@ Academy       { id, teamId, level, instructorIds[], riderIds[], programs[], budg
 ### Tecnica
 
 ```ts
-Bike          { id, teamId, riderId, categoryId, season, components: Record<Slot, ComponentId>,
-                currentSetup, engineUsage[] }
+Bike          { id, teamId, riderId, slot: 'A'|'B', label: 'reference'|'experimental'|'dry'|'wet'|'spare',
+                categoryId, season, components: Record<Slot, ComponentId>,   // Slot include 'accessories'
+                setupId, mileageKm, wear, reliabilityNow, damage: Damage[], maintenance: MaintenanceState,
+                readiness (0..1), availability: 'ready'|'preparing'|'damaged'|'notAllowed' }
+EngineAllocation { riderId, season, allowed, usedEngineIds[] }   // condivisa fra Moto A e B
+Damage          { componentId, severity, repairHours, cause, day }
+MaintenanceState{ hoursSinceService, pendingJobs: Job[] }
+Job             { id, bikeId, kind: 'setup'|'component'|'engine'|'repair'|'service', hoursRequired, hoursDone, assignedMechanicIds[] }
 Component     { id, slot, designId, serial, mileageKm, condition, status: 'available'|'fitted'|'broken'|'sealed' }
 ComponentDesign { id, ownerId (team|manufacturer), slot, version, stats: Record<Stat, number>,
                   reliability, weight, unitCost, homologated, seasonIntroduced }
@@ -119,7 +143,27 @@ RnDProject    { id, teamId, slot, approach: 'conservative'|'balanced'|'aggressiv
                 budget, engineerIds[], startDay, expectedEndDay, progress, risk,
                 targetStats, status: 'design'|'production'|'testing'|'done'|'failed'|'cancelled' }
 Facility      { id, teamId, type, level, upgrade?: { targetLevel, endDay, cost }, upkeepPerMonth }
-SetupSheet    { riderId, circuitId, values: Record<SetupParam, number>, notes, quality? }
+SetupSheet    { id, riderId, bikeId?, circuitId, conditions: 'dry'|'wet'|'mixed', values: Record<SetupParam, number>,
+                notes, origin: 'library'|'briefing'|'rider'|'simulator', parentId? }
+SetupLibraryEntry { teamId, circuitId, conditions, setupId, season, rating }
+
+// --- Briefing e conoscenza (ADR-0003). I tipi Truth* restano nel motore. ---
+TruthSetupIssue   (solo sim) { bikeId, area, cause: SetupParam[], magnitude }
+SessionRunPlan    { sessionId, riderId, items: { goal: 'dryDev'|'raceSim'|'tyreTest'|'bikeB'|'wetData', laps }[] }
+Observation       { id, sessionId, bikeId, kind: TelemetryIndicator, value, noise, laps }
+RiderFeedback     { id, sessionId, riderId, bikeId, symptoms: { area, phraseKey, severity }[], satisfaction }
+StaffHypothesis   { id, briefingId, staffId, area, suspectedCauses: SetupParam[], declaredConfidence,
+                    outcome?: 'correct'|'partial'|'wrong' }   // outcome calcolato dopo la prova
+SetupProposal     { id, hypothesisId, changes: Partial<Record<SetupParam, number>>, expectedGain: [min,max],
+                    expectedDrawbacks: string[], targetBike: 'A'|'B' }
+Briefing          { id, sessionId, riderId, kind: 'post'|'postQuali'|'preRace', timeBudgetMin, timeUsedMin,
+                    feedbackId, hypothesisIds[], proposalIds[], decision?: BriefingDecision, delegatedTo? }
+BriefingDecision  { type: 'accept'|'secondOpinion'|'compare'|'askCrewChief'|'riderFirst'|'keep'|'experimentB',
+                    proposalId?, day }
+ABComparison      { id, sessionId, riderId, deltaRaw, corrections: Record<string, number>, deltaCorrected,
+                    sigma, validLapsA, validLapsB, reliability: 'low'|'medium'|'high' }
+RacePlan          { riderId, roundId, tyres, fuelMode, paceTargets, rainScenarios: { condition, action }[],
+                    contingency: string[], pitBoardScript[] }
 ```
 
 ### Contratti, mercato, economia
