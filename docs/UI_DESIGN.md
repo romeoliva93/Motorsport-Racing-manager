@@ -78,7 +78,25 @@ Layout progettato su 1920×1080 in unità `rem`; la dimensione radice scala a 14
 | Obiettivi | dirigenza, sponsor, costruttore con stato | `Objective` |
 | Notizie | ultime notizie e rumors generati dagli eventi | `NewsItem` |
 
-## 4. Altre schermate chiave (linee guida)
+## 4. Weekend di gara — vista 2D
+
+![Vista gara 2D](images/race-view.png)
+
+- **Sinistra**: classifica live con distacchi, ultimo giro, mescola, guadagni/perdite di posizioni; i piloti della squadra sono evidenziati.
+- **Centro**: mappa 2D dall'alto disegnata dal tracciato del circuito, settori, corsia box, moto numerate nei colori delle squadre, segnalazione di cadute; feed degli eventi prodotti dalla simulazione.
+- **Destra**: un pannello per pilota (usura e temperatura gomme, carburante con margine all'arrivo, fatica e concentrazione) e i comandi consentiti dal regolamento: ritmo, mappa motore, **pit board** con anteprima del messaggio.
+- **Barra inferiore**: pausa, 1×, 2×, 4×, 8×, 16×, avanzamento gara, giro più veloce.
+
+## 5. Scheda pilota
+
+![Scheda pilota](images/rider-profile.png)
+
+Intestazione con numero, valutazione, **potenziale stimato come intervallo** (dipende dagli scout),
+morale, forma, stipendio. Schede: Profilo, Risultati, Contratto, Assetto preferito, Telemetria, Storico.
+Nel profilo: i 17 attributi con tendenza, andamento della stagione, contratto e clausole,
+relazioni con staff/compagno/rivali, preferenze di assetto ricavate dal feedback, condizione fisica.
+
+## 6. Altre schermate chiave (linee guida)
 
 - **Tabelle**: intestazioni fisse, ordinamento, filtri salvabili, colonne configurabili,
   virtualizzazione oltre 100 righe, confronto di due righe.
@@ -89,6 +107,6 @@ Layout progettato su 1920×1080 in unità `rem`; la dimensione radice scala a 14
 - **Telemetria**: grafici a traccia sovrapposta per distanza (velocità, gas, freno, piega),
   delta-tempo, confronto pilota A/B, selettore giro.
 
-## 5. Accessibilità
+## 7. Accessibilità
 Contrasto minimo AA sul testo, stati mai indicati solo dal colore, dimensione testo regolabile,
 modalità per daltonici sui colori di gomme e squadre, riduzione animazioni.

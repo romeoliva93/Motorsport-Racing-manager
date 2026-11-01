@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Weekend di gara, vista 2D</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { height: 100vh; overflow: hidden; }
+  .wrap { display: grid; grid-template-columns: 24rem 1fr 26rem; grid-template-rows: 3.5rem 1fr 4rem; height: 100%; }
+  header { grid-column: 1 / 4; display: flex; align-items: center; gap: 1.5rem; padding: 0 1.25rem; border-bottom: 1px solid var(--line); background: var(--bg-1); }
+  header h2 { margin: 0; font: 700 1.3rem var(--font-display); text-transform: uppercase; letter-spacing: .05em; }
+  .chip { padding: .3rem .6rem; border-radius: 4px; background: var(--bg-3); font-size: .75rem; color: var(--text-2); }
+  .chip b { color: var(--text-1); }
+  .flag { background: rgba(47,191,113,.15); color: var(--ok); font-weight: 700; }
+  .spacer { flex: 1; }
+  .panel { background: var(--bg-1); border-right: 1px solid var(--line); overflow: hidden; }
+  .panel.r { border-right: 0; border-left: 1px solid var(--line); padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+  .ttl { font: 700 .85rem var(--font-display); text-transform: uppercase; letter-spacing: .1em; color: var(--text-2); padding: .8rem 1rem .4rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .76rem; }
+  th { text-align: left; color: var(--text-3); font-size: .6rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 600; padding: 0 .4rem .3rem; }
+  td { padding: .32rem .4rem; border-top: 1px solid var(--line); white-space: nowrap; }
+  td.r, th.r { text-align: right; }
+  tr.me td { background: rgba(42,108,240,.12); }
+  tr.me td:first-child { box-shadow: inset 3px 0 0 #2a6cf0; }
+  .sw { display: inline-block; width: 4px; height: .9rem; vertical-align: middle; margin-right: .4rem; border-radius: 2px; }
+  .ty { display: inline-grid; place-items: center; width: 1rem; height: 1rem; border-radius: 50%; font-size: .55rem; font-weight: 800; color: #000; }
+  .up { color: var(--ok); } .dn { color: var(--bad); }
+  .map { position: relative; background:
+      radial-gradient(800px 500px at 50% 50%, rgba(255,122,26,.06), transparent 70%), var(--bg-0); }
+  .map svg { width: 100%; height: 100%; }
+  .feed { position: absolute; left: 1rem; bottom: 1rem; width: 26rem; display: flex; flex-direction: column; gap: .35rem; }
+  .ev { background: rgba(14,16,21,.88); border: 1px solid var(--line); border-left: 3px solid var(--orange); padding: .4rem .6rem; border-radius: 4px; font-size: .74rem; }
+  .ev small { color: var(--text-3); margin-right: .4rem; }
+  .ev.bad { border-left-color: var(--bad); }
+  .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-3); padding: .8rem .9rem; }
+  .card h3 { margin: 0 0 .6rem; font: 700 .85rem var(--font-display); text-transform: uppercase; letter-spacing: .08em; color: var(--text-2); display: flex; justify-content: space-between; }
+  .row { display: flex; justify-content: space-between; font-size: .74rem; padding: .2rem 0; }
+  .muted { color: var(--text-3); }
+  .bar { height: 6px; background: var(--bg-3); border-radius: 4px; overflow: hidden; width: 55%; }
+  .bar span { display: block; height: 100%; background: var(--accent-grad); }
+  .seg { display: flex; gap: .3rem; margin-top: .4rem; }
+  .seg button { flex: 1; background: var(--bg-3); border: 1px solid var(--line-strong); color: var(--text-2); border-radius: 4px; padding: .35rem 0; font: 600 .7rem var(--font-ui); }
+  .seg button.on { background: rgba(255,122,26,.15); border-color: var(--orange); color: var(--orange); }
+  .board { background: #0a0a0a; border: 2px solid #333; border-radius: 4px; padding: .5rem .7rem; font: 700 1.1rem var(--font-mono); color: #ffd23f; letter-spacing: .05em; line-height: 1.3; }
+  .mockup-badge { bottom: auto !important; top: 4.2rem; }
+  footer { grid-column: 1 / 4; display: flex; align-items: center; gap: .6rem; padding: 0 1.25rem; border-top: 1px solid var(--line); background: var(--bg-1); }
+  footer .sp button { background: var(--bg-3); border: 1px solid var(--line-strong); color: var(--text-2); padding: .45rem .8rem; border-radius: 4px; font: 700 .85rem var(--font-display); letter-spacing: .05em; }
+  footer .sp button.on { background: var(--accent-grad); color: #fff; border: 0; }
+  .prog { flex: 1; height: 6px; background: var(--bg-3); border-radius: 4px; margin: 0 1rem; position: relative; }
+  .prog span { position: absolute; inset: 0 auto 0 0; width: 52%; background: var(--accent-grad); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h2>Brennholz-Ring · Gara</h2>
+    <span class="chip flag">BANDIERA VERDE</span>
+    <span class="chip">Giro <b>14 / 27</b></span>
+    <span class="chip">Asfalto <b>34°</b> · Aria <b>21°</b></span>
+    <span class="chip">Pioggia prevista <b>35% tra 10'</b></span>
+    <span class="chip">Pista <b>asciutta</b></span>
+    <div class="spacer"></div>
+    <span class="chip">Comunicazioni: <b>pit board + cruscotto</b></span>
+  </header>
+
+  <section class="panel">
+    <div class="ttl">Classifica live</div>
+    <table>
+      <tr><th>P</th><th>Pilota</th><th class="r">Distacco</th><th class="r">Ultimo</th><th>G</th></tr>
+      <tr><td>1</td><td><span class="sw" style="background:#e5322d"></span>Brandauer</td><td class="r">—</td><td class="r">1:31.842</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr><td>2</td><td><span class="sw" style="background:#fff"></span>Aoyama</td><td class="r">+0.412</td><td class="r">1:31.790</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr class="me"><td>3 <span class="up">▲2</span></td><td><span class="sw" style="background:#2a6cf0"></span>Varriale</td><td class="r">+1.087</td><td class="r up">1:31.655</td><td><span class="ty" style="background:var(--tyre-soft)">S</span></td></tr>
+      <tr><td>4</td><td><span class="sw" style="background:#ff7a1a"></span>Szabó</td><td class="r">+1.530</td><td class="r">1:31.977</td><td><span class="ty" style="background:var(--tyre-hard)">H</span></td></tr>
+      <tr><td>5 <span class="dn">▼2</span></td><td><span class="sw" style="background:#7b5cff"></span>Pellerin</td><td class="r">+2.214</td><td class="r">1:32.410</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr><td>6</td><td><span class="sw" style="background:#2fbf71"></span>Okonkwo</td><td class="r">+3.902</td><td class="r">1:32.101</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr><td>7</td><td><span class="sw" style="background:#e5322d"></span>Castellví</td><td class="r">+4.338</td><td class="r">1:32.244</td><td><span class="ty" style="background:var(--tyre-hard)">H</span></td></tr>
+      <tr><td>8</td><td><span class="sw" style="background:#ffd23f"></span>Hartmann</td><td class="r">+5.017</td><td class="r">1:32.380</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr><td>9</td><td><span class="sw" style="background:#00c2c7"></span>Moreau</td><td class="r">+6.442</td><td class="r">1:32.512</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr class="me"><td>10</td><td><span class="sw" style="background:#2a6cf0"></span>Oyarzún</td><td class="r">+7.105</td><td class="r">1:32.330</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr><td>11</td><td><span class="sw" style="background:#fff"></span>Ishida</td><td class="r">+8.920</td><td class="r">1:32.691</td><td><span class="ty" style="background:var(--tyre-hard)">H</span></td></tr>
+      <tr><td>12</td><td><span class="sw" style="background:#7b5cff"></span>Lindahl</td><td class="r">+9.774</td><td class="r">1:32.802</td><td><span class="ty" style="background:var(--tyre-medium)">M</span></td></tr>
+      <tr><td>13</td><td><span class="sw" style="background:#ff7a1a"></span>Ferraz</td><td class="r">+11.06</td><td class="r">1:32.915</td><td><span class="ty" style="background:var(--tyre-soft)">S</span></td></tr>
+      <tr><td>—</td><td><span class="sw" style="background:#00c2c7"></span>Bianchet</td><td class="r dn">RIT</td><td class="r muted">caduta G9</td><td></td></tr>
+    </table>
+  </section>
+
+  <section class="map">
+    <svg viewBox="0 0 1000 700">
+      <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#e5322d"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
+      <path id="t" d="M130 560 L600 560 C690 560 730 520 750 470 L790 360 C810 310 860 300 900 330 L930 350 C960 370 975 330 955 290 L860 130 C835 90 790 80 745 100 L560 175 C515 192 485 175 465 140 L420 80 C395 45 345 40 315 70 L160 210 C125 245 140 285 185 295 L350 330 C395 340 400 385 360 400 L140 450 C80 465 70 560 130 560 Z" fill="none" stroke="#1f2430" stroke-width="34" stroke-linejoin="round"/>
+      <path d="M130 560 L600 560 C690 560 730 520 750 470 L790 360 C810 310 860 300 900 330 L930 350 C960 370 975 330 955 290 L860 130 C835 90 790 80 745 100 L560 175 C515 192 485 175 465 140 L420 80 C395 45 345 40 315 70 L160 210 C125 245 140 285 185 295 L350 330 C395 340 400 385 360 400 L140 450 C80 465 70 560 130 560 Z" fill="none" stroke="#2c3240" stroke-width="2" stroke-dasharray="2 8"/>
+      <line x1="300" y1="538" x2="300" y2="582" stroke="#fff" stroke-width="4" stroke-dasharray="4 4"/>
+      <path d="M180 600 L620 600" stroke="#1a1e27" stroke-width="10" stroke-linecap="round"/>
+      <text x="400" y="625" fill="#6b7385" font-size="13" font-family="Inter, sans-serif" text-anchor="middle">CORSIA BOX</text>
+      <g font-family="Inter, sans-serif" font-size="12" fill="#6b7385">
+        <text x="770" y="395">S1</text><text x="560" y="210">S2</text><text x="205" y="330">S3</text><text x="820" y="560">S4</text>
+      </g>
+      <!-- moto -->
+      <g font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="11" text-anchor="middle">
+        <circle cx="893" cy="208" r="10" fill="#e5322d" stroke="#000" stroke-width="2"/><text x="893" y="212" fill="#fff">8</text>
+        <circle cx="878" cy="186" r="10" fill="#fff" stroke="#000" stroke-width="2"/><text x="878" y="190" fill="#000">33</text>
+        <circle cx="860" cy="157" r="12" fill="#2a6cf0" stroke="#ff7a1a" stroke-width="3"/><text x="860" y="161" fill="#fff">27</text>
+        <circle cx="845" cy="135" r="10" fill="#ff7a1a" stroke="#000" stroke-width="2"/><text x="845" y="139" fill="#000">12</text>
+        <circle cx="815" cy="102" r="10" fill="#7b5cff" stroke="#000" stroke-width="2"/><text x="815" y="106" fill="#fff">5</text>
+        <circle cx="700" cy="118" r="10" fill="#2fbf71" stroke="#000" stroke-width="2"/><text x="700" y="122" fill="#000">41</text>
+        <circle cx="660" cy="134" r="10" fill="#e5322d" stroke="#000" stroke-width="2"/><text x="660" y="138" fill="#fff">19</text>
+        <circle cx="618" cy="152" r="10" fill="#ffd23f" stroke="#000" stroke-width="2"/><text x="618" y="156" fill="#000">72</text>
+        <circle cx="560" cy="175" r="10" fill="#00c2c7" stroke="#000" stroke-width="2"/><text x="560" y="179" fill="#000">23</text>
+        <circle cx="520" cy="185" r="12" fill="#2a6cf0" stroke="#ff7a1a" stroke-width="3"/><text x="520" y="189" fill="#fff">61</text>
+        <circle cx="470" cy="148" r="10" fill="#fff" stroke="#000" stroke-width="2"/><text x="470" y="152" fill="#000">14</text>
+        <circle cx="440" cy="108" r="10" fill="#7b5cff" stroke="#000" stroke-width="2"/><text x="440" y="112" fill="#fff">88</text>
+        <circle cx="400" cy="60" r="10" fill="#ff7a1a" stroke="#000" stroke-width="2"/><text x="400" y="64" fill="#000">36</text>
+      </g>
+      <g><circle cx="335" cy="56" r="7" fill="none" stroke="#ff4d4f" stroke-width="2"/><text x="335" y="40" fill="#ff4d4f" font-size="11" font-family="Inter, sans-serif" text-anchor="middle">caduta G9</text></g>
+    </svg>
+    <div class="feed">
+      <div class="ev"><small>G14</small>Varriale supera Pellerin alla staccata di curva 1</div>
+      <div class="ev"><small>G13</small>Varriale nella scia di Pellerin: −0,24 s nel settore 4</div>
+      <div class="ev bad"><small>G9</small>Caduta di Bianchet in curva 7 · ritirato</div>
+    </div>
+  </section>
+
+  <section class="panel r">
+    <div class="card">
+      <h3>#27 Varriale <span class="muted" style="font:500 .7rem var(--font-ui)">P3</span></h3>
+      <div class="row"><span class="muted">Gomma post. soft · usura</span><div class="bar"><span style="width:46%"></span></div></div>
+      <div class="row"><span class="muted">Temp. posteriore</span><b class="warn">108 °C (alta)</b></div>
+      <div class="row"><span class="muted">Carburante</span><b>9,8 l · arriva +0,4 l</b></div>
+      <div class="row"><span class="muted">Fatica · concentrazione</span><b>31% · 88%</b></div>
+      <div class="muted" style="font-size:.7rem; margin-top:.4rem">Ritmo</div>
+      <div class="seg"><button>Gestione</button><button>Costante</button><button class="on">Attacco</button></div>
+      <div class="muted" style="font-size:.7rem; margin-top:.4rem">Mappa motore</div>
+      <div class="seg"><button>1 · Eco</button><button class="on">2</button><button>3</button><button>4 · Max</button></div>
+    </div>
+    <div class="card">
+      <h3>#61 Oyarzún <span class="muted" style="font:500 .7rem var(--font-ui)">P10</span></h3>
+      <div class="row"><span class="muted">Gomma post. media · usura</span><div class="bar"><span style="width:38%"></span></div></div>
+      <div class="row"><span class="muted">Temp. posteriore</span><b class="ok">96 °C</b></div>
+      <div class="row"><span class="muted">Carburante</span><b>10,1 l · arriva +0,9 l</b></div>
+      <div class="seg"><button>Gestione</button><button class="on">Costante</button><button>Attacco</button></div>
+    </div>
+    <div class="card">
+      <h3>Pit board · #27 <span class="muted" style="font:500 .7rem var(--font-ui)">esposta al prossimo passaggio</span></h3>
+      <div class="board">P3 &nbsp;+1.0<br>27 &nbsp;L13<br>PUSH</div>
+    </div>
+  </section>
+
+  <footer>
+    <span class="sp"><button>❚❚</button> <button>1×</button> <button>2×</button> <button class="on">4×</button> <button>8×</button> <button>16×</button></span>
+    <div class="prog"><span></span></div>
+    <span class="chip">Tempo gara <b>21:28</b></span>
+    <span class="chip">Giro più veloce <b>1:31.655 · Varriale</b></span>
+  </footer>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+</body>
+</html>

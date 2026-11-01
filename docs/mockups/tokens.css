@@ -62,7 +62,7 @@ body {
 .display { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
 .mockup-badge {
   position: fixed; right: 12px; bottom: 10px; z-index: 99;
-  font: 600 11px var(--font-ui); letter-spacing: .08em; text-transform: uppercase;
+  font: 600 .7rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase;
   color: var(--amber); background: rgba(255,176,32,.08); border: 1px solid rgba(255,176,32,.35);
   padding: 4px 8px; border-radius: 4px;
 }

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Scheda pilota</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { height: 100vh; overflow: hidden; }
+  .app { display: grid; grid-template-columns: 15rem 1fr; height: 100%; }
+  aside { background: var(--bg-1); border-right: 1px solid var(--line); padding: .6rem .5rem; }
+  .grp { color: var(--text-3); font: 600 .62rem var(--font-ui); letter-spacing: .14em; text-transform: uppercase; padding: .7rem .7rem .3rem; }
+  aside a { display: block; padding: .42rem .7rem; border-radius: 6px; color: var(--text-2); font-size: .82rem; }
+  aside a.on { background: linear-gradient(90deg, rgba(229,50,45,.20), rgba(255,122,26,.04)); color: var(--text-1); box-shadow: inset 2px 0 0 var(--orange); }
+  main { overflow: hidden; display: flex; flex-direction: column; }
+  .hero { position: relative; padding: 1.5rem 2rem; background: linear-gradient(100deg, rgba(42,108,240,.22), rgba(14,16,21,0) 55%), var(--bg-1); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 2rem; overflow: hidden; }
+  .hero .num { font: 800 8rem/0.8 var(--font-display); font-style: italic; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero h1 { margin: 0; font: 800 3rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; }
+  .hero .sub { color: var(--text-2); margin-top: .4rem; }
+  .tags { display: flex; gap: .4rem; margin-top: .7rem; }
+  .tag { font-size: .7rem; padding: .25rem .55rem; border-radius: 4px; background: var(--bg-3); color: var(--text-2); }
+  .tag.o { background: rgba(255,122,26,.15); color: var(--orange); }
+  .kpis { margin-left: auto; display: grid; grid-template-columns: repeat(5, auto); gap: 2.2rem; }
+  .kpis small { display: block; color: var(--text-3); font-size: .62rem; text-transform: uppercase; letter-spacing: .12em; }
+  .kpis b { font: 700 1.9rem var(--font-display); }
+  .tabs { display: flex; gap: 1.5rem; padding: 0 2rem; border-bottom: 1px solid var(--line); background: var(--bg-1); }
+  .tabs span { padding: .75rem 0; color: var(--text-3); font-weight: 600; font-size: .82rem; }
+  .tabs span.on { color: var(--text-1); box-shadow: inset 0 -2px 0 var(--orange); }
+  .grid { padding: 1rem 2rem; display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 1rem; }
+  .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-3); padding: .9rem 1rem; }
+  .card h3 { margin: 0 0 .7rem; font: 700 .9rem var(--font-display); text-transform: uppercase; letter-spacing: .08em; color: var(--text-2); display: flex; justify-content: space-between; }
+  .card h3 span { font: 500 .7rem var(--font-ui); text-transform: none; letter-spacing: 0; color: var(--text-3); }
+  .attr { display: grid; grid-template-columns: 9.5rem 1fr 2rem 1rem; align-items: center; gap: .6rem; font-size: .76rem; padding: .17rem 0; }
+  .attr .bar { height: 6px; background: var(--bg-3); border-radius: 4px; overflow: hidden; }
+  .attr .bar span { display: block; height: 100%; border-radius: 4px; background: var(--accent-grad); }
+  .attr b { text-align: right; }
+  .up { color: var(--ok); } .dn { color: var(--bad); } .muted { color: var(--text-3); } .warn { color: var(--warn); } .ok { color: var(--ok); }
+  .row { display: flex; justify-content: space-between; font-size: .76rem; padding: .3rem 0; border-top: 1px solid var(--line); }
+  .row:first-of-type { border-top: 0; }
+  .rel { display: grid; grid-template-columns: 1fr 6rem 2.5rem; gap: .6rem; align-items: center; font-size: .76rem; padding: .3rem 0; }
+  .meter { height: 6px; background: var(--bg-3); border-radius: 4px; position: relative; }
+  .meter span { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+  .col { display: flex; flex-direction: column; gap: 1rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="grp">Squadra</div><a>Panoramica</a><a>Scuderia</a><a class="on">Piloti</a><a>Personale</a>
+    <div class="grp">Tecnica</div><a>Moto</a><a>Sviluppo</a><a>Strutture</a>
+    <div class="grp">Persone e affari</div><a>Accademia</a><a>Mercato</a><a>Sponsor</a><a>Finanze</a>
+    <div class="grp">Competizione</div><a>Calendario</a><a>Campionato</a><a>Statistiche</a>
+    <div class="grp">Mondo</div><a>Notizie</a><a>Archivio</a>
+  </aside>
+  <main>
+    <div class="hero">
+      <div class="num">27</div>
+      <div>
+        <h1>Teo Varriale</h1>
+        <div class="sub">Italia · 24 anni · Scuderia Lupo Blu · Pilota titolare</div>
+        <div class="tags"><span class="tag o">Stile: staccatore aggressivo</span><span class="tag">Personalità: ambizioso</span><span class="tag">Rivale: L. Brandauer</span></div>
+      </div>
+      <div class="kpis">
+        <div><small>Valutazione</small><b>84</b></div>
+        <div><small>Potenziale (stima scout)</small><b>86–91</b></div>
+        <div><small>Morale</small><b class="ok">Alto</b></div>
+        <div><small>Forma</small><b class="up">▲ +3</b></div>
+        <div><small>Stipendio</small><b>₡ 2,4 M</b></div>
+      </div>
+    </div>
+    <div class="tabs"><span class="on">Profilo</span><span>Risultati</span><span>Contratto</span><span>Assetto preferito</span><span>Telemetria</span><span>Storico</span></div>
+    <div class="grid">
+      <section class="card">
+        <h3>Attributi <span>tendenza ultime 5 gare</span></h3>
+        <div class="attr"><span>Velocità</span><div class="bar"><span style="width:88%"></span></div><b>88</b><span class="up">▲</span></div>
+        <div class="attr"><span>Passo gara</span><div class="bar"><span style="width:83%"></span></div><b>83</b><span class="up">▲</span></div>
+        <div class="attr"><span>Frenata</span><div class="bar"><span style="width:91%"></span></div><b>91</b><span></span></div>
+        <div class="attr"><span>Accelerazione</span><div class="bar"><span style="width:80%"></span></div><b>80</b><span></span></div>
+        <div class="attr"><span>Inserimento in curva</span><div class="bar"><span style="width:86%"></span></div><b>86</b><span></span></div>
+        <div class="attr"><span>Sorpassi</span><div class="bar"><span style="width:89%"></span></div><b>89</b><span class="up">▲</span></div>
+        <div class="attr"><span>Difesa</span><div class="bar"><span style="width:77%"></span></div><b>77</b><span></span></div>
+        <div class="attr"><span>Gestione pneumatici</span><div class="bar"><span style="width:72%"></span></div><b>72</b><span class="dn">▼</span></div>
+        <div class="attr"><span>Gestione carburante</span><div class="bar"><span style="width:75%"></span></div><b>75</b><span></span></div>
+        <div class="attr"><span>Bagnato</span><div class="bar"><span style="width:69%"></span></div><b>69</b><span></span></div>
+        <div class="attr"><span>Costanza</span><div class="bar"><span style="width:78%"></span></div><b>78</b><span></span></div>
+        <div class="attr"><span>Aggressività</span><div class="bar"><span style="width:85%"></span></div><b>85</b><span></span></div>
+        <div class="attr"><span>Concentrazione</span><div class="bar"><span style="width:81%"></span></div><b>81</b><span></span></div>
+        <div class="attr"><span>Feedback tecnico</span><div class="bar"><span style="width:74%"></span></div><b>74</b><span class="up">▲</span></div>
+        <div class="attr"><span>Adattabilità</span><div class="bar"><span style="width:79%"></span></div><b>79</b><span></span></div>
+        <div class="attr"><span>Forma fisica</span><div class="bar"><span style="width:92%"></span></div><b>92</b><span></span></div>
+        <div class="attr"><span>Resistenza mentale</span><div class="bar"><span style="width:76%"></span></div><b>76</b><span></span></div>
+      </section>
+
+      <div class="col">
+        <section class="card">
+          <h3>Stagione 2027</h3>
+          <svg viewBox="0 0 300 120" width="100%">
+            <g stroke="#262b37"><line x1="20" y1="20" x2="295" y2="20"/><line x1="20" y1="60" x2="295" y2="60"/><line x1="20" y1="100" x2="295" y2="100"/></g>
+            <g fill="#6b7385" font-size="9" font-family="Inter, sans-serif"><text x="4" y="23">1</text><text x="4" y="63">10</text><text x="0" y="103">20</text></g>
+            <polyline points="40,42 85,64 130,29 175,51 220,100 265,33" fill="none" stroke="#ff7a1a" stroke-width="2.5"/>
+            <g fill="#ff7a1a"><circle cx="40" cy="42" r="3.5"/><circle cx="85" cy="64" r="3.5"/><circle cx="130" cy="29" r="3.5"/><circle cx="175" cy="51" r="3.5"/><circle cx="220" cy="100" r="3.5" fill="#ff4d4f"/><circle cx="265" cy="33" r="3.5"/></g>
+            <g fill="#6b7385" font-size="9" font-family="Inter, sans-serif" text-anchor="middle"><text x="40" y="116">R1</text><text x="85" y="116">R2</text><text x="130" y="116">R3</text><text x="175" y="116">R4</text><text x="220" y="116">R5</text><text x="265" y="116">R6</text></g>
+          </svg>
+          <div class="row"><span class="muted">Punti · posizione</span><b>88 · 5°</b></div>
+          <div class="row"><span class="muted">Vittorie · podi · pole</span><b>0 · 2 · 1</b></div>
+          <div class="row"><span class="muted">Cadute · ritiri</span><b>2 · 1</b></div>
+          <div class="row"><span class="muted">Media qualifica</span><b>4,8</b></div>
+        </section>
+        <section class="card">
+          <h3>Contratto</h3>
+          <div class="row"><span class="muted">Scadenza</span><b>fine 2028</b></div>
+          <div class="row"><span class="muted">Bonus</span><b>₡ 80 k/podio · ₡ 250 k/vittoria</b></div>
+          <div class="row"><span class="muted">Clausola rescissoria</span><b>₡ 6,5 M</b></div>
+          <div class="row"><span class="muted">Opzione rinnovo</span><b>squadra, entro 31/07</b></div>
+          <div class="row"><span class="muted">Interesse esterno</span><b class="warn">Hoshiro RW (rumors)</b></div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="card">
+          <h3>Relazioni <span>−100 … +100</span></h3>
+          <div class="rel"><span>M. Doria · capotecnico</span><div class="meter"><span style="left:50%; width:36%; background:var(--ok)"></span></div><b class="ok">+72</b></div>
+          <div class="rel"><span>A. Kessler · ing. di pista</span><div class="meter"><span style="left:50%; width:20%; background:var(--ok)"></span></div><b class="ok">+41</b></div>
+          <div class="rel"><span>R. Oyarzún · compagno</span><div class="meter"><span style="left:44%; width:6%; background:var(--warn)"></span></div><b class="warn">−12</b></div>
+          <div class="rel"><span>L. Brandauer · rivale</span><div class="meter"><span style="left:22%; width:28%; background:var(--bad)"></span></div><b class="dn">−55</b></div>
+          <div class="rel"><span>Team Principal (tu)</span><div class="meter"><span style="left:50%; width:29%; background:var(--ok)"></span></div><b class="ok">+58</b></div>
+        </section>
+        <section class="card">
+          <h3>Preferenze di assetto <span>da feedback del pilota</span></h3>
+          <div class="row"><span class="muted">Anteriore</span><b>rigido, molto supporto in staccata</b></div>
+          <div class="row"><span class="muted">Posteriore</span><b>morbido in uscita</b></div>
+          <div class="row"><span class="muted">Freno motore</span><b>basso</b></div>
+          <div class="row"><span class="muted">Controllo trazione</span><b>medio-basso</b></div>
+          <div class="row"><span class="muted">Affidabilità del feedback</span><b>74 / 100</b></div>
+        </section>
+        <section class="card">
+          <h3>Condizione</h3>
+          <div class="row"><span class="muted">Infortuni</span><b class="ok">nessuno</b></div>
+          <div class="row"><span class="muted">Fatica accumulata</span><b>bassa</b></div>
+          <div class="row"><span class="muted">Impegni sponsor questo mese</span><b>2 / 3</b></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+</body>
+</html>
