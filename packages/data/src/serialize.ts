@@ -8,7 +8,11 @@ import { SCHEMA_VERSION, type GameState } from './schema/state.ts';
 export type Migration = (state: Record<string, unknown>) => Record<string, unknown>;
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
-  // 1: (s) => ({ ...s, schemaVersion: 2, ... })
+  /** v1 → v2: aggiunta la tabella delle trattative di mercato. */
+  1: (s) => {
+    const tables = (s.tables ?? {}) as Record<string, unknown>;
+    return { ...s, tables: { ...tables, negotiations: tables.negotiations ?? {} } };
+  },
 };
 
 export class SaveFormatError extends Error {}

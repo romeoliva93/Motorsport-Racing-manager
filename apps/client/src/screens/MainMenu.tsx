@@ -84,8 +84,8 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
           >
             Carica partita <small>{saves ? `${saves.length} salvataggi` : '…'}</small>
           </button>
-          <button className="item" disabled>
-            Crea la tua squadra <span className="soon">In sviluppo</span>
+          <button className="item" onClick={() => go({ name: 'newCareer', mode: 'create' })}>
+            Crea la tua squadra <small>Nuova scuderia</small>
           </button>
           <button className="item" disabled>
             Impostazioni <span className="soon">In sviluppo</span>

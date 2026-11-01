@@ -23,18 +23,24 @@ describe('GameEngine', () => {
     const e = GameEngine.newCareer({ seed: 's1', saveName: 'prova', teamId: lupoBlu(tmp) });
     expect(validateGameState(e.state)).toEqual([]);
     expect(e.state.meta.playerTeamId).toBe(lupoBlu(e));
-    expect(e.availableCommands()).toEqual(['AdvanceDays', 'ContinueToNextEvent']);
+    expect(e.availableCommands()).toEqual([
+      'AdvanceDays',
+      'ContinueToNextEvent',
+      'MakeOffer',
+      'AcceptCounter',
+      'WithdrawNegotiation',
+    ]);
   });
 
   it('valida i comandi senza modificare lo stato in caso di errore', () => {
     const e = GameEngine.newCareer({ seed: 's2', saveName: 'prova' });
-    expect(e.availableCommands()).toEqual(['SetPlayerTeam']);
+    expect(e.availableCommands()).toEqual(['SetPlayerTeam', 'CreateTeam']);
     const before = e.version;
     expect(e.dispatch({ type: 'AdvanceDays', days: 3 }).ok).toBe(false);
     const rookiesOrg = rows(e.state, 'teams').find((t) => t.type === 'organizer')!.id;
     expect(e.dispatch({ type: 'SetPlayerTeam', teamId: rookiesOrg })).toEqual({
       ok: false,
-      error: 'La Velocity Rookies Cup non ha squadre gestibili',
+      error: 'La Rookies Cup non ha squadre gestibili',
     });
     expect(e.dispatch({ type: 'SetPlayerTeam', teamId: 'tem_999999' }).ok).toBe(false);
     expect(e.version).toBe(before);

@@ -30,7 +30,7 @@ export function createEngineHost(opts: EngineHostOptions) {
     opts.post({ kind: 'changed', version });
   };
   const stateFor = (name: string): GameState => {
-    if (name === 'categories' || name === 'teamCards')
+    if (!engine && (name === 'categories' || name === 'teamCards' || name === 'createTeamOptions'))
       return (engine ?? preview ?? failNoWorld()).state as GameState;
     return current().state as GameState;
   };

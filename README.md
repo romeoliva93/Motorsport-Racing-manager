@@ -17,9 +17,14 @@ Il codice contiene le fondamenta (`packages/core`, `packages/data`): generatore 
 identificativi, tempo di gioco, eventi, denaro, schema delle entità, validatore delle regole del mondo,
 salvataggio versionato, **contenuti originali e generatore del mondo** (4 categorie, 41 squadre, 135 piloti,
 oltre 500 membri dello staff, 20 circuiti, calendario, contratti, moto, strutture, budget).
-Il motore gira in un Web Worker e l'**interfaccia React** permette già di: creare una carriera scegliendo una
-squadra del mondo generato, consultare Panoramica, Scuderia, Piloti, Personale e Calendario con dati reali,
-far avanzare il tempo fino al prossimo evento, salvare e ricaricare (IndexedDB, slot multipli).
+Il motore gira in un Web Worker e l'**interfaccia React** permette già di: creare una carriera **scegliendo una
+squadra esistente o creandone una nuova** (nome, sigla, nazionalità, sede, colori, categoria, tipologia,
+costruttore), **trattare con tutti i piloti al Mercato** prima del primo Gran Premio (offerte, controproposte,
+clausole, rinnovi), consultare Panoramica, Scuderia, Piloti, Personale e Calendario con dati reali, far avanzare
+il tempo, salvare e ricaricare (IndexedDB, slot multipli). Gli importi sono in euro, mostrati in milioni.
+
+> Nomi provvisori: le categorie si chiamano per ora **MotoGP, Moto2 e Moto3** su richiesta, in attesa dei nomi
+> definitivi. Sono marchi registrati: vanno sostituiti prima di qualunque distribuzione pubblica.
 **Non si corrono ancora gare**: weekend, simulazione, economia e classifiche arrivano con la Fase 2.
 Le voci del menu dei sistemi non ancora sviluppati sono visibili ma disabilitate ("In sviluppo").
 

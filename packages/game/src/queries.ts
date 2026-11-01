@@ -5,6 +5,8 @@
  */
 import { GameCalendar, cyrb128 } from '@lean-angle/core';
 import {
+  NAMES_CONTENT,
+  OPENING_BALANCE,
   RIDER_ATTRIBUTES,
   rows,
   teamBalance,
@@ -20,6 +22,7 @@ import {
   type TeamId,
   type TeamType,
 } from '@lean-angle/data';
+import { activeRiderContract, askingSalary, buyoutFor, ineligibility, marketOpen } from './market.ts';
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
@@ -493,6 +496,195 @@ export function calendar(s: GameState, categoryId: string): CalendarRow[] {
   });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Mercato
+
+export interface MarketRow {
+  id: string;
+  name: string;
+  nationality: string;
+  age: number;
+  team: string | null;
+  teamColors: { primary: string; secondary: string } | null;
+  category: string | null;
+  tier: CategoryTier | null;
+  role: RiderRole;
+  rating: number;
+  potential: [number, number];
+  salary: number | null;
+  contractEnd: string | null;
+  buyout: number;
+  /** Richiesta indicativa del manager (intervallo), per la squadra del giocatore. */
+  askingRange: [number, number] | null;
+  eligible: boolean;
+  ineligibleReason: string | null;
+  own: boolean;
+  negotiation: 'open' | 'signed' | 'rejected' | 'withdrawn' | null;
+}
+
+export type MarketFilter = 'all' | 'free' | CategoryTier;
+
+export function marketRiders(s: GameState, filter: MarketFilter = 'all', search = ''): MarketRow[] {
+  const c = cal(s);
+  const teamId = s.meta.playerTeamId;
+  const q = search.trim().toLowerCase();
+  return rows(s, 'riders')
+    .filter((r) => r.status !== 'retired')
+    .map((r) => {
+      const k = activeRiderContract(s, r.id);
+      const team = k ? s.tables.teams[k.employerId as TeamId] : undefined;
+      const tier = r.categoryId ? s.tables.categories[r.categoryId]!.tier : null;
+      const why = teamId ? ineligibility(s, r, teamId, 'race') : null;
+      const ask = teamId ? askingSalary(s, r, teamId) : null;
+      const neg = rows(s, 'negotiations')
+        .filter((n) => n.riderId === r.id && n.teamId === teamId)
+        .at(-1);
+      return {
+        id: r.id,
+        name: `${r.firstName} ${r.lastName}`,
+        nationality: r.nationality,
+        age: c.ageOn(r.birthDay, s.meta.currentDay),
+        team: team ? team.name : null,
+        teamColors: team ? { primary: team.colors.primary, secondary: team.colors.secondary } : null,
+        category: r.categoryId ? s.tables.categories[r.categoryId]!.name : null,
+        tier,
+        role: r.role,
+        rating: riderRating(r),
+        potential: potentialEstimate(s, r, teamId),
+        salary: k ? k.salary : null,
+        contractEnd: k ? c.format(k.endDay) : null,
+        buyout: k?.employerId === teamId ? 0 : buyoutFor(s, k),
+        askingRange:
+          ask === null
+            ? null
+            : [Math.round((ask * 0.9) / 10_000) * 10_000, Math.round((ask * 1.1) / 10_000) * 10_000],
+        eligible: why === null,
+        ineligibleReason: why,
+        own: !!teamId && k?.employerId === teamId,
+        negotiation: neg ? neg.status : null,
+      } satisfies MarketRow;
+    })
+    .filter((r) => (filter === 'all' ? true : filter === 'free' ? r.team === null : r.tier === filter))
+    .filter((r) => !q || r.name.toLowerCase().includes(q) || (r.team ?? '').toLowerCase().includes(q))
+    .sort((a, b) => b.rating - a.rating);
+}
+
+export interface NegotiationView {
+  rider: MarketRow;
+  open: boolean;
+  marketOpen: boolean;
+  kind: 'transfer' | 'renewal';
+  balance: number;
+  currentContract: {
+    team: string;
+    salary: number;
+    end: string;
+    role: string;
+    bonuses: { condition: string; amount: number }[];
+  } | null;
+  ownSeats: { riderId: string | null; name: string | null; number: number }[];
+  rounds: {
+    day: string;
+    salary: number;
+    years: number;
+    role: string;
+    response: string;
+    counter: { salary: number; years: number } | null;
+    message: string;
+  }[];
+  status: 'open' | 'signed' | 'rejected' | 'withdrawn' | null;
+  patience: number | null;
+}
+
+export function negotiationView(s: GameState, riderId: string): NegotiationView | null {
+  const r = s.tables.riders[riderId as Rider['id']];
+  const teamId = s.meta.playerTeamId;
+  if (!r || !teamId) return null;
+  const c = cal(s);
+  const row = marketRiders(s, 'all').find((x) => x.id === riderId)!;
+  const k = activeRiderContract(s, r.id);
+  const neg = rows(s, 'negotiations')
+    .filter((n) => n.riderId === r.id && n.teamId === teamId)
+    .at(-1);
+  const entry = rows(s, 'teamEntries').find((e) => e.teamId === teamId)!;
+  return {
+    rider: row,
+    open: neg?.status === 'open',
+    marketOpen: marketOpen(s),
+    kind: k?.employerId === teamId ? 'renewal' : 'transfer',
+    balance: teamBalance(s, teamId),
+    currentContract: k
+      ? {
+          team: s.tables.teams[k.employerId as TeamId]!.name,
+          salary: k.salary,
+          end: c.format(k.endDay),
+          role: k.role,
+          bonuses: k.bonuses,
+        }
+      : null,
+    ownSeats: entry.seats.map((seat) => {
+      const sr = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
+      return {
+        riderId: seat.riderId,
+        name: sr ? `${sr.firstName} ${sr.lastName}` : null,
+        number: seat.number,
+      };
+    }),
+    rounds: (neg?.rounds ?? []).map((x) => ({
+      day: c.format(x.day),
+      salary: x.offer.salary,
+      years: x.offer.years,
+      role: x.offer.role,
+      response: x.response,
+      counter: x.counter ?? null,
+      message: x.message,
+    })),
+    status: neg?.status ?? null,
+    patience: neg ? neg.patience : null,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Crea la tua squadra
+
+export interface CreateTeamOptionsView {
+  categories: {
+    tier: Exclude<CategoryTier, 'rookies'>;
+    name: string;
+    manufacturers: { id: string; name: string; country: string; strength: number }[];
+    types: { type: 'private' | 'independent' | 'satellite'; budget: [number, number] }[];
+  }[];
+  nationalities: string[];
+}
+
+export function createTeamOptions(s: GameState): CreateTeamOptionsView {
+  const tiers = ['premier', 'intermediate', 'lightweight'] as const;
+  return {
+    categories: tiers.map((tier) => {
+      const cat = rows(s, 'categories').find((c) => c.tier === tier)!;
+      return {
+        tier,
+        name: cat.name,
+        manufacturers: rows(s, 'manufacturers')
+          .filter((m) => m.categories.includes(cat.id))
+          .map((m) => ({ id: m.id, name: m.name, country: m.country, strength: m.engineeringStrength })),
+        types: (['private', 'independent', 'satellite'] as const).flatMap((type) => {
+          const b = OPENING_BALANCE[tier][type];
+          return b
+            ? [
+                {
+                  type,
+                  budget: [Math.round((b[0] + b[1]) / 2), Math.round((b[0] + b[1]) / 2)] as [number, number],
+                },
+              ]
+            : [];
+        }),
+      };
+    }),
+    nationalities: Object.keys(NAMES_CONTENT).sort(),
+  };
+}
+
 /** Registro delle viste disponibili all'interfaccia (usato dall'engine host per le richieste remote). */
 export const QUERIES = {
   categories,
@@ -504,6 +696,9 @@ export const QUERIES = {
   teamStaff,
   staffDetail,
   calendar,
+  marketRiders,
+  negotiationView,
+  createTeamOptions,
 } as const;
 export type QueryName = keyof typeof QUERIES;
 export type QueryArgs<N extends QueryName> = (typeof QUERIES)[N] extends (

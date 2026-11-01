@@ -260,3 +260,17 @@ Specifiche: [REGULATIONS.md](REGULATIONS.md) e [INJURIES_AND_TESTERS.md](INJURIE
   promozioni in Lightweight, storie di carriera generate (es. Fabrizio Vitellino).
 - **IA**: le squadre avversarie scelgono fra le stesse tre opzioni in base a budget, obiettivi, durata
   dell'assenza, collaudatori, mercato, classifica e regolamento.
+
+## 18. Mercato e creazione squadra (Fase 1, prima versione giocabile)
+
+- **Nomi provvisori delle categorie**: MotoGP, Moto2, Moto3 (+ Rookies Cup), su richiesta durante lo sviluppo.
+  Da sostituire con nomi originali prima di qualunque distribuzione pubblica.
+- **Valuta**: euro; l'interfaccia mostra sempre gli importi in milioni (es. € 25,02 mln).
+- **Mercato piloti** aperto fino al primo Gran Premio, su tutti i piloti (liberi o sotto contratto, di ogni
+  categoria). Il giocatore va dal pilota, vede il contratto che ha (stipendio, scadenza, bonus, clausola) e fa
+  un'offerta (stipendio, durata 1–3 anni, ruolo, bonus vittoria/podio, chi lascia il posto). Il pilota accetta,
+  rifiuta o fa una controproposta; ogni offerta consuma pazienza. Formule in `packages/game/src/market.ts`.
+- **Firma**: clausola pagata alla squadra di provenienza, pilota sostituito liberato con indennità (50% del residuo),
+  capotecnico, ingegnere di pista e moto riassegnati; la squadra che perde un pilota ingaggia il miglior libero idoneo.
+- **Crea la tua squadra**: nome, sigla, nazionalità, sede, colori, categoria, tipologia (privata, indipendente,
+  satellite) e costruttore; staff tecnico di partenza e due posti liberi da riempire al mercato.

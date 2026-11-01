@@ -21,6 +21,12 @@ simulazione, design system e mockup di menu principale e dashboard.
 | **M1.7 Menu e nuova carriera** ✅ | menu principale, scelta squadra esistente, salvataggio iniziale | partita creata dal generatore e visibile nella shell |
 | **M1.8 Schermate dati** ✅ | Scuderia, Piloti (lista + scheda), Personale (lista + scheda) collegate allo stato | nessun dato statico nelle schermate |
 
+## Anticipato in Fase 1 (su richiesta)
+- Mercato piloti pre-campionato con trattative, controproposte, clausole e rinnovi (versione base di M3.x).
+- Crea la tua squadra (privata, indipendente, satellite); restano in sviluppo squadra ufficiale e nuovo costruttore.
+- Restano per la Fase 3: mercato in stagione, offerte delle squadre IA ai piloti del giocatore, contratti
+  con clausole avanzate, mercato dello staff.
+
 ## Fase 2 — Prima stagione giocabile (v0.1)
 
 | Milestone | Contenuto |

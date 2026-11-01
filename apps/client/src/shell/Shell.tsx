@@ -7,6 +7,7 @@ import { TeamScreen } from '../screens/game/Team.tsx';
 import { RidersScreen } from '../screens/game/Riders.tsx';
 import { StaffScreen } from '../screens/game/Staff.tsx';
 import { CalendarScreen } from '../screens/game/Calendar.tsx';
+import { MarketScreen } from '../screens/game/Market.tsx';
 
 export type Section =
   | 'overview'
@@ -49,7 +50,7 @@ const NAV: { group: string; items: { id: Section; label: string; ready: boolean 
     group: 'Persone e affari',
     items: [
       { id: 'academy', label: 'Accademia', ready: false },
-      { id: 'market', label: 'Mercato', ready: false },
+      { id: 'market', label: 'Mercato', ready: true },
       { id: 'sponsors', label: 'Sponsor', ready: false },
       { id: 'finance', label: 'Finanze', ready: false },
     ],
@@ -75,8 +76,16 @@ const TITLE = Object.fromEntries(NAV.flatMap((g) => g.items.map((i) => [i.id, i.
   string
 >;
 
-export function Shell({ slot, exit }: { slot: string; exit: () => void }) {
-  const [section, setSection] = useState<Section>('overview');
+export function Shell({
+  slot,
+  exit,
+  initialSection = 'overview',
+}: {
+  slot: string;
+  exit: () => void;
+  initialSection?: Section;
+}) {
+  const [section, setSection] = useState<Section>(initialSection);
   const [toast, setToast] = useState<{ text: string; err?: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const version = useEngineVersion();
@@ -200,6 +209,8 @@ export function Shell({ slot, exit }: { slot: string; exit: () => void }) {
           <RidersScreen teamId={team.id} colors={team.colors} />
         ) : section === 'staff' ? (
           <StaffScreen teamId={team.id} colors={team.colors} />
+        ) : section === 'market' ? (
+          <MarketScreen notify={(text, err) => setToast({ text, ...(err ? { err } : {}) })} />
         ) : section === 'calendar' ? (
           <CalendarScreen categoryId={s!.category!.id} />
         ) : null}

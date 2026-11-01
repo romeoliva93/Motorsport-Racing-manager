@@ -9,7 +9,7 @@
   `tem_…` (squadra), `mfr_…` (costruttore), `cir_…` (circuito), `ctr_…` (contratto)…
 - **Date di gioco**: interi "giorni dal 1° gennaio dell'anno 0 della carriera" (`GameDay`),
   convertiti in data per la UI. Evita fusi orari e problemi di serializzazione.
-- **Denaro**: interi in unità intere della valuta di gioco ("crediti", simbolo `₡`), mai float.
+- **Denaro**: interi in euro, mai float; l'interfaccia mostra gli importi in milioni (`formatMoney`).
 - **Attributi**: interi 1–100 visibili; internamente float 0–1 per la simulazione.
   Gli attributi "nascosti" (potenziale reale, ideale di assetto) non sono mai inviati alla UI
   senza passare dal filtro di conoscenza dello scouting.
@@ -206,6 +206,15 @@ Transaction   { id, teamId, day, amount, category: IncomeCategory|ExpenseCategor
 Loan          { id, lender, principal, rate, startDay, termMonths, remaining }
 SponsorDeal   { id, sponsorId, teamId, contractId, placement, valuePerYear,
                 objectives[], satisfaction, activitiesDone[] }
+```
+
+### Trattative (schema v2)
+
+```ts
+Negotiation   { id, teamId, riderId, kind: 'transfer'|'renewal', status: 'open'|'signed'|'rejected'|'withdrawn',
+                buyout, patience, startedDay, rounds: NegotiationRound[] }
+NegotiationRound { day, offer: ContractOffer, response: 'accepted'|'rejected'|'countered', counter?, message }
+ContractOffer { salary, years: 1|2|3, role: 'race'|'test', winBonus, podiumBonus, replaceRiderId }
 ```
 
 ### Media, storico, statistiche

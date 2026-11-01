@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { formatCredits } from '@lean-angle/core';
+import { formatMoney } from '@lean-angle/core';
 
 export function Card({
   title,
@@ -68,7 +68,7 @@ export function Kpi({ label, value, tone }: { label: string; value: ReactNode; t
 }
 
 export function Money({ value }: { value: number }) {
-  return <span className={value < 0 ? 'bad' : undefined}>{formatCredits(value)}</span>;
+  return <span className={value < 0 ? 'bad' : undefined}>{formatMoney(value)}</span>;
 }
 
 /** Stemma della squadra generato dai colori ufficiali e dalla sigla (in attesa dei loghi definitivi). */

@@ -19,6 +19,17 @@ describe('serializzazione', () => {
     ).toThrow(/più recente/);
   });
 
+  it('migra i salvataggi della versione 1 (senza trattative)', () => {
+    const v1 = JSON.parse(serializeState(buildMiniWorld())) as Record<string, unknown> & {
+      tables: Record<string, unknown>;
+    };
+    v1.schemaVersion = 1;
+    delete v1.tables.negotiations;
+    const migrated = deserializeState(JSON.stringify(v1));
+    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(migrated.tables.negotiations).toEqual({});
+  });
+
   it('applica le migrazioni in sequenza', () => {
     const old = { ...buildMiniWorld(), schemaVersion: SCHEMA_VERSION - 1 } as Record<string, unknown>;
     if (SCHEMA_VERSION - 1 < 1) {

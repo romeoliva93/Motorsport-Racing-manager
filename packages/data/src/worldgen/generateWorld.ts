@@ -22,7 +22,7 @@ import type {
   StaffRole,
 } from '../schema/people.ts';
 import { RIDER_ATTRIBUTES } from '../schema/people.ts';
-import type { ManufacturerId, Seat, TeamId, TeamType } from '../schema/org.ts';
+import type { ManufacturerId, Seat, TeamId } from '../schema/org.ts';
 import type { Bike } from '../schema/tech.ts';
 import { FACILITY_TYPES } from '../schema/tech.ts';
 import { insert } from '../tables.ts';
@@ -39,6 +39,13 @@ import {
   STAFF_SPECIALIZATION,
   TEAMS,
   isBlockedSurname,
+  RIDER_BASE_SALARY,
+  SALARY_GROWTH_PER_POINT,
+  OPENING_BALANCE,
+  FACILITY_LEVELS,
+  STAFF_QUALITY,
+  STAFF_BASE_SALARY,
+  STAFF_SALARY_SCALE,
   type PresetStaff,
   type RidingStyle,
   type TeamContent,
@@ -60,48 +67,6 @@ const STYLE_BIAS: Record<RidingStyle, Partial<Record<RiderAttribute, number>>> =
   allRounder: {},
 };
 const STYLES: RidingStyle[] = ['braker', 'flowing', 'aggressive', 'technical', 'allRounder'];
-
-/** Stipendio annuo base del titolare medio, per categoria. */
-const BASE_SALARY: Record<CategoryTier, number> = {
-  premier: 1_500_000,
-  intermediate: 250_000,
-  lightweight: 80_000,
-  rookies: 0,
-};
-
-/** Budget iniziale (min–max) per tipo di squadra e categoria. */
-const OPENING_BALANCE: Record<CategoryTier, Partial<Record<TeamType, [number, number]>>> = {
-  premier: {
-    factory: [60_000_000, 90_000_000],
-    satellite: [25_000_000, 40_000_000],
-    independent: [15_000_000, 25_000_000],
-    private: [10_000_000, 15_000_000],
-  },
-  intermediate: { independent: [5_000_000, 8_000_000], private: [3_500_000, 5_500_000] },
-  lightweight: {
-    factory: [4_000_000, 6_000_000],
-    independent: [2_500_000, 4_000_000],
-    private: [1_800_000, 2_800_000],
-  },
-  rookies: {},
-};
-
-const FACILITY_LEVELS: Record<TeamType, [number, number]> = {
-  factory: [3, 5],
-  satellite: [2, 4],
-  independent: [2, 3],
-  private: [1, 2],
-  newManufacturer: [2, 4],
-  organizer: [1, 1],
-};
-
-/** Qualità media dello staff per categoria (1–100). */
-const STAFF_QUALITY: Record<CategoryTier, number> = {
-  premier: 72,
-  intermediate: 64,
-  lightweight: 58,
-  rookies: 50,
-};
 
 const round1000 = (x: number) => Math.round(x / 1000) * 1000;
 const rating = (x: number) => Math.round(clamp(x, 1, 99));
@@ -395,7 +360,9 @@ export function generateWorld(opts: WorldOptions): GameState {
   }
   function riderSalary(tier: CategoryTier, quality: number) {
     const c = CATEGORIES.find((x) => x.key === tier)!;
-    return round1000(BASE_SALARY[tier] * Math.pow(1.12, quality - c.riderQuality.mean));
+    return round1000(
+      RIDER_BASE_SALARY[tier] * Math.pow(SALARY_GROWTH_PER_POINT, quality - c.riderQuality.mean),
+    );
   }
   const avgAttr = (r: Rider) =>
     RIDER_ATTRIBUTES.reduce((s, a) => s + r.attributes[a], 0) / RIDER_ATTRIBUTES.length;
@@ -468,24 +435,11 @@ export function generateWorld(opts: WorldOptions): GameState {
     return s;
   }
   function staffSalary(role: StaffRole, tier: CategoryTier, quality: number) {
-    const base: Partial<Record<StaffRole, number>> = {
-      technicalDirector: 900_000,
-      crewChief: 380_000,
-      trackEngineer: 300_000,
-      telemetryAnalyst: 140_000,
-      strategyChief: 260_000,
-      mechanic: 70_000,
-      sportingDirector: 300_000,
-      physio: 90_000,
-      doctor: 160_000,
-    };
-    const scale: Record<CategoryTier, number> = {
-      premier: 1,
-      intermediate: 0.4,
-      lightweight: 0.25,
-      rookies: 0.2,
-    };
-    return round1000((base[role] ?? 100_000) * scale[tier] * Math.pow(1.05, quality - STAFF_QUALITY[tier]));
+    return round1000(
+      (STAFF_BASE_SALARY[role] ?? 100_000) *
+        STAFF_SALARY_SCALE[tier] *
+        Math.pow(1.05, quality - STAFF_QUALITY[tier]),
+    );
   }
   function bond(riderId: RiderId, staffId: StaffId, seasons: number) {
     const compatibility = staffRng.int(40, 88);

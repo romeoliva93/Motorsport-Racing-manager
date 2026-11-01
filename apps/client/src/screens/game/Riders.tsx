@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatCredits } from '@lean-angle/core';
+import { formatMoney } from '@lean-angle/core';
 import { useQuery } from '../../engine/hooks.ts';
 import { Bar, Card, Monogram, Row, ratingTone } from '../../design-system/components.tsx';
 import { RIDER_ATTR, RIDER_ROLE, country } from '../../i18n/it.ts';
@@ -41,7 +41,7 @@ export function RidersScreen({ teamId, colors }: { teamId: string; colors: { pri
                 </td>
                 <td className="r">{r.morale}</td>
                 <td>{r.contractEnd}</td>
-                <td className="r">{r.salary ? formatCredits(r.salary) : '—'}</td>
+                <td className="r">{r.salary ? formatMoney(r.salary) : '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -142,7 +142,7 @@ function RiderDetailPanel({ riderId, color }: { riderId: string; color: string }
       <Card title="Contratto e moto">
         <Row label="Squadra">{r.team ?? '—'}</Row>
         <Row label="Scadenza">{r.contractEnd ?? '—'}</Row>
-        <Row label="Stipendio annuo">{r.salary !== null ? formatCredits(r.salary) : '—'}</Row>
+        <Row label="Stipendio annuo">{r.salary !== null ? formatMoney(r.salary) : '—'}</Row>
         {r.bonuses.map((b) => (
           <Row
             key={b.condition}
@@ -154,7 +154,7 @@ function RiderDetailPanel({ riderId, color }: { riderId: string; color: string }
                   : `Bonus ${b.condition}`
             }
           >
-            {formatCredits(b.amount)}
+            {formatMoney(b.amount)}
           </Row>
         ))}
         <Row label="Moto assegnate">

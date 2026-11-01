@@ -1,5 +1,6 @@
 /**
- * Denaro di gioco: interi in crediti (₡), mai numeri decimali (DATA_MODEL.md §1).
+ * Denaro di gioco: interi in euro, mai numeri decimali (DATA_MODEL.md §1).
+ * L'interfaccia mostra gli importi in milioni di euro.
  */
 
 export type Credits = number;
@@ -30,13 +31,14 @@ export function splitCredits(total: Credits, weights: readonly number[]): Credit
   return parts;
 }
 
-/** Formato breve per l'interfaccia: ₡ 18,42 M · ₡ 640 k · ₡ 950. */
-export function formatCredits(value: Credits, locale: 'it' | 'en' = 'it'): string {
+/**
+ * Formato per l'interfaccia, sempre in milioni di euro: € 25,02 mln · € 0,64 mln · € 0,015 mln.
+ * Sotto i 100.000 € usa tre decimali per non perdere informazione (es. bonus e premi minori).
+ */
+export function formatMoney(value: Credits, locale: 'it' | 'en' = 'it'): string {
   const sign = value < 0 ? '−' : '';
-  const abs = Math.abs(value);
-  const dec = locale === 'it' ? ',' : '.';
-  const fmt = (x: number, digits: number) => x.toFixed(digits).replace('.', dec);
-  if (abs >= 1_000_000) return `${sign}₡ ${fmt(abs / 1_000_000, 2)} M`;
-  if (abs >= 1_000) return `${sign}₡ ${fmt(abs / 1_000, abs >= 100_000 ? 0 : 1)} k`;
-  return `${sign}₡ ${abs}`;
+  const m = Math.abs(value) / 1_000_000;
+  const digits = Math.abs(value) >= 100_000 || value === 0 ? 2 : 3;
+  const n = m.toFixed(digits);
+  return locale === 'it' ? `${sign}€ ${n.replace('.', ',')} mln` : `${sign}€${n}m`;
 }

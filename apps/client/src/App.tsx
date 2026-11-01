@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { MainMenu } from './screens/MainMenu.tsx';
-import { NewCareer } from './screens/NewCareer.tsx';
+import { NewCareer, type CareerMode } from './screens/NewCareer.tsx';
 import { LoadGame } from './screens/LoadGame.tsx';
-import { Shell } from './shell/Shell.tsx';
+import { Shell, type Section } from './shell/Shell.tsx';
 
 export type AppScreen =
-  { name: 'menu' } | { name: 'newCareer' } | { name: 'load' } | { name: 'game'; slot: string };
+  | { name: 'menu' }
+  | { name: 'newCareer'; mode?: CareerMode }
+  | { name: 'load' }
+  | { name: 'game'; slot: string; section?: Section };
 
 export function App() {
   const [screen, setScreen] = useState<AppScreen>({ name: 'menu' });
@@ -13,10 +16,16 @@ export function App() {
     case 'menu':
       return <MainMenu go={setScreen} />;
     case 'newCareer':
-      return <NewCareer go={setScreen} />;
+      return <NewCareer go={setScreen} initialMode={screen.mode ?? 'existing'} />;
     case 'load':
       return <LoadGame go={setScreen} />;
     case 'game':
-      return <Shell slot={screen.slot} exit={() => setScreen({ name: 'menu' })} />;
+      return (
+        <Shell
+          slot={screen.slot}
+          initialSection={screen.section ?? 'overview'}
+          exit={() => setScreen({ name: 'menu' })}
+        />
+      );
   }
 }

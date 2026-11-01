@@ -40,7 +40,7 @@ const lowerWeekend: SessionSpec[] = [
 export const CATEGORIES: CategoryContent[] = [
   {
     key: 'premier',
-    name: 'VWC Premier',
+    name: 'MotoGP',
     maxGrid: 22,
     teamsManaged: true,
     riderQuality: { mean: 79, sd: 5, min: 68, max: 93 },
@@ -67,7 +67,7 @@ export const CATEGORIES: CategoryContent[] = [
   },
   {
     key: 'intermediate',
-    name: 'VWC Intermediate',
+    name: 'Moto2',
     maxGrid: 30,
     teamsManaged: true,
     riderQuality: { mean: 69, sd: 5, min: 58, max: 84 },
@@ -94,7 +94,7 @@ export const CATEGORIES: CategoryContent[] = [
   },
   {
     key: 'lightweight',
-    name: 'VWC Lightweight',
+    name: 'Moto3',
     maxGrid: 28,
     teamsManaged: true,
     riderQuality: { mean: 61, sd: 6, min: 48, max: 78 },

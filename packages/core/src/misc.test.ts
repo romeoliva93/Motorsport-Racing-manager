@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { IdFactory, idPrefix, isId } from './ids.ts';
-import { credits, formatCredits, splitCredits } from './money.ts';
+import { credits, formatMoney, splitCredits } from './money.ts';
 import { EventLog } from './events.ts';
 import { attr01, clamp, invLerp, roundTo, sigmoid } from './math.ts';
 import { err, ok, unwrap } from './result.ts';
@@ -36,12 +36,13 @@ describe('denaro', () => {
     expect(Math.max(...parts) - Math.min(...parts)).toBeLessThanOrEqual(1);
   });
 
-  it('formatta gli importi', () => {
-    expect(formatCredits(18_420_000)).toBe('₡ 18,42 M');
-    expect(formatCredits(640_000)).toBe('₡ 640 k');
-    expect(formatCredits(38_000)).toBe('₡ 38,0 k');
-    expect(formatCredits(-4_960_000)).toBe('−₡ 4,96 M');
-    expect(formatCredits(950)).toBe('₡ 950');
+  it('formatta gli importi in milioni di euro', () => {
+    expect(formatMoney(18_420_000)).toBe('€ 18,42 mln');
+    expect(formatMoney(640_000)).toBe('€ 0,64 mln');
+    expect(formatMoney(38_000)).toBe('€ 0,038 mln');
+    expect(formatMoney(-4_960_000)).toBe('−€ 4,96 mln');
+    expect(formatMoney(0)).toBe('€ 0,00 mln');
+    expect(formatMoney(2_500_000, 'en')).toBe('€2.50m');
   });
 });
 

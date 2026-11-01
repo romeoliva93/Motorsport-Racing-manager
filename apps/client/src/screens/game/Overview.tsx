@@ -38,6 +38,27 @@ export function Overview({ go }: { go: (s: Section) => void }) {
         </button>
       </Card>
       <RidersCard teamId={team.id} color={team.colors.primary} go={go} />
+      <Card title="Mercato piloti" aside={s.roundsDone === 0 ? 'aperto' : 'chiuso'} className="s12">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <span className="t2" style={{ flex: 1, minWidth: '16rem' }}>
+            {s.roundsDone === 0
+              ? `Puoi trattare con tutti i piloti, liberi o sotto contratto, fino al primo Gran Premio (${s.nextRound?.date ?? ''}).`
+              : "Il mercato si è chiuso con l'inizio del campionato: riaprirà a fine stagione."}
+            {team.riders.length < 2 && (
+              <b className="warn">
+                {' '}
+                {2 - team.riders.length === 2
+                  ? 'Hai due posti liberi in griglia'
+                  : 'Hai un posto libero in griglia'}
+                : ingaggia i tuoi piloti.
+              </b>
+            )}
+          </span>
+          <button className={`btn ${team.riders.length < 2 ? 'primary' : ''}`} onClick={() => go('market')}>
+            Vai al mercato
+          </button>
+        </div>
+      </Card>
       <Card title="Scuderia" className="s4">
         <Row label="Tipologia">{TEAM_TYPE[team.type]}</Row>
         <Row label="Costruttore">{team.manufacturer}</Row>

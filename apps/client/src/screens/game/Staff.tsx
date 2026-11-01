@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatCredits } from '@lean-angle/core';
+import { formatMoney } from '@lean-angle/core';
 import type { StaffRole } from '@lean-angle/data';
 import { useQuery } from '../../engine/hooks.ts';
 import { Bar, Card, Monogram, Row, ratingTone } from '../../design-system/components.tsx';
@@ -70,7 +70,7 @@ export function StaffScreen({ teamId, colors }: { teamId: string; colors: { prim
                 </td>
                 <td className="r">{m.experienceYears} a</td>
                 <td>{m.contractEnd}</td>
-                <td className="r">{m.salary ? formatCredits(m.salary) : '—'}</td>
+                <td className="r">{m.salary ? formatMoney(m.salary) : '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -165,7 +165,7 @@ function StaffDetailPanel({ staffId, color }: { staffId: string; color: string }
       )}
       <Card title="Contratto">
         <Row label="Scadenza">{m.contractEnd ?? '—'}</Row>
-        <Row label="Stipendio annuo">{m.salary !== null ? formatCredits(m.salary) : '—'}</Row>
+        <Row label="Stipendio annuo">{m.salary !== null ? formatMoney(m.salary) : '—'}</Row>
         <Row label="Reputazione">{m.reputation}</Row>
       </Card>
     </div>

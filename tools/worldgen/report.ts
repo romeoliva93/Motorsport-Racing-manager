@@ -2,7 +2,7 @@
  * Report testuale del mondo generato: `node tools/worldgen/report.ts [seme]`.
  * Utile per controllare a colpo d'occhio la credibilità dei contenuti (non è usato dal gioco).
  */
-import { GameCalendar, formatCredits } from '../../packages/core/src/index.ts';
+import { GameCalendar, formatMoney } from '../../packages/core/src/index.ts';
 import {
   generateWorld,
   rows,
@@ -49,7 +49,7 @@ for (const cat of rows(w, 'categories')) {
       const r = w.tables.riders[s.riderId!]!;
       return `#${s.number} ${r.firstName} ${r.lastName} (${r.nationality}, ${cal.ageOn(r.birthDay, 0)}, ${avg(r)})`;
     });
-    const bal = w.accounts.some((a) => a.teamId === t.id) ? formatCredits(teamBalance(w, t.id)) : '—';
+    const bal = w.accounts.some((a) => a.teamId === t.id) ? formatMoney(teamBalance(w, t.id)) : '—';
     const label = cat.tier === 'rookies' ? `${riders.length} piloti` : riders.join(' · ');
     p(`  ${t.name.padEnd(26)} ${t.type.padEnd(11)} ${mfr.name.padEnd(18)} ${bal.padStart(11)}  ${label}`);
   }

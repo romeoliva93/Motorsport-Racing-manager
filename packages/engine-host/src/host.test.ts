@@ -18,7 +18,7 @@ describe('engine host + client', () => {
 
     await client.newCareer('host-seed', 'La mia carriera', lupo.id);
     expect((await client.query('careerSummary')).team!.name).toBe('Scuderia Lupo Blu');
-    expect(await client.availableCommands()).toEqual(['AdvanceDays', 'ContinueToNextEvent']);
+    expect(await client.availableCommands()).toContain('MakeOffer');
 
     const events = await client.dispatch({ type: 'ContinueToNextEvent' });
     expect(events.map((e) => e.type)).toContain('RoundReached');

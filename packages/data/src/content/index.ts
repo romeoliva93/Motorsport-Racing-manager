@@ -7,3 +7,4 @@ export * from './realNames.ts';
 export * from './staffSkills.ts';
 export * from './sponsors.ts';
 export * from './presets.ts';
+export * from './economy.ts';
