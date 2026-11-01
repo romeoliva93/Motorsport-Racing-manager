@@ -25,6 +25,9 @@ Le voci del menu dei sistemi non ancora sviluppati sono visibili ma disabilitate
 
 Screenshot dell'app: `docs/images/app-*.png` (generati dal test end-to-end).
 
+**Versione online** (privata, condivisibile dal menu Condividi della pagina): https://claude.ai/artifact/Hm8aBjMgYxqp3obqHN2Bag
+— pubblicata dalla build di `apps/client`. Lì i salvataggi restano nel browser di chi gioca.
+
 ## Sviluppo
 
 Requisiti: Node.js ≥ 22.

@@ -1,5 +1,5 @@
 /** Salvataggi nel browser con IndexedDB (disponibile anche dentro il Web Worker). */
-import type { SaveMeta, SaveRecord, SaveStore } from '@lean-angle/persistence';
+import { MemorySaveStore, type SaveMeta, type SaveRecord, type SaveStore } from '@lean-angle/persistence';
 
 const DB = 'lean-angle';
 const STORE = 'saves';
@@ -38,5 +38,49 @@ export class IndexedDbSaveStore implements SaveStore {
   }
   async delete(slot: string): Promise<void> {
     await run('readwrite', (s) => s.delete(slot));
+  }
+}
+
+/**
+ * Archivio del browser con ripiego: se IndexedDB non è disponibile o fallisce (finestra privata, dati del sito
+ * bloccati, pagina incorporata), passa a un archivio in memoria valido per la sessione corrente.
+ */
+export class BrowserSaveStore implements SaveStore {
+  private impl: SaveStore;
+  /** true quando i salvataggi non sopravvivono alla chiusura della pagina. */
+  temporary = false;
+
+  constructor() {
+    let ok: boolean;
+    try {
+      ok = typeof indexedDB !== 'undefined' && indexedDB !== null;
+    } catch {
+      ok = false;
+    }
+    this.impl = ok ? new IndexedDbSaveStore() : new MemorySaveStore();
+    this.temporary = !ok;
+  }
+
+  private async attempt<T>(fn: (s: SaveStore) => Promise<T>): Promise<T> {
+    try {
+      return await fn(this.impl);
+    } catch (e) {
+      if (this.temporary) throw e;
+      this.impl = new MemorySaveStore();
+      this.temporary = true;
+      return fn(this.impl);
+    }
+  }
+  list() {
+    return this.attempt((s) => s.list());
+  }
+  put(r: SaveRecord) {
+    return this.attempt((s) => s.put(r));
+  }
+  get(slot: string) {
+    return this.attempt((s) => s.get(slot));
+  }
+  delete(slot: string) {
+    return this.attempt((s) => s.delete(slot));
   }
 }

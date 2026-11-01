@@ -89,7 +89,7 @@ function RidersCard({ teamId, color, go }: { teamId: string; color: string; go: 
       }
       className="s7"
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div className="two-col">
         {riders.map((r) => (
           <div
             key={r.id}
@@ -171,7 +171,7 @@ function KeyStaff({ teamId, color, go }: { teamId: string; color: string; go: (s
       }
       className="s12"
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '.8rem' }}>
+      <div className="staff-row">
         {key.map((m) => (
           <div key={m.id} style={{ display: 'flex', gap: '.6rem', alignItems: 'center' }}>
             <Monogram name={m.name} color={color} />

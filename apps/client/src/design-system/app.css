@@ -462,3 +462,98 @@ table.std tbody tr.sel td:first-child {
   font: 800 1.6rem/1 var(--font-display);
   text-transform: uppercase;
 }
+
+/* --- Tema: il gioco è progettato solo in scuro --------------------------------- */
+:root {
+  color-scheme: dark;
+}
+html,
+body {
+  background: var(--bg-0);
+}
+
+/* --- Griglie della Panoramica ------------------------------------------------ */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.staff-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.8rem;
+}
+
+/* --- Schermi stretti (tablet e telefono) ------------------------------------- */
+@media (max-width: 1000px) {
+  body {
+    overflow: auto;
+  }
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    height: auto;
+    min-height: 100%;
+  }
+  .app > * {
+    min-width: 0;
+  }
+  .kpi b {
+    white-space: normal;
+  }
+  .two-col,
+  .staff-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar {
+    grid-row: auto;
+    overflow: visible;
+  }
+  .nav {
+    display: flex;
+    gap: 0.3rem;
+    overflow-x: auto;
+    padding: 0.4rem 0.6rem;
+  }
+  .nav > div {
+    display: contents;
+  }
+  .nav .grp {
+    display: none;
+  }
+  .nav button {
+    width: auto;
+    white-space: nowrap;
+    flex: none;
+  }
+  .nav button:disabled {
+    display: none;
+  }
+  .sidebar .foot {
+    padding: 0.5rem 0.8rem;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    padding: 0.6rem 1rem;
+  }
+  .main {
+    overflow: visible;
+    padding: 1rem;
+  }
+  .grid12 > * {
+    grid-column: span 12;
+  }
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card {
+    overflow-x: auto;
+  }
+  .detail {
+    position: static;
+  }
+  .attr {
+    grid-template-columns: 9rem 1fr 2.2rem;
+  }
+}

@@ -146,3 +146,29 @@
   color: var(--text-3);
   font-size: 0.75rem;
 }
+@media (max-width: 1000px) {
+  .menu-stage {
+    overflow: auto;
+  }
+  .menu-track {
+    opacity: 0.25;
+    width: 120vw;
+    right: -30vw;
+  }
+  .menu-left {
+    position: relative;
+    left: auto;
+    width: auto;
+    padding: 2rem max(16px, env(safe-area-inset-left, 0px)) 4rem;
+    justify-content: flex-start;
+  }
+  .brand h1 {
+    font-size: 3.6rem;
+  }
+  .menu-foot {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    padding: 0 1rem 1rem;
+  }
+}

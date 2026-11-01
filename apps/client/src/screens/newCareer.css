@@ -138,3 +138,21 @@
   gap: 1rem;
   overflow: auto;
 }
+@media (max-width: 1000px) {
+  .nc {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    padding: 1rem;
+  }
+  .nc-head {
+    flex-wrap: wrap;
+  }
+  .nc-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nc-grid {
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

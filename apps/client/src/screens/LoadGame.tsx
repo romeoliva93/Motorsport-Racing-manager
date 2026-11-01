@@ -7,6 +7,8 @@ import { Card } from '../design-system/components.tsx';
 export function LoadGame({ go }: { go: (s: AppScreen) => void }) {
   const [saves, setSaves] = useState<SaveMeta[]>([]);
   const [error, setError] = useState<string | null>(null);
+  /** Slot in attesa di conferma dell'eliminazione (conferma nella pagina, non con finestre del browser). */
+  const [confirming, setConfirming] = useState<string | null>(null);
   const refresh = () => engine.listSaves().then(setSaves, (e: Error) => setError(e.message));
   useEffect(() => void refresh(), []);
 
@@ -19,7 +21,11 @@ export function LoadGame({ go }: { go: (s: AppScreen) => void }) {
     }
   }
   async function remove(slot: string) {
-    if (!confirm(`Eliminare definitivamente il salvataggio "${slot}"?`)) return;
+    if (confirming !== slot) {
+      setConfirming(slot);
+      return;
+    }
+    setConfirming(null);
     await engine.deleteSave(slot);
     await refresh();
   }
@@ -60,7 +66,7 @@ export function LoadGame({ go }: { go: (s: AppScreen) => void }) {
                       void remove(s.slot);
                     }}
                   >
-                    Elimina
+                    {confirming === s.slot ? 'Conferma eliminazione' : 'Elimina'}
                   </button>
                 </td>
               </tr>
