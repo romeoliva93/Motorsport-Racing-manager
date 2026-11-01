@@ -1,0 +1,12 @@
+{
+  "name": "@lean-angle/data",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@lean-angle/core": "0.0.0"
+  }
+}

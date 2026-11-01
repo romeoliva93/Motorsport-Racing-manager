@@ -9,12 +9,32 @@ mentre una simulazione deterministica fa correre ogni sessione del weekend.
 
 | Fase | Stato |
 |---|---|
-| 0 — Progettazione | **Proposta in revisione** |
-| 1 — Fondamenta | Non iniziata (in attesa di approvazione) |
+| 0 — Progettazione | Completata (PR in revisione) |
+| 1 — Fondamenta | **In corso**: M1.1 infrastruttura, M1.2 `core`, M1.3 schema dati completati |
 | 2–6 | Pianificate, vedi [roadmap](docs/ROADMAP.md) |
 
-Al momento il repository contiene solo documentazione e mockup grafici: **nessun sistema di
-gioco è ancora implementato**.
+Il codice contiene le fondamenta (`packages/core`, `packages/data`): generatore casuale deterministico,
+identificativi, tempo di gioco, eventi, denaro, schema delle entità, validatore delle regole del mondo e
+salvataggio versionato. **Non c'è ancora nulla di giocabile**: generatore del mondo, simulazione e interfaccia
+arrivano nelle milestone successive.
+
+## Sviluppo
+
+Requisiti: Node.js ≥ 22.
+
+```bash
+npm install
+npm run check        # lint + controllo tipi + test
+npm test             # solo test (Vitest)
+npm run format       # formattazione (Prettier)
+```
+
+| Pacchetto | Contenuto |
+|---|---|
+| `packages/core` | `Rng`/`RngStreams` (SFC32 con seme), `IdFactory`, `GameCalendar`, `EventLog`, `Result`, denaro intero, utilità matematiche |
+| `packages/data` | entità (mondo, persone, squadre, moto, contratti, finanze), `GameState` normalizzato, `validateGameState`, serializzazione con migrazioni |
+
+I confini fra pacchetti sono controllati da ESLint (`core` non importa nulla; `data` solo `core`).
 
 ## Documentazione
 
