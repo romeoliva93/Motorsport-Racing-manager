@@ -10,14 +10,20 @@ mentre una simulazione deterministica fa correre ogni sessione del weekend.
 | Fase | Stato |
 |---|---|
 | 0 — Progettazione | Completata (PR in revisione) |
-| 1 — Fondamenta | **In corso**: M1.1 infrastruttura, M1.2 `core`, M1.3 schema dati, M1.4 generatore del mondo completati |
+| 1 — Fondamenta | **Completata** (M1.1–M1.8), in revisione nella PR |
 | 2–6 | Pianificate, vedi [roadmap](docs/ROADMAP.md) |
 
 Il codice contiene le fondamenta (`packages/core`, `packages/data`): generatore casuale deterministico,
 identificativi, tempo di gioco, eventi, denaro, schema delle entità, validatore delle regole del mondo,
 salvataggio versionato, **contenuti originali e generatore del mondo** (4 categorie, 41 squadre, 135 piloti,
 oltre 500 membri dello staff, 20 circuiti, calendario, contratti, moto, strutture, budget).
-**Non c'è ancora nulla di giocabile**: simulazione e interfaccia arrivano nelle milestone successive.
+Il motore gira in un Web Worker e l'**interfaccia React** permette già di: creare una carriera scegliendo una
+squadra del mondo generato, consultare Panoramica, Scuderia, Piloti, Personale e Calendario con dati reali,
+far avanzare il tempo fino al prossimo evento, salvare e ricaricare (IndexedDB, slot multipli).
+**Non si corrono ancora gare**: weekend, simulazione, economia e classifiche arrivano con la Fase 2.
+Le voci del menu dei sistemi non ancora sviluppati sono visibili ma disabilitate ("In sviluppo").
+
+Screenshot dell'app: `docs/images/app-*.png` (generati dal test end-to-end).
 
 ## Sviluppo
 
@@ -25,6 +31,9 @@ Requisiti: Node.js ≥ 22.
 
 ```bash
 npm install
+npm run dev          # avvia l'app in sviluppo (http://localhost:5173)
+npm run build        # build di produzione dell'app (apps/client/dist)
+npm run e2e          # test end-to-end con Playwright (richiede la build)
 npm run check        # lint + controllo tipi + test
 npm test             # solo test (Vitest)
 npm run format       # formattazione (Prettier)
@@ -36,7 +45,13 @@ npm run worldgen:report -- <seme>   # riepilogo del mondo generato da un seme
 | `packages/core` | `Rng`/`RngStreams` (SFC32 con seme), `IdFactory`, `GameCalendar`, `EventLog`, `Result`, denaro intero, utilità matematiche |
 | `packages/data` | entità (mondo, persone, squadre, moto, contratti, finanze), `GameState` normalizzato, `validateGameState`, serializzazione con migrazioni, contenuti originali (`content/`) e `generateWorld` (`worldgen/`) |
 
-I confini fra pacchetti sono controllati da ESLint (`core` non importa nulla; `data` solo `core`).
+| `packages/game` | `GameEngine` (comandi validati, avanzamento del tempo, eventi) e viste per l'interfaccia con filtro delle informazioni nascoste |
+| `packages/persistence` | formato dei salvataggi, `SaveStore`, archivio in memoria |
+| `packages/engine-host` | protocollo motore ↔ interfaccia, host (Worker) e client con Promise |
+| `apps/client` | app React + Vite: design system, menu, nuova carriera, schermate di gioco, Worker del motore, salvataggi IndexedDB |
+
+I confini fra pacchetti sono controllati da ESLint: `core` ← `data` ← (`game`, `persistence`) ← `engine-host` ← `apps/client`.
+Il contenitore desktop Tauri non è ancora configurato: per ora l'app gira nel browser.
 
 ## Documentazione
 

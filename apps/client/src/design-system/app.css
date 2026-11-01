@@ -1,0 +1,464 @@
+/* Layout e componenti dell'app. Riprende lo stile dei mockup approvati (docs/mockups/shell.css). */
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  overflow: hidden;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+input,
+select {
+  font: inherit;
+  color: var(--text-1);
+}
+::selection {
+  background: rgba(255, 122, 26, 0.35);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 6px;
+  border: 2px solid var(--bg-1);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.muted {
+  color: var(--text-3);
+}
+.t2 {
+  color: var(--text-2);
+}
+.ok {
+  color: var(--ok);
+}
+.bad {
+  color: var(--bad);
+}
+.warn {
+  color: var(--warn);
+}
+.or {
+  color: var(--orange);
+}
+.info {
+  color: var(--info);
+}
+
+/* --- Bottoni ---------------------------------------------------------------- */
+.btn {
+  border: 1px solid var(--line-strong);
+  background: var(--bg-2);
+  color: var(--text-1);
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  font: 600 0.82rem var(--font-ui);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.btn:hover:not(:disabled) {
+  background: var(--bg-3);
+  border-color: var(--text-3);
+}
+.btn.primary {
+  background: var(--accent-grad);
+  border: 0;
+  color: #fff;
+  font: 700 0.95rem var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.6rem 1.4rem;
+  box-shadow: 0 6px 20px rgba(229, 50, 45, 0.3);
+}
+.btn.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.btn.ghost {
+  background: transparent;
+}
+.btn.sel {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(255, 122, 26, 0.1);
+}
+.btn:disabled {
+  opacity: 0.45;
+}
+
+/* --- Card e testi ------------------------------------------------------------ */
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.9rem 1rem;
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+.card > h3,
+.section-title {
+  margin: 0 0 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font: 700 0.9rem var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+.card > h3 small,
+.section-title small {
+  font: 500 0.72rem var(--font-ui);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-3);
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.82rem;
+  padding: 0.32rem 0;
+  border-top: 1px solid var(--line);
+}
+.row:first-of-type {
+  border-top: 0;
+}
+.big {
+  font: 700 1.9rem/1 var(--font-display);
+}
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: var(--bg-3);
+  color: var(--text-2);
+}
+.pill.ok {
+  background: rgba(47, 191, 113, 0.15);
+}
+.pill.warn {
+  background: rgba(255, 176, 32, 0.15);
+}
+.pill.or {
+  background: rgba(255, 122, 26, 0.15);
+}
+.pill.info {
+  background: rgba(74, 163, 255, 0.15);
+}
+.pill.bad {
+  background: rgba(255, 77, 79, 0.15);
+}
+.bar {
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 4px;
+  overflow: hidden;
+  flex: 1;
+  min-width: 3rem;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent-grad);
+  border-radius: 4px;
+}
+
+/* --- Tabelle ----------------------------------------------------------------- */
+table.std {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+table.std th {
+  text-align: left;
+  color: var(--text-3);
+  font-weight: 600;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 0.5rem 0.45rem;
+  white-space: nowrap;
+}
+table.std td {
+  padding: 0.5rem;
+  border-top: 1px solid var(--line);
+  white-space: nowrap;
+}
+table.std td.r,
+table.std th.r {
+  text-align: right;
+}
+table.std tbody tr {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+table.std tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+table.std tbody tr.sel td {
+  background: rgba(255, 122, 26, 0.09);
+}
+table.std tbody tr.sel td:first-child {
+  box-shadow: inset 2px 0 0 var(--orange);
+}
+
+/* --- Badge squadra e monogramma persona -------------------------------------- */
+.team-badge {
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font: 800 0.9rem var(--font-display);
+  letter-spacing: 0.02em;
+  flex: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.monogram {
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font: 700 0.85rem var(--font-display);
+  flex: none;
+  color: #fff;
+}
+
+/* --- Shell ------------------------------------------------------------------- */
+.app {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  grid-template-rows: 3.75rem 1fr;
+  height: 100%;
+}
+.sidebar {
+  grid-row: 1 / 3;
+  background: var(--bg-1);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+.sidebar .team {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--line);
+  min-height: 3.75rem;
+}
+.sidebar .team b {
+  font: 700 0.95rem var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  line-height: 1.1;
+}
+.sidebar .team span {
+  color: var(--text-3);
+  font-size: 0.7rem;
+}
+.nav {
+  padding: 0.5rem;
+  flex: 1;
+}
+.nav .grp {
+  color: var(--text-3);
+  font: 600 0.62rem var(--font-ui);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.7rem 0.7rem 0.3rem;
+}
+.nav button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  color: var(--text-2);
+  font-size: 0.84rem;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+.nav button:hover:not(:disabled) {
+  background: var(--bg-2);
+  color: var(--text-1);
+}
+.nav button.on {
+  background: linear-gradient(90deg, rgba(229, 50, 45, 0.2), rgba(255, 122, 26, 0.04));
+  color: var(--text-1);
+  box-shadow: inset 2px 0 0 var(--orange);
+}
+.nav button:disabled {
+  color: var(--text-3);
+  opacity: 0.6;
+}
+.nav button .soon {
+  margin-left: auto;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.sidebar .foot {
+  padding: 0.8rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 0.4rem;
+}
+.sidebar .foot .btn {
+  flex: 1;
+  font-size: 0.74rem;
+  padding: 0.4rem;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(14, 16, 21, 0.9);
+  min-width: 0;
+}
+.topbar h2 {
+  margin: 0;
+  font: 700 1.35rem var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.kpi small {
+  color: var(--text-3);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.kpi b {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.spacer {
+  flex: 1;
+}
+.main {
+  overflow: auto;
+  padding: 1rem 1.25rem;
+}
+.grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+  align-content: start;
+}
+.s3 {
+  grid-column: span 3;
+}
+.s4 {
+  grid-column: span 4;
+}
+.s5 {
+  grid-column: span 5;
+}
+.s6 {
+  grid-column: span 6;
+}
+.s7 {
+  grid-column: span 7;
+}
+.s8 {
+  grid-column: span 8;
+}
+.s12 {
+  grid-column: span 12;
+}
+.toast {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-3);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+  box-shadow: var(--shadow-1);
+  z-index: 50;
+}
+.toast.err {
+  border-color: rgba(255, 77, 79, 0.5);
+  color: var(--bad);
+}
+.loading {
+  color: var(--text-3);
+  padding: 2rem;
+  text-align: center;
+}
+
+/* --- Attributi ----------------------------------------------------------------- */
+.attr {
+  display: grid;
+  grid-template-columns: 11rem 1fr 2.2rem;
+  gap: 0.7rem;
+  align-items: center;
+  font-size: 0.8rem;
+  padding: 0.2rem 0;
+}
+.attr b {
+  text-align: right;
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30rem;
+  gap: 1rem;
+  align-items: start;
+}
+.detail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.hero .num {
+  font: 800 3.6rem/1 var(--font-display);
+  font-style: italic;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero .nm {
+  font: 800 1.6rem/1 var(--font-display);
+  text-transform: uppercase;
+}

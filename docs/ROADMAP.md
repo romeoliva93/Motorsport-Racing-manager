@@ -16,10 +16,10 @@ simulazione, design system e mockup di menu principale e dashboard.
 | **M1.2 Core** ✅ | PRNG con seme e flussi, ID, calendario di gioco (`GameDay`), bus eventi, `Result`, utilità matematiche | test di determinismo e distribuzione del PRNG |
 | **M1.3 Schema dati** ✅ | tipi delle entità (incluse `Bike` con slot A/B, `StaffAssignment`, `RiderStaffBond`, `Briefing`), separazione tipi `Truth*` / osservazioni, validatori, `GameState` normalizzato, serializzazione | round-trip senza perdite; test che vieta l'uso dei tipi `Truth*` fuori dal motore |
 | **M1.4 Content e generatore del mondo** ✅ | content pack originali (costruttori, squadre, circuiti, sponsor, nomi), generatore di piloti e staff con attributi per ruolo (ingegneri di pista, capotecnici, specialisti), controllo nomi reali | stesso seme → stesso mondo; invarianti (2 piloti per squadra, 1 capotecnico + 1 ingegnere di pista per pilota, età per categoria) |
-| **M1.5 Engine host** | Web Worker, protocollo comandi/query, avanzamento del tempo | test di integrazione comando → evento |
-| **M1.6 Design system e shell** | token, tipografia, componenti base, sidebar a 16 voci, top bar, scala Full HD/4K | screenshot Playwright 1080p e 4K |
-| **M1.7 Menu e nuova carriera** | menu principale, scelta squadra esistente, salvataggio iniziale | partita creata dal generatore e visibile nella shell |
-| **M1.8 Schermate dati** | Scuderia, Piloti (lista + scheda), Personale (lista + scheda) collegate allo stato | nessun dato statico nelle schermate |
+| **M1.5 Engine host** ✅ | Web Worker, protocollo comandi/query, avanzamento del tempo | test di integrazione comando → evento |
+| **M1.6 Design system e shell** ✅ | token, tipografia, componenti base, sidebar a 16 voci, top bar, scala Full HD/4K | screenshot Playwright 1080p e 4K |
+| **M1.7 Menu e nuova carriera** ✅ | menu principale, scelta squadra esistente, salvataggio iniziale | partita creata dal generatore e visibile nella shell |
+| **M1.8 Schermate dati** ✅ | Scuderia, Piloti (lista + scheda), Personale (lista + scheda) collegate allo stato | nessun dato statico nelle schermate |
 
 ## Fase 2 — Prima stagione giocabile (v0.1)
 

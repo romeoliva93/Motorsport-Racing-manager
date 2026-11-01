@@ -19,3 +19,6 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: E2E_SHOTS=0 npm run e2e

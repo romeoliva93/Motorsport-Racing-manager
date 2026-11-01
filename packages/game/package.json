@@ -1,0 +1,13 @@
+{
+  "name": "@lean-angle/game",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@lean-angle/core": "0.0.0",
+    "@lean-angle/data": "0.0.0"
+  }
+}

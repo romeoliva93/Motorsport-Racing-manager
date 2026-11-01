@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 
 /**
  * Confini fra pacchetti (ARCHITECTURE.md §4): un pacchetto può importare solo quelli sotto di lui.
- *   core  ← data ← (sim, persistence) ← game ← engine-host ← apps
+ *   core ← data ← (sim, persistence) ← game ← engine-host ← apps/client
  */
 const boundary = (allowed) => ({
   'no-restricted-imports': [
@@ -34,4 +34,11 @@ export default tseslint.config(
   },
   { files: ['packages/core/src/**/*.ts'], rules: boundary([]) },
   { files: ['packages/data/src/**/*.ts'], rules: boundary(['core']) },
+  { files: ['packages/game/src/**/*.ts'], rules: boundary(['core', 'data']) },
+  { files: ['packages/persistence/src/**/*.ts'], rules: boundary(['core', 'data']) },
+  { files: ['packages/engine-host/src/**/*.ts'], rules: boundary(['core', 'data', 'game', 'persistence']) },
+  {
+    files: ['apps/client/src/**/*.{ts,tsx}'],
+    rules: boundary(['engine-host', 'game', 'persistence', 'data', 'core']),
+  },
 );
