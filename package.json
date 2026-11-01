@@ -17,10 +17,12 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run typecheck && npm run test"
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "worldgen:report": "node tools/worldgen/report.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
     "eslint": "^10.14.0",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",

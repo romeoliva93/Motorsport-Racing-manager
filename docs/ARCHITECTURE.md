@@ -171,8 +171,10 @@ ottimizzati per i nostri dati), ORM o database server. Ogni nuova dipendenza ric
 
 Il "database" del gioco ha tre livelli:
 
-1. **Content database** (`packages/data/content`): dati di partenza originali (costruttori,
-   circuiti, sponsor, pool di nomi per nazionalità, regolamenti iniziali), in JSON validato.
+1. **Content database** (`packages/data/src/content`): dati di partenza originali (costruttori,
+   circuiti, squadre, sponsor, nomi per nazionalità, regolamenti iniziali, personaggi scritti a mano),
+   come moduli TypeScript tipizzati e verificati dai test (`content.test.ts`); un formato JSON per i mod
+   potrà essere aggiunto in seguito.
 2. **Game state**: database relazionale in memoria, generato dal content database con un seme
    e poi fatto evolvere dalla simulazione (vedi [DATA_MODEL.md](DATA_MODEL.md)).
 3. **Salvataggi**: per ogni slot una cartella con

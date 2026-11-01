@@ -173,11 +173,10 @@ export class Rng {
  */
 export class RngStreams {
   private readonly streams = new Map<string, Rng>();
+  private readonly masterSeed: string;
 
-  constructor(
-    private readonly masterSeed: string,
-    saved?: Readonly<Record<string, RngState>>,
-  ) {
+  constructor(masterSeed: string, saved?: Readonly<Record<string, RngState>>) {
+    this.masterSeed = masterSeed;
     if (saved) {
       for (const [name, state] of Object.entries(saved)) this.streams.set(name, Rng.fromState(state));
     }

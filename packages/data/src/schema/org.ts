@@ -16,7 +16,8 @@ export interface Manufacturer {
   philosophy: string;
 }
 
-export type TeamType = 'private' | 'independent' | 'satellite' | 'factory' | 'newManufacturer';
+/** 'organizer' = ente che iscrive direttamente i piloti (es. Velocity Rookies Cup, monomarca). */
+export type TeamType = 'private' | 'independent' | 'satellite' | 'factory' | 'newManufacturer' | 'organizer';
 
 export interface Team {
   id: TeamId;

@@ -10,13 +10,14 @@ mentre una simulazione deterministica fa correre ogni sessione del weekend.
 | Fase | Stato |
 |---|---|
 | 0 — Progettazione | Completata (PR in revisione) |
-| 1 — Fondamenta | **In corso**: M1.1 infrastruttura, M1.2 `core`, M1.3 schema dati completati |
+| 1 — Fondamenta | **In corso**: M1.1 infrastruttura, M1.2 `core`, M1.3 schema dati, M1.4 generatore del mondo completati |
 | 2–6 | Pianificate, vedi [roadmap](docs/ROADMAP.md) |
 
 Il codice contiene le fondamenta (`packages/core`, `packages/data`): generatore casuale deterministico,
-identificativi, tempo di gioco, eventi, denaro, schema delle entità, validatore delle regole del mondo e
-salvataggio versionato. **Non c'è ancora nulla di giocabile**: generatore del mondo, simulazione e interfaccia
-arrivano nelle milestone successive.
+identificativi, tempo di gioco, eventi, denaro, schema delle entità, validatore delle regole del mondo,
+salvataggio versionato, **contenuti originali e generatore del mondo** (4 categorie, 41 squadre, 135 piloti,
+oltre 500 membri dello staff, 20 circuiti, calendario, contratti, moto, strutture, budget).
+**Non c'è ancora nulla di giocabile**: simulazione e interfaccia arrivano nelle milestone successive.
 
 ## Sviluppo
 
@@ -27,12 +28,13 @@ npm install
 npm run check        # lint + controllo tipi + test
 npm test             # solo test (Vitest)
 npm run format       # formattazione (Prettier)
+npm run worldgen:report -- <seme>   # riepilogo del mondo generato da un seme
 ```
 
 | Pacchetto | Contenuto |
 |---|---|
 | `packages/core` | `Rng`/`RngStreams` (SFC32 con seme), `IdFactory`, `GameCalendar`, `EventLog`, `Result`, denaro intero, utilità matematiche |
-| `packages/data` | entità (mondo, persone, squadre, moto, contratti, finanze), `GameState` normalizzato, `validateGameState`, serializzazione con migrazioni |
+| `packages/data` | entità (mondo, persone, squadre, moto, contratti, finanze), `GameState` normalizzato, `validateGameState`, serializzazione con migrazioni, contenuti originali (`content/`) e `generateWorld` (`worldgen/`) |
 
 I confini fra pacchetti sono controllati da ESLint (`core` non importa nulla; `data` solo `core`).
 

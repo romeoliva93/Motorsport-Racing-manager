@@ -61,6 +61,7 @@ export function validateGameState(state: GameState): ValidationIssue[] {
 
   const activeContracts = rows(state, 'contracts').filter((c) => c.status === 'active');
   const seatedBySeason = new Map<string, Set<string>>();
+  const numbersBySeason = new Map<string, Set<number>>();
 
   for (const e of rows(state, 'teamEntries')) {
     if (!exists('teams', e.teamId)) add('ref.entry.team', 'Squadra inesistente', e.id);
@@ -91,9 +92,11 @@ export function validateGameState(state: GameState): ValidationIssue[] {
     const reg = t.regulations[season.regulationId];
     const seated = seatedBySeason.get(e.seasonId) ?? new Set<string>();
     seatedBySeason.set(e.seasonId, seated);
-    const numbers = new Set<number>();
+    const numbers = numbersBySeason.get(e.seasonId) ?? new Set<number>();
+    numbersBySeason.set(e.seasonId, numbers);
     for (const seat of e.seats) {
-      if (numbers.has(seat.number)) add('entry.duplicateNumber', `Numero ${seat.number} ripetuto`, e.id);
+      if (numbers.has(seat.number))
+        add('entry.duplicateNumber', `Numero ${seat.number} già usato nella categoria`, e.id);
       numbers.add(seat.number);
       if (seat.riderId === null) {
         if (reg && !reg.substitution.vacancyAllowed)

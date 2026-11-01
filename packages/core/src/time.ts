@@ -61,8 +61,10 @@ export function civilFromDays(days: number): CivilDate {
 /** Calendario della carriera: converte tra GameDay e date civili. */
 export class GameCalendar {
   private readonly epoch: number;
+  readonly startYear: number;
 
-  constructor(readonly startYear: number) {
+  constructor(startYear: number) {
+    this.startYear = startYear;
     this.epoch = daysFromCivil({ year: startYear, month: 1, day: 1 });
   }
 

@@ -8,3 +8,5 @@ export * from './schema/state.ts';
 export * from './tables.ts';
 export * from './validate.ts';
 export * from './serialize.ts';
+export * from './worldgen/generateWorld.ts';
+export * as content from './content/index.ts';
