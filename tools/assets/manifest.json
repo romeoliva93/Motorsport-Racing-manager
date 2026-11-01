@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "notes": "Identità visive permanenti. 'seed' e 'look' NON vanno cambiati dopo l'approvazione: definiscono il volto del personaggio. Le varianti di squadra/età si ricavano dalla master.",
+  "teams": {
+    "lupo-blu": { "name": "Scuderia Lupo Blu", "category": "premier", "colors": "royal blue and deep navy with thin white pinstripes", "sponsor": "VOLTARIS" },
+    "lupo-blu-junior": { "name": "Lupo Blu Junior Team", "category": "lightweight", "colors": "bright sunflower yellow and royal blue", "sponsor": "VOLTARIS" },
+    "nordvik": { "name": "Team Nordvik", "category": "intermediate", "colors": "turquoise teal and dark forest green with silver accents", "sponsor": "NORDVIK" },
+    "rookies-cup": { "name": "Velocity Rookies Cup", "category": "rookies", "colors": "anthracite grey and vivid orange, identical official series suit", "sponsor": "VELOCITY ROOKIES" }
+  },
+  "people": [
+    { "id": "rdr-teo-varriale", "kind": "rider", "folder": "riders", "name": "Teo Varriale", "age": 24, "nat": "Italian", "team": "lupo-blu", "number": "27", "seed": 270424,
+      "look": "olive skin, short wavy dark brown hair, light stubble beard, brown eyes, strong jaw, confident determined expression" },
+    { "id": "rdr-rafa-oyarzun", "kind": "rider", "folder": "riders", "name": "Rafa Oyarzún", "age": 21, "nat": "Spanish", "team": "lupo-blu", "number": "61", "seed": 610321,
+      "look": "light olive skin, short straight black hair with a side fringe, clean shaven, dark eyes, youthful slim face, shy slight smile" },
+    { "id": "rdr-dawid-kowalczyk", "kind": "rider", "folder": "riders", "name": "Dawid Kowalczyk", "age": 22, "nat": "Polish", "team": "nordvik", "number": "52", "seed": 520222,
+      "look": "fair skin, ash blond hair buzzed on the sides and longer on top, light blue-grey eyes, narrow face, serious focused expression" },
+    { "id": "rdr-mateus-duarte", "kind": "rider", "folder": "riders", "name": "Mateus Duarte", "age": 20, "nat": "Brazilian", "team": "nordvik", "number": "17", "seed": 170220,
+      "look": "warm brown skin, short black curly hair, dark brown eyes, broad friendly smile, round face" },
+    { "id": "rdr-fabrizio-vitellino", "kind": "rider", "folder": "riders", "name": "Fabrizio Vitellino", "age": 16, "nat": "Italian", "team": "lupo-blu-junior", "number": "44", "seed": 440116,
+      "look": "teenage boy, light olive skin, curly chestnut brown hair, hazel eyes, a few freckles, enthusiastic open smile, youthful face" },
+    { "id": "rdr-noa-lindgren", "kind": "rider", "folder": "riders", "name": "Noa Lindgren", "age": 18, "nat": "Swedish", "team": "lupo-blu-junior", "number": "9", "seed": 90118,
+      "look": "very fair skin, straight platinum blond hair slightly long on top, pale blue eyes, thin face, calm neutral expression" },
+    { "id": "rky-kaito-mizushima", "kind": "rider", "folder": "rookies", "name": "Kaito Mizushima", "age": 14, "nat": "Japanese", "team": "rookies-cup", "number": "12", "seed": 120114,
+      "look": "14 year old boy, light skin, straight black hair with short fringe, dark eyes, small teenage face, polite serious expression" },
+    { "id": "rky-mateo-rinaldi", "kind": "rider", "folder": "rookies", "name": "Mateo Rinaldi", "age": 15, "nat": "Argentinian", "team": "rookies-cup", "number": "7", "seed": 70115,
+      "look": "15 year old boy, tanned skin, messy dark brown hair, brown eyes, slight grin, teenage face" },
+    { "id": "eng-anja-kessler", "kind": "engineer", "folder": "engineers", "name": "Anja Kessler", "age": 34, "nat": "Austrian", "team": "lupo-blu", "role": "track engineer", "seed": 3401,
+      "look": "woman, fair skin, light brown hair tied back in a low ponytail, thin rectangular glasses, green-grey eyes, analytical calm expression" },
+    { "id": "eng-karl-lindqvist", "kind": "engineer", "folder": "engineers", "name": "Karl Lindqvist", "age": 39, "nat": "Swedish", "team": "lupo-blu", "role": "track engineer", "seed": 3902,
+      "look": "man, fair skin, short blond hair, trimmed blond beard, blue eyes, stern direct expression" },
+    { "id": "crw-marco-doria", "kind": "crew", "folder": "crew", "name": "Marco Doria", "age": 51, "nat": "Italian", "team": "lupo-blu", "role": "crew chief", "seed": 5103,
+      "look": "man, olive skin with weathered lines, short salt-and-pepper grey hair, short grey beard, brown eyes, experienced warm half smile" }
+  ],
+  "bikes": [
+    { "id": "bk-premier-ardena-lupo-blu-27", "category": "premier", "team": "lupo-blu", "number": "27", "seed": 902701,
+      "design": "fictional Ardena 1000cc V4 MotoGP-class prototype racing motorcycle, aggressive Italian design, large front aerodynamic winglets, ground-effect side fairing ducts, sharp angular nose, carbon fibre swingarm, high exhaust under the seat tail, big carbon brake discs, slick racing tyres",
+      "livery": "royal blue and deep navy livery with thin white pinstripes, fictional sponsor text VOLTARIS on the side fairing",
+      "views": ["three-quarter front", "side"] },
+    { "id": "bk-intermediate-navarra-nordvik-52", "category": "intermediate", "team": "nordvik", "number": "52", "seed": 905201,
+      "design": "fictional 800cc three-cylinder Moto2-class racing motorcycle with Navarra aluminium twin-spar chassis, slimmer fairing than a prototype, small integrated winglets, steel brake discs, slick tyres, under-belly exhaust",
+      "livery": "turquoise teal and dark forest green livery with silver accents, fictional sponsor text NORDVIK",
+      "views": ["three-quarter front", "side"] },
+    { "id": "bk-lightweight-hoshiro-lupo-blu-junior-44", "category": "lightweight", "team": "lupo-blu-junior", "number": "44", "seed": 904401,
+      "design": "fictional Hoshiro 250cc single-cylinder Moto3-class racing motorcycle, small and narrow, compact fairing, thin tyres, lightweight steel trellis frame partly visible, simple tail",
+      "livery": "bright sunflower yellow and royal blue livery, fictional sponsor text VOLTARIS",
+      "views": ["three-quarter front", "side"] },
+    { "id": "bk-rookies-lysander-r250-12", "category": "rookies", "team": "rookies-cup", "number": "12", "seed": 901201,
+      "design": "fictional Lysander R250 one-make junior cup racing motorcycle, simple production-based small sportbike, plain rounded fairing, round headlight cover sticker, basic steel swingarm, road-style exhaust",
+      "livery": "anthracite grey and vivid orange one-make series livery, identical for every rider, white number plate",
+      "views": ["three-quarter front", "side"] }
+  ]
+}
