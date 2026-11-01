@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Menu principale</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { width: 100vw; height: 100vh; overflow: hidden; }
+  .stage {
+    position: relative; height: 100%;
+    background:
+      radial-gradient(1200px 700px at 78% 45%, rgba(229,50,45,.16), transparent 60%),
+      radial-gradient(900px 600px at 95% 100%, rgba(255,122,26,.10), transparent 60%),
+      linear-gradient(180deg, #0b0c10 0%, #07080a 100%);
+  }
+  .grid-bg {
+    position: absolute; inset: 0; opacity: .35;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(900px 600px at 75% 50%, #000 0%, transparent 75%);
+  }
+  .track { position: absolute; right: 4vw; top: 50%; transform: translateY(-50%); width: 58vw; max-width: 1100px; }
+  .track path.base { fill: none; stroke: #1f2430; stroke-width: 22; stroke-linejoin: round; stroke-linecap: round; }
+  .track path.line { fill: none; stroke: url(#g); stroke-width: 3; stroke-dasharray: 14 10; animation: run 6s linear infinite; }
+  .track circle { filter: drop-shadow(0 0 8px rgba(255,122,26,.9)); }
+  @keyframes run { to { stroke-dashoffset: -480; } }
+
+  .left { position: absolute; left: 6vw; top: 0; bottom: 0; width: 520px; display: flex; flex-direction: column; justify-content: center; gap: 2.5rem; }
+  .brand .kicker { color: var(--orange); font: 600 .75rem var(--font-ui); letter-spacing: .3em; text-transform: uppercase; }
+  .brand h1 { margin: .4rem 0 0; font: 800 5.2rem/0.9 var(--font-display); text-transform: uppercase; letter-spacing: .01em; font-style: italic; }
+  .brand h1 span { background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand p { margin: .6rem 0 0; color: var(--text-2); font-size: 1rem; letter-spacing: .02em; }
+
+  nav { display: flex; flex-direction: column; gap: .35rem; }
+  .item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .95rem 1.1rem; border-radius: var(--r-2);
+    border: 1px solid transparent; color: var(--text-1);
+    font: 700 1.35rem var(--font-display); text-transform: uppercase; letter-spacing: .06em;
+  }
+  .item small { font: 500 .78rem var(--font-ui); color: var(--text-3); text-transform: none; letter-spacing: 0; }
+  .item.primary { background: linear-gradient(90deg, rgba(229,50,45,.22), rgba(255,122,26,.06)); border-color: rgba(255,122,26,.45); box-shadow: inset 3px 0 0 var(--orange); }
+  .item.primary small { color: var(--text-2); }
+  .item:hover { background: var(--bg-2); border-color: var(--line); }
+  .item.disabled { color: var(--text-3); }
+  .tag { font: 600 .65rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; padding: 3px 6px; border-radius: 3px; border: 1px solid var(--line-strong); color: var(--text-3); }
+
+  .continue-card { display: flex; gap: 1rem; align-items: center; padding: 1rem; border-radius: var(--r-3); background: rgba(21,24,33,.75); border: 1px solid var(--line); backdrop-filter: blur(6px); }
+  .swatch { width: 54px; height: 54px; border-radius: 10px; background: linear-gradient(135deg, #e5322d 0 50%, #111 50% 100%); display: grid; place-items: center; font: 800 1.1rem var(--font-display); }
+  .continue-card .meta { color: var(--text-2); font-size: .8rem; margin-top: .2rem; }
+
+  footer { position: absolute; left: 6vw; right: 14rem; bottom: 2rem; display: flex; justify-content: space-between; color: var(--text-3); font-size: .75rem; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grid-bg"></div>
+
+  <svg class="track" viewBox="0 0 1000 620" aria-hidden="true">
+    <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#e5322d"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
+    <path id="trk" class="base" d="M120 470 L520 470 C600 470 640 440 660 400 L700 320 C720 280 760 270 800 290 L880 330 C930 355 950 320 930 280 L860 150 C840 110 800 95 760 110 L560 180 C520 195 490 180 470 150 L430 95 C405 60 360 55 330 80 L180 200 C150 225 160 260 195 270 L330 300 C370 310 375 350 340 365 L130 400 C80 410 70 470 120 470 Z"/>
+    <path class="line" d="M120 470 L520 470 C600 470 640 440 660 400 L700 320 C720 280 760 270 800 290 L880 330 C930 355 950 320 930 280 L860 150 C840 110 800 95 760 110 L560 180 C520 195 490 180 470 150 L430 95 C405 60 360 55 330 80 L180 200 C150 225 160 260 195 270 L330 300 C370 310 375 350 340 365 L130 400 C80 410 70 470 120 470 Z"/>
+    <circle r="7" fill="#ff7a1a"><animateMotion dur="9s" repeatCount="indefinite"><mpath href="#trk"/></animateMotion></circle>
+    <circle r="6" fill="#e5322d"><animateMotion dur="9.4s" begin="-0.5s" repeatCount="indefinite"><mpath href="#trk"/></animateMotion></circle>
+    <circle r="5" fill="#eef0f4"><animateMotion dur="9.8s" begin="-1.2s" repeatCount="indefinite"><mpath href="#trk"/></animateMotion></circle>
+  </svg>
+
+  <div class="left">
+    <div class="brand">
+      <div class="kicker">Velocity World Championship</div>
+      <h1>Lean<br><span>Angle</span></h1>
+      <p>Moto Racing Manager</p>
+    </div>
+
+    <div class="continue-card">
+      <div class="swatch">LB</div>
+      <div>
+        <div class="display" style="font-size:1.1rem">Scuderia Lupo Blu</div>
+        <div class="meta">Premier · Stagione 2027 · Round 7 — Brennholz-Ring · Salvato 2 ore fa</div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="item primary">Continua carriera <small>Slot 1 · autosalvataggio</small></div>
+      <div class="item">Nuova carriera <small>Squadra esistente · Crea la tua squadra</small></div>
+      <div class="item">Carica partita <small>3 slot</small></div>
+      <div class="item">Impostazioni <small>Grafica · Audio · Lingua · Unità</small></div>
+      <div class="item disabled">Editor contenuti <span class="tag">In sviluppo</span></div>
+      <div class="item">Esci</div>
+    </nav>
+  </div>
+
+  <footer><span>v0.0 — proposta grafica</span><span>Universo, nomi e marchi originali</span></footer>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi</div>
+</body>
+</html>

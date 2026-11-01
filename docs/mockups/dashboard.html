@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mockup — Dashboard (Panoramica)</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body { height: 100vh; overflow: hidden; }
+  .app { display: grid; grid-template-columns: 15rem 1fr; grid-template-rows: 3.75rem 1fr; height: 100%; }
+
+  /* Sidebar */
+  aside { grid-row: 1 / 3; background: var(--bg-1); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+  .team { display: flex; gap: .7rem; align-items: center; padding: 1rem; border-bottom: 1px solid var(--line); height: 3.75rem; }
+  .logo { width: 2.1rem; height: 2.1rem; border-radius: 8px; background: linear-gradient(135deg, #2a6cf0 0 50%, #0d1530 50%); display: grid; place-items: center; font: 800 .85rem var(--font-display); }
+  .team b { font: 700 1rem var(--font-display); text-transform: uppercase; letter-spacing: .04em; display: block; }
+  .team span { color: var(--text-3); font-size: .7rem; }
+  .nav { padding: .6rem .5rem; overflow: hidden; flex: 1; }
+  .grp { color: var(--text-3); font: 600 .62rem var(--font-ui); letter-spacing: .14em; text-transform: uppercase; padding: .7rem .7rem .3rem; }
+  .nav a { display: flex; align-items: center; gap: .65rem; padding: .42rem .7rem; border-radius: 6px; color: var(--text-2); font-weight: 500; font-size: .82rem; text-decoration: none; }
+  .nav a i { width: 1rem; height: 1rem; border-radius: 3px; border: 1.5px solid currentColor; opacity: .7; }
+  .nav a.on { background: linear-gradient(90deg, rgba(229,50,45,.20), rgba(255,122,26,.04)); color: var(--text-1); box-shadow: inset 2px 0 0 var(--orange); }
+  .nav a.on i { border-color: var(--orange); opacity: 1; }
+  .nav a .cnt { margin-left: auto; font-size: .65rem; background: var(--red); color: #fff; border-radius: 9px; padding: 1px 6px; }
+
+  /* Top bar */
+  header { display: flex; align-items: center; gap: 1.5rem; padding: 0 1.25rem; border-bottom: 1px solid var(--line); background: rgba(14,16,21,.9); }
+  header h2 { margin: 0; font: 700 1.35rem var(--font-display); text-transform: uppercase; letter-spacing: .05em; }
+  .kpi { display: flex; flex-direction: column; line-height: 1.15; }
+  .kpi small { color: var(--text-3); font-size: .62rem; text-transform: uppercase; letter-spacing: .12em; }
+  .kpi b { font-size: .9rem; }
+  .spacer { flex: 1; }
+  .btn { border: 1px solid var(--line-strong); background: var(--bg-2); color: var(--text-1); padding: .55rem .9rem; border-radius: 6px; font-weight: 600; font-size: .8rem; }
+  .btn.primary { background: var(--accent-grad); border: 0; color: #fff; font: 700 .95rem var(--font-display); text-transform: uppercase; letter-spacing: .08em; padding: .6rem 1.4rem; box-shadow: 0 6px 20px rgba(229,50,45,.35); }
+
+  /* Content */
+  main { padding: 1rem 1.25rem; display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: min-content; gap: 1rem; overflow: hidden; }
+  .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-3); padding: .9rem 1rem; box-shadow: var(--shadow-1); min-width: 0; }
+  .card h3 { margin: 0 0 .7rem; display: flex; align-items: center; justify-content: space-between; font: 700 .9rem var(--font-display); text-transform: uppercase; letter-spacing: .08em; color: var(--text-2); }
+  .card h3 a { font: 500 .72rem var(--font-ui); text-transform: none; letter-spacing: 0; color: var(--orange); }
+  .c5 { grid-column: span 5; } .c7 { grid-column: span 7; } .c4 { grid-column: span 4; } .c3 { grid-column: span 3; }
+  .muted { color: var(--text-3); } .t2 { color: var(--text-2); }
+  .big { font: 700 1.9rem/1 var(--font-display); }
+  .pill { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: .68rem; font-weight: 600; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .bar { height: 6px; background: var(--bg-3); border-radius: 4px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent-grad); border-radius: 4px; }
+
+  /* Next event */
+  .event { display: grid; grid-template-columns: 1fr 1.1fr; gap: 1rem; }
+  .event svg path { fill: none; stroke: var(--line-strong); stroke-width: 7; stroke-linejoin: round; }
+  .event svg path.hl { stroke: url(#eg); stroke-width: 2.5; }
+  .wx { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin: .6rem 0; }
+  .wx div { background: var(--bg-3); border-radius: 6px; padding: .45rem; text-align: center; font-size: .72rem; }
+  .wx b { display: block; font-size: 1rem; margin: .15rem 0; }
+  .sched { width: 100%; border-collapse: collapse; font-size: .74rem; }
+  .sched td { padding: .22rem 0; border-bottom: 1px solid var(--line); }
+  .sched td:last-child { text-align: right; color: var(--text-2); }
+
+  /* Riders */
+  .riders { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .rider { background: var(--bg-3); border-radius: var(--r-2); padding: .85rem; position: relative; overflow: hidden; }
+  .rider .num { position: absolute; right: .6rem; top: -.6rem; font: 800 5rem/1 var(--font-display); font-style: italic; color: rgba(255,255,255,.05); }
+  .rider .name { font: 700 1.25rem var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
+  .stats4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; margin: .7rem 0; }
+  .stats4 div small { display: block; color: var(--text-3); font-size: .6rem; text-transform: uppercase; letter-spacing: .1em; }
+  .stats4 div b { font-size: 1rem; }
+  .row { display: flex; justify-content: space-between; align-items: center; font-size: .74rem; padding: .22rem 0; }
+  .form { display: flex; gap: 3px; }
+  .form span { width: 1.25rem; height: 1.1rem; border-radius: 3px; font-size: .62rem; display: grid; place-items: center; background: var(--bg-2); color: var(--text-2); }
+  .form span.p { background: rgba(255,122,26,.18); color: var(--orange); }
+  .form span.d { background: rgba(255,77,79,.15); color: var(--bad); }
+
+  /* Tables */
+  table.std { width: 100%; border-collapse: collapse; font-size: .76rem; }
+  table.std th { text-align: left; color: var(--text-3); font-weight: 600; font-size: .62rem; text-transform: uppercase; letter-spacing: .1em; padding: 0 0 .35rem; }
+  table.std td { padding: .3rem 0; border-top: 1px solid var(--line); }
+  table.std td.r, table.std th.r { text-align: right; }
+  table.std tr.me td { color: var(--orange); font-weight: 600; }
+  .dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 2px; margin-right: .4rem; vertical-align: middle; }
+
+  .list { display: flex; flex-direction: column; gap: .5rem; }
+  .task { display: grid; grid-template-columns: .25rem 1fr auto; gap: .7rem; align-items: center; background: var(--bg-3); border-radius: 6px; padding: .55rem .7rem .55rem 0; font-size: .78rem; }
+  .task .k { height: 100%; border-radius: 0 3px 3px 0; }
+  .task small { display: block; color: var(--text-3); font-size: .68rem; margin-top: 2px; }
+  .news .n { padding: .45rem 0; border-top: 1px solid var(--line); font-size: .78rem; }
+  .news .n small { color: var(--text-3); font-size: .66rem; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .08em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="team"><div class="logo">LB</div><div><b>Scuderia Lupo Blu</b><span>Premier · Satellite Ardena</span></div></div>
+    <div class="nav">
+      <div class="grp">Squadra</div>
+      <a class="on"><i></i>Panoramica</a><a><i></i>Scuderia</a><a><i></i>Piloti</a><a><i></i>Personale</a>
+      <div class="grp">Tecnica</div>
+      <a><i></i>Moto</a><a><i></i>Sviluppo<span class="cnt">2</span></a><a><i></i>Strutture</a>
+      <div class="grp">Persone e affari</div>
+      <a><i></i>Accademia</a><a><i></i>Mercato<span class="cnt">1</span></a><a><i></i>Sponsor</a><a><i></i>Finanze</a>
+      <div class="grp">Competizione</div>
+      <a><i></i>Calendario</a><a><i></i>Campionato</a><a><i></i>Statistiche</a>
+      <div class="grp">Mondo</div>
+      <a><i></i>Notizie</a><a><i></i>Archivio</a>
+    </div>
+  </aside>
+
+  <header>
+    <h2>Panoramica</h2>
+    <div class="kpi"><small>Data</small><b>Lun 14 giugno 2027</b></div>
+    <div class="kpi"><small>Prossimo evento</small><b>Round 7 · Brennholz-Ring · tra 4 giorni</b></div>
+    <div class="kpi"><small>Saldo</small><b class="ok">₡ 18,42 M</b></div>
+    <div class="kpi"><small>Posizione squadre</small><b>6ª · 142 pt</b></div>
+    <div class="spacer"></div>
+    <button class="btn">Posta · 5</button>
+    <button class="btn primary">Continua ▸</button>
+  </header>
+
+  <main>
+    <!-- Prossimo evento -->
+    <section class="card c5">
+      <h3>Prossimo evento <a>Apri weekend</a></h3>
+      <div class="event">
+        <div>
+          <svg viewBox="0 0 300 210" width="100%">
+            <defs><linearGradient id="eg" x1="0" x2="1"><stop offset="0" stop-color="#e5322d"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
+            <path d="M40 170 L180 170 C215 170 225 150 230 130 L245 70 C250 45 230 30 205 40 L150 62 C130 70 115 60 110 45 L100 25 C92 12 70 12 60 25 L25 85 C15 100 25 115 40 115 L95 118 C110 120 110 140 95 143 L45 150 C25 153 22 170 40 170 Z"/>
+            <path class="hl" d="M40 170 L180 170 C215 170 225 150 230 130 L245 70 C250 45 230 30 205 40 L150 62 C130 70 115 60 110 45 L100 25 C92 12 70 12 60 25 L25 85 C15 100 25 115 40 115 L95 118 C110 120 110 140 95 143 L45 150 C25 153 22 170 40 170 Z"/>
+          </svg>
+          <div class="muted" style="font-size:.7rem">4,62 km · 14 curve · abrasività media · sorpassi: alta</div>
+        </div>
+        <div>
+          <div class="display" style="font-size:1.25rem">Brennholz-Ring</div>
+          <div class="muted" style="font-size:.72rem">Germania · gara 27 giri</div>
+          <div class="wx">
+            <div>Ven<b>22°</b><span class="t2">sereno</span></div>
+            <div>Sab<b>19°</b><span class="warn">pioggia 40%</span></div>
+            <div>Dom<b>21°</b><span class="t2">variabile</span></div>
+          </div>
+          <table class="sched">
+            <tr><td>Conferenza stampa</td><td>Gio 15:00</td></tr>
+            <tr><td>FP1 · Prove valide</td><td>Ven</td></tr>
+            <tr><td>Qualifiche · Sprint</td><td>Sab</td></tr>
+            <tr><td>Warm-up · Gara</td><td>Dom 14:00</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Piloti -->
+    <section class="card c7">
+      <h3>Piloti <a>Gestisci</a></h3>
+      <div class="riders">
+        <div class="rider">
+          <div class="num">27</div>
+          <div class="name">Teo Varriale</div>
+          <div class="muted" style="font-size:.72rem">ITA · 24 anni · Capotecnico: M. Doria</div>
+          <div class="stats4">
+            <div><small>Campionato</small><b>5° · 88 pt</b></div>
+            <div><small>Valutazione</small><b>84</b></div>
+            <div><small>Morale</small><b class="ok">Alto</b></div>
+            <div><small>Contratto</small><b>2028</b></div>
+          </div>
+          <div class="row"><span class="muted">Ultimi risultati</span><div class="form"><span class="p">3</span><span>6</span><span class="p">2</span><span>5</span><span class="d">R</span></div></div>
+          <div class="row"><span class="muted">Forma fisica</span><div class="bar" style="width:55%"><span style="width:92%"></span></div></div>
+          <div class="row"><span class="muted">Sintonia con la moto</span><div class="bar" style="width:55%"><span style="width:78%"></span></div></div>
+        </div>
+        <div class="rider">
+          <div class="num">61</div>
+          <div class="name">Rafa Oyarzún</div>
+          <div class="muted" style="font-size:.72rem">ESP · 21 anni · Capotecnico: K. Lindqvist</div>
+          <div class="stats4">
+            <div><small>Campionato</small><b>13° · 54 pt</b></div>
+            <div><small>Valutazione</small><b>77</b></div>
+            <div><small>Morale</small><b class="warn">Medio</b></div>
+            <div><small>Contratto</small><b>2027</b></div>
+          </div>
+          <div class="row"><span class="muted">Ultimi risultati</span><div class="form"><span>9</span><span>11</span><span class="d">R</span><span>8</span><span>10</span></div></div>
+          <div class="row"><span class="muted">Forma fisica</span><div class="bar" style="width:55%"><span style="width:70%"></span></div></div>
+          <div class="row"><span class="muted">Sintonia con la moto</span><div class="bar" style="width:55%"><span style="width:61%"></span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Classifica -->
+    <section class="card c4">
+      <h3>Classifica piloti <a>Completa</a></h3>
+      <table class="std">
+        <tr><th>Pos</th><th>Pilota</th><th>Squadra</th><th class="r">Pt</th></tr>
+        <tr><td>1</td><td>L. Brandauer</td><td><span class="dot" style="background:#e5322d"></span>Ardena Corse</td><td class="r">131</td></tr>
+        <tr><td>2</td><td>K. Aoyama</td><td><span class="dot" style="background:#ffffff"></span>Hoshiro RW</td><td class="r">117</td></tr>
+        <tr><td>3</td><td>N. Pellerin</td><td><span class="dot" style="background:#7b5cff"></span>Corvane MS</td><td class="r">102</td></tr>
+        <tr><td>4</td><td>D. Szabó</td><td><span class="dot" style="background:#ff7a1a"></span>Vohrmann P.</td><td class="r">95</td></tr>
+        <tr class="me"><td>5</td><td>T. Varriale</td><td><span class="dot" style="background:#2a6cf0"></span>Lupo Blu</td><td class="r">88</td></tr>
+        <tr><td>6</td><td>M. Okonkwo</td><td><span class="dot" style="background:#2fbf71"></span>Atlas MS</td><td class="r">81</td></tr>
+      </table>
+    </section>
+
+    <!-- Finanze -->
+    <section class="card c4">
+      <h3>Finanze <a>Dettaglio</a></h3>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end">
+        <div><div class="muted" style="font-size:.68rem">Saldo di cassa</div><div class="big">₡ 18,42 M</div></div>
+        <div style="text-align:right"><div class="muted" style="font-size:.68rem">Previsione fine stagione</div><div class="warn" style="font-weight:700">₡ 6,1 M</div></div>
+      </div>
+      <svg viewBox="0 0 300 70" width="100%" style="margin:.6rem 0 .3rem">
+        <defs><linearGradient id="fa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a1a" stop-opacity=".35"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></linearGradient></defs>
+        <path d="M0 22 L30 26 L60 20 L90 30 L120 34 L150 28 L180 38 L210 36 L240 44 L270 41 L300 47 L300 70 L0 70Z" fill="url(#fa)"/>
+        <path d="M0 22 L30 26 L60 20 L90 30 L120 34 L150 28 L180 38 L210 36 L240 44 L270 41 L300 47" fill="none" stroke="#ff7a1a" stroke-width="2"/>
+      </svg>
+      <div class="row"><span class="muted">Entrate del mese</span><b class="ok">+ ₡ 3,84 M</b></div>
+      <div class="row"><span class="muted">Uscite del mese</span><b class="bad">− ₡ 4,96 M</b></div>
+      <div class="row"><span class="muted">Budget sviluppo usato</span><div class="bar" style="width:45%"><span style="width:64%"></span></div></div>
+    </section>
+
+    <!-- Sviluppo -->
+    <section class="card c4">
+      <h3>Sviluppo e moto <a>Reparto R&amp;D</a></h3>
+      <div class="list">
+        <div><div class="row"><span>Forcellone v3 · <span class="muted">equilibrato</span></span><span class="t2">test · 6 gg</span></div><div class="bar"><span style="width:82%"></span></div></div>
+        <div><div class="row"><span>Pacchetto aero B · <span class="warn">aggressivo</span></span><span class="t2">produzione · 19 gg</span></div><div class="bar"><span style="width:47%"></span></div></div>
+        <div><div class="row"><span>Mappe elettroniche · <span class="muted">conservativo</span></span><span class="t2">progetto · 11 gg</span></div><div class="bar"><span style="width:28%"></span></div></div>
+      </div>
+      <div class="row" style="margin-top:.7rem"><span class="muted">Motori usati</span><b>3 / 7 · #27 &nbsp; 4 / 7 · #61</b></div>
+      <div class="row"><span class="muted">Affidabilità media</span><b class="ok">93%</b></div>
+    </section>
+
+    <!-- Decisioni -->
+    <section class="card c5">
+      <h3>Decisioni richieste <a>Posta</a></h3>
+      <div class="list">
+        <div class="task"><span class="k" style="background:var(--red)"></span><div>Rinnovo contratto di R. Oyarzún<small>Il manager chiede una risposta entro 6 giorni · Mercato</small></div><button class="btn">Apri</button></div>
+        <div class="task"><span class="k" style="background:var(--orange)"></span><div>Offerta di Akane Racing per l'ingegnere K. Lindqvist<small>Morale e fedeltà a rischio · Personale</small></div><button class="btn">Apri</button></div>
+        <div class="task"><span class="k" style="background:var(--info)"></span><div>Voto della commissione: limite dispositivi aerodinamici<small>Scadenza: fine round 8 · Regolamenti</small></div><button class="btn">Apri</button></div>
+      </div>
+    </section>
+
+    <!-- Obiettivi -->
+    <section class="card c3">
+      <h3>Obiettivi</h3>
+      <div class="list" style="font-size:.76rem">
+        <div><div class="row"><span>Top 6 squadre <span class="muted">· dirigenza</span></span><b class="ok">6°</b></div><div class="bar"><span style="width:70%"></span></div></div>
+        <div><div class="row"><span>3 podi <span class="muted">· Voltaris Energy</span></span><b class="warn">2/3</b></div><div class="bar"><span style="width:66%"></span></div></div>
+        <div><div class="row"><span>Bilancio positivo</span><b class="bad">a rischio</b></div><div class="bar"><span style="width:35%"></span></div></div>
+      </div>
+    </section>
+
+    <!-- Notizie -->
+    <section class="card c4 news">
+      <h3>Notizie <a>Tutte</a></h3>
+      <div class="n"><small>Mercato · rumors</small>Hoshiro avrebbe sondato Varriale per il 2028</div>
+      <div class="n"><small>Gara · Vltava Ring</small>Brandauer allunga, cade Pellerin al penultimo giro</div>
+      <div class="n"><small>Federazione</small>Proposta di ridurre i motori da 7 a 6 per stagione</div>
+    </section>
+  </main>
+</div>
+<div class="mockup-badge">Mockup — dati illustrativi, non generati dal gioco</div>
+</body>
+</html>
