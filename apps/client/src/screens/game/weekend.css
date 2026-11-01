@@ -345,3 +345,13 @@
     max-height: 18rem;
   }
 }
+.choice button small {
+  display: block;
+  width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.choice button:has(small) {
+  flex-wrap: wrap;
+  row-gap: 0.1rem;
+}

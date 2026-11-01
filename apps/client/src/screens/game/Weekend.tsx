@@ -232,7 +232,10 @@ function Strategy({
               </div>
               <div className="strat-label">
                 Gomma
-                <Help>Le gomme si consumano giro dopo giro: una gomma consumata fa perdere tempo.</Help>
+                <Help>
+                  Le gomme si consumano giro dopo giro. Sotto ogni mescola: quanti secondi si stima di perdere
+                  sull’intera gara rispetto alla scelta migliore, con il ritmo selezionato.
+                </Help>
               </div>
               <div className="choice">
                 {TYRES.map((t) => (
@@ -243,6 +246,11 @@ function Strategy({
                   >
                     <i className={`tyre ${t.id}`} />
                     {t.label}
+                    <small className={r.forecast[p.mode][t.id] === 0 ? 'ok' : 'muted'}>
+                      {r.forecast[p.mode][t.id] === 0
+                        ? 'migliore'
+                        : `+${r.forecast[p.mode][t.id].toFixed(1).replace('.', ',')} s`}
+                    </small>
                   </button>
                 ))}
               </div>

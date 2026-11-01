@@ -19,6 +19,7 @@ import {
   type TeamId,
 } from '@lean-angle/data';
 import {
+  compoundForecast,
   generateTrack,
   runQualifying,
   runRace,
@@ -39,10 +40,10 @@ export interface Strategy {
 
 /** Giri e velocità media di riferimento per categoria (gare più corte del reale per renderle guardabili). */
 export const RACE_FORMAT: Record<CategoryTier, { laps: number; avgSpeed: number }> = {
-  premier: { laps: 22, avgSpeed: 46 },
-  intermediate: { laps: 18, avgSpeed: 43.5 },
-  lightweight: { laps: 16, avgSpeed: 40.5 },
-  rookies: { laps: 12, avgSpeed: 38 },
+  premier: { laps: 15, avgSpeed: 46 },
+  intermediate: { laps: 13, avgSpeed: 43.5 },
+  lightweight: { laps: 12, avgSpeed: 40.5 },
+  rookies: { laps: 10, avgSpeed: 38 },
 };
 
 export function trackFor(s: GameState, round: Round) {
@@ -119,10 +120,17 @@ function entrants(s: GameState, round: Round): Entrant[] {
     );
 }
 
-function aiStrategy(r: Rider, rng: Rng): Strategy {
-  const compound = rng.weightedPick<Compound>(['soft', 'medium', 'hard'], [2, 6, 2]);
+/**
+ * Strategia delle squadre IA: ritmo dal carattere del pilota, mescola con la previsione del proprio ingegnere
+ * (con un margine d'errore: non sempre azzeccano la scelta migliore).
+ */
+function aiStrategy(r: Rider, rng: Rng, laps: number): Strategy {
   const mode: PaceMode =
     r.attributes.aggression > 72 && rng.chance(0.45) ? 'attack' : rng.chance(0.1) ? 'conservative' : 'normal';
+  const fc = compoundForecast(unit(r.attributes.tyreManagement), mode, laps);
+  const compound = (['soft', 'medium', 'hard'] as Compound[])
+    .map((c) => ({ c, v: fc[c] + rng.normal(0, 1.2) }))
+    .sort((a, b) => a.v - b.v)[0]!.c;
   return { compound, mode };
 }
 
@@ -235,7 +243,7 @@ export function runRaceDay(
       .map((r) => list.find((e) => e.rider.id === r.riderId))
       .filter((e): e is Entrant => !!e);
     const grid = gridOrder.map((e) =>
-      toRaceRider(s, e, playerStrategies[e.rider.id] ?? aiStrategy(e.rider, rng)),
+      toRaceRider(s, e, playerStrategies[e.rider.id] ?? aiStrategy(e.rider, rng, RACE_FORMAT[cat.tier].laps)),
     );
     const circuit = s.tables.circuits[round.circuitId]!;
     const track = trackFor(s, round);

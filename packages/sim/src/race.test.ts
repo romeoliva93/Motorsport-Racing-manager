@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generateTrack, pointAt } from './track.ts';
-import { runQualifying, runRace, type RaceRider } from './race.ts';
+import { compoundForecast, runQualifying, runRace, type RaceRider } from './race.ts';
 
 const track = generateTrack('brennholz', 14);
 const rider = (id: string, skill: number, bike = 0.8, extra: Partial<RaceRider> = {}): RaceRider => ({
@@ -105,5 +105,45 @@ describe('qualifiche e gara', () => {
       }).events.filter((e) => e.kind === 'crash').length;
     }
     expect(attack).toBeGreaterThan(calm);
+  });
+});
+
+describe('equilibrio delle gomme', () => {
+  it('ogni mescola è la migliore per qualche pilota, su ogni lunghezza di gara', () => {
+    for (const laps of [10, 12, 13, 15]) {
+      const winners = new Set<string>();
+      for (const tm of [0.3, 0.5, 0.7, 0.9, 1])
+        for (const mode of ['conservative', 'normal', 'attack'] as const) {
+          const fc = compoundForecast(tm, mode, laps);
+          winners.add((['soft', 'medium', 'hard'] as const).reduce((a, b) => (fc[a] <= fc[b] ? a : b)));
+        }
+      expect([...winners].sort()).toEqual(['hard', 'medium', 'soft']);
+    }
+  });
+
+  it('la previsione corrisponde alla gara simulata', () => {
+    const solo = (tm: number, compound: 'soft' | 'hard') => {
+      let t = 0;
+      for (let i = 0; i < 20; i++)
+        t += runRace({
+          seed: `tyre-${i}`,
+          track,
+          lengthM: 4600,
+          laps: 15,
+          refLap: 100,
+          grid: [
+            rider('a', 0.85, 0.85, {
+              tyreManagement: tm,
+              consistency: 0.8,
+              concentration: 1,
+              reliability: 1,
+              compound,
+            }),
+          ],
+        }).results[0]!.time!;
+      return t / 20;
+    };
+    expect(solo(0.95, 'soft')).toBeLessThan(solo(0.95, 'hard'));
+    expect(solo(0.3, 'hard')).toBeLessThan(solo(0.3, 'soft'));
   });
 });

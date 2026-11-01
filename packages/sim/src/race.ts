@@ -12,6 +12,7 @@
  *   giro base    = giro di riferimento × (1 + 0,0006 × (92 − prestazione)) × (1 + forma del giorno),
  *                  forma del giorno ~ N(0; 0,35%) diversa per ogni pilota e ogni sessione
  *   giro         = giro base × (1 + gomma(età, mescola) + carburante + ritmo + N(0, σ)),  σ = 0,25% × (1,2 − costanza)
+ *   gomma        = base(mescola) + deg(mescola) × 14/(giri−1) × età × ritmo.deg × (1,3 − 0,6 × gestione gomme)
  *   caduta/giro  = 0,0025 × ritmo × (1,3 − concentrazione) × (1 + aggressività/2)
  */
 import { Rng, clamp } from '@lean-angle/core';
@@ -79,16 +80,49 @@ export interface RaceOutcome {
   duration: number;
 }
 
+/**
+ * Gomme. `base` = differenza di passo a gomma nuova; `deg` = perdita per ogni giro di età (gara da 15 giri).
+ * Bilanciamento (gara da 15 giri, consumo medio f = 0,88): le tre mescole finiscono entro ~1 s l'una
+ * dall'altra; la media è la migliore per un pilota medio, la morbida per chi gestisce bene le gomme (f < 0,8),
+ * la dura per chi le consuma molto o attacca (f > 1,0). Vedi `compoundForecast`.
+ */
 const TYRE: Record<Compound, { base: number; deg: number }> = {
-  soft: { base: -0.006, deg: 0.0011 },
-  medium: { base: 0, deg: 0.0006 },
-  hard: { base: 0.004, deg: 0.00035 },
+  soft: { base: -0.006, deg: 0.0017 },
+  medium: { base: 0, deg: 0.00063 },
+  hard: { base: 0.003, deg: 0.0002 },
 };
 const MODE: Record<PaceMode, { pace: number; crash: number; deg: number }> = {
   conservative: { pace: 0.005, crash: 0.5, deg: 0.85 },
   normal: { pace: 0, crash: 1, deg: 1 },
   attack: { pace: -0.004, crash: 2, deg: 1.3 },
 };
+
+/**
+ * Il consumo per giro si scala con la lunghezza della gara (14 / (giri − 1)): su ogni distanza le gomme arrivano
+ * a fine gara con lo stesso grado di usura, così l'equilibrio fra mescole non dipende dal numero di giri.
+ */
+export const degScale = (laps: number) => 14 / Math.max(1, laps - 1);
+
+/** Fattore di consumo del pilota: (1,3 − 0,6 × gestione gomme) × ritmo (prudente 0,85, normale 1, attacco 1,3). */
+export const wearFactor = (tyreManagement: number, mode: PaceMode) =>
+  MODE[mode].deg * (1.3 - 0.6 * tyreManagement);
+
+/**
+ * Previsione: tempo perso (in giri equivalenti × 100) da ciascuna mescola su tutta la gara, a parità di tutto il
+ * resto. Più basso = meglio. Usata dall'ingegnere per il consiglio e dall'IA per scegliere.
+ */
+export function compoundForecast(
+  tyreManagement: number,
+  mode: PaceMode,
+  laps: number,
+): Record<Compound, number> {
+  const f = wearFactor(tyreManagement, mode) * degScale(laps);
+  const sumAge = (laps * (laps - 1)) / 2;
+  const out = {} as Record<Compound, number>;
+  for (const c of ['soft', 'medium', 'hard'] as Compound[])
+    out[c] = 100 * (TYRE[c].base * laps + TYRE[c].deg * f * sumAge);
+  return out;
+}
 
 export const performance = (r: Pick<RaceRider, 'skill' | 'bike'>) => 100 * (0.6 * r.skill + 0.4 * r.bike);
 export const baseLap = (refLap: number, r: Pick<RaceRider, 'skill' | 'bike'>) =>
@@ -159,7 +193,7 @@ export function runRace(setup: RaceSetup): RaceOutcome {
     const tyreAge = s.lap;
     const t = TYRE[r.compound];
     const m = MODE[r.mode];
-    const tyre = t.base + t.deg * tyreAge * m.deg * (1.3 - 0.6 * r.tyreManagement);
+    const tyre = t.base + t.deg * degScale(laps) * tyreAge * m.deg * (1.3 - 0.6 * r.tyreManagement);
     const fuel = 0.004 * (1 - s.lap / laps);
     const noise = rng.normal(0, 0.0025 * (1.2 - r.consistency));
     return baseLap(setup.refLap, r) * (1 + tyre + fuel + m.pace + noise + s.form);

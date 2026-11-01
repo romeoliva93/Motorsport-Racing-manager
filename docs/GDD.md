@@ -298,3 +298,15 @@ classifica squadre, calcolata dalla posizione attesa (classifica per reputazione
 **Caschi.** Ogni scuderia ha un casco con un disegno proprio (motivo grafico e tinta della visiera ricavati dal
 nome) e i colori ufficiali; il numero cambia per pilota. Sostituiscono i monogrammi finché non ci saranno
 fotografie.
+
+## 20. Formato gara e gomme (versione giocabile)
+
+**Giri:** MotoGP 15, Moto2 13, Moto3 12, Rookies Cup 10.
+
+**Gomme.** Perdita per giro rispetto alla media nuova: morbida −0,6% ma consuma 0,17% per giro di età,
+media 0% / 0,063%, dura +0,3% / 0,02%. Il consumo si moltiplica per (1,3 − 0,6 × gestione gomme), per il ritmo
+(prudente 0,85, normale 1, attacco 1,3) e per 14/(giri − 1), così l'equilibrio non cambia con la lunghezza
+della gara. Risultato: la morbida conviene a chi tratta bene le gomme o va prudente, la dura a chi le consuma o
+attacca, la media al pilota medio; le differenze su una gara vanno da pochi decimi a qualche secondo.
+Prima della gara l'ingegnere mostra per ogni mescola i secondi stimati persi rispetto alla migliore; le squadre
+IA usano la stessa previsione con un margine d'errore.

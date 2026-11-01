@@ -29,6 +29,7 @@ import {
   sponsorOffers,
   type SponsorOffer,
 } from './sponsors.ts';
+import { compoundForecast, unit } from '@lean-angle/sim';
 import { RACE_FORMAT, standings, trackFor, type StandingsView, type Strategy } from './weekend.ts';
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
@@ -117,6 +118,8 @@ export interface WeekendView {
     grid: number | null;
     suggested: Strategy;
     why: string;
+    /** Secondi persi da ogni mescola rispetto alla migliore, per ciascun ritmo (0 = la migliore). */
+    forecast: Record<Strategy['mode'], Record<Strategy['compound'], number>>;
   }[];
   /** Ultima gara del giocatore, per mostrare i risultati fra un weekend e l'altro. */
   last: { circuit: string; number: number; race: ResultRowView[] } | null;
@@ -164,16 +167,34 @@ export function weekendView(s: GameState): WeekendView {
   const myRiders = entry.seats.flatMap((seat) => {
     const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
     if (!r) return [];
-    const tm = r.attributes.tyreManagement;
-    const ag = r.attributes.aggression;
-    const compound = tm >= 70 ? 'soft' : tm <= 45 ? 'hard' : 'medium';
-    const mode = ag >= 75 ? 'normal' : r.attributes.consistency >= 72 ? 'attack' : 'normal';
-    const why =
+    const laps = RACE_FORMAT[cat.tier].laps;
+    const refLap = circuit.lengthM / RACE_FORMAT[cat.tier].avgSpeed;
+    const tmU = Math.min(1, unit(r.attributes.tyreManagement) + upgradeBonus(s, entry.teamId).tyreCare);
+    const mode: Strategy['mode'] =
+      r.attributes.aggression >= 75 ? 'normal' : r.attributes.consistency >= 72 ? 'attack' : 'normal';
+    // Secondi persi da ogni mescola rispetto alla migliore, per ciascun ritmo.
+    const forecast = {} as Record<Strategy['mode'], Record<Strategy['compound'], number>>;
+    for (const m of ['conservative', 'normal', 'attack'] as const) {
+      const fc = compoundForecast(tmU, m, laps);
+      const bestC = (['soft', 'medium', 'hard'] as const).reduce((a, b) => (fc[a] <= fc[b] ? a : b));
+      const sec = (c: Strategy['compound']) =>
+        c === bestC ? 0 : Math.max(0.1, Math.round(((fc[c] - fc[bestC]) / 100) * refLap * 10) / 10);
+      forecast[m] = { soft: sec('soft'), medium: sec('medium'), hard: sec('hard') };
+    }
+    const compound = (['soft', 'medium', 'hard'] as const).find((c) => forecast[mode][c] === 0)!;
+    const NAME = { soft: 'morbida', medium: 'media', hard: 'dura' };
+    const others = (['soft', 'medium', 'hard'] as const)
+      .filter((c) => c !== compound)
+      .map((c) => `${NAME[c]} +${forecast[mode][c].toFixed(1).replace('.', ',')} s`)
+      .join(', ');
+    const care = r.attributes.tyreManagement;
+    const why = `Gestione gomme ${care}/99: ${
       compound === 'soft'
-        ? 'Gestisce bene le gomme: la morbida gli dà più velocità senza calare troppo.'
+        ? 'le tratta bene, la morbida regge fino in fondo'
         : compound === 'hard'
-          ? 'Consuma molto le gomme: la dura cala meno nel finale.'
-          : 'La media è il compromesso più sicuro.';
+          ? 'le consuma molto, la dura cala meno nel finale'
+          : 'la media è il miglior compromesso'
+    }. Stima su ${laps} giri: ${others}.`;
     return [
       {
         id: r.id,
@@ -182,6 +203,7 @@ export function weekendView(s: GameState): WeekendView {
         grid: quali?.rows.find((x) => x.riderId === r.id)?.position ?? null,
         suggested: { compound, mode } as Strategy,
         why,
+        forecast,
       },
     ];
   });
