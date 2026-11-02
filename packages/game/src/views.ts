@@ -588,6 +588,8 @@ export interface BikeView {
   numbers: number[];
   balance: number;
   manufacturer: string;
+  /** Categoria (premier, intermediate, lightweight, rookies): serve a scegliere la foto della moto. */
+  tier: string;
   /** Qualità della moto 0–100 con gli upgrade montati, e media delle avversarie di categoria. */
   rating: number;
   rivalsAvg: number;
@@ -657,6 +659,7 @@ export function bikeView(s: GameState): BikeView | null {
     numbers: entry.seats.map((x) => x.number),
     balance,
     manufacturer: s.tables.manufacturers[entry.manufacturerId]!.name,
+    tier: s.tables.categories[entry.categoryId]!.tier,
     rating: rating(entry.teamId),
     concession: teamConcession(s, entry.teamId),
     engines:

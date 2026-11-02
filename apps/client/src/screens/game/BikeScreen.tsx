@@ -4,6 +4,7 @@ import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help } from '../../design-system/components.tsx';
 import { Bike, type BikePart } from '../../design-system/Bike.tsx';
+import { BikePhoto } from '../../design-system/BikePhoto.tsx';
 
 /** Componente del garage → reparto di sviluppo che lo migliora (per evidenziarlo sul disegno). */
 const PART_OF: Record<string, BikePart> = {
@@ -209,6 +210,7 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
         </Card>
       )}
       <Card title="La tua moto" className="s4">
+        <BikePhoto manufacturer={b.manufacturer} tier={b.tier} />
         <div className="muted">Costruttore</div>
         <b style={{ fontSize: '1.15rem' }}>{b.manufacturer}</b>
         <div className="row" style={{ marginTop: '.8rem' }}>

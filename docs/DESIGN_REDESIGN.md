@@ -37,9 +37,22 @@ Base scura (`--bg-*`), colore squadra come bordo/accento delle schede, numeri in
 | Telefoni modesti | fluido | da ottimizzare (LOD) |
 Proposta: tenere il **2D come vista principale** e il 3D come opzione, finché il 3D non ha LOD, moto inclinate e telecamere TV. Non sostituisco il renderer principale senza approvazione.
 
-## 6. Prossime milestone (da approvare)
+## 6. Garage (fatto)
+- Moto al centro, 14 componenti intorno: motore, cambio, frizione, catena, radiatori, scarico, telaio, forcellone,
+  forcella, ammortizzatore, freno anteriore e posteriore, centralina, carena. Per ognuno: usura, affidabilità,
+  km percorsi su vita prevista, revisioni fatte, livello di sviluppo.
+- Moto A e B solo in MotoGP (le prove si dividono fra le due, qualifiche e gare sulla A).
+- Collegato alla simulazione: l'usura oltre metà vita abbassa l'affidabilità della moto in gara (più guasti).
+  Revisione singola o di tutti i pezzi oltre il 75%, pagata alla voce Riparazioni. Le squadre IA revisionano da sole.
+- MotoGP: il motore segue la dotazione del regolamento (nuovo ogni 3 weekend).
+- 3D: le moto piegano in curva (fino a ~50°), telecamera di inseguimento più vicina.
+
+## 7. Immagini generate (gratis, in locale)
+- Ritratti di piloti, staff e vivaio: `tools/portraits/generate.py` (SDXL-Turbo, ~10 s l'uno su CPU).
+- Moto per costruttore e categoria: `tools/portraits/bikes.py`.
+- Divise e carene descritte "semplici": il modello a volte disegna comunque piccoli loghi inventati; se uno
+  ricorda un marchio reale si rigenera quel singolo file (`--only <chiave> --force`).
+
+## 8. Prossime milestone (da approvare)
 1. **Strategia in gara** (5 ritmi, 3 mappe carburante, modificabili mentre si corre): richiede di dividere la simulazione in segmenti giro per giro — modifica strutturale, serve approvazione.
-2. Garage con moto al centro e 14 componenti (usura, affidabilità, chilometraggio, manutenzione); moto A/B solo in Premier.
-3. Schermata piloti con foto grandi e numero accanto alla foto.
-4. Foto realistiche (piloti, staff, Rookies Cup): generazione locale gratuita, bloccata finché i domini di download non sono abilitati.
-5. 3D: inclinazione moto, telecamere TV/box/automatica, pubblico che reagisce, spruzzi e asfalto che si asciuga.
+2. 3D: telecamere TV/box/automatica, pubblico che reagisce, spruzzi e asfalto che si asciuga.

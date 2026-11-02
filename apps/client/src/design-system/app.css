@@ -901,3 +901,14 @@ table.std tbody tr.mine td:first-child {
 .portrait.round {
   border-radius: 50%;
 }
+
+.bike-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--r-2);
+  margin-bottom: 0.8rem;
+  border: 1px solid var(--line);
+}
