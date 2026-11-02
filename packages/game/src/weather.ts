@@ -58,6 +58,7 @@ const HOUR: Record<SessionKind, number> = {
   q2: 1,
   qualifying: 1,
   sprint: 2,
+  warmup: -2,
   race: 2,
 };
 

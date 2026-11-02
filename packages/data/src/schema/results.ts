@@ -25,7 +25,8 @@ export interface ResultRow {
   penalty?: { longLaps: number; served: number; timeAdded: number; positionDrop: boolean };
 }
 
-export type SessionKind = 'fp1' | 'practice' | 'fp2' | 'q1' | 'q2' | 'qualifying' | 'sprint' | 'race';
+export type SessionKind =
+  'fp1' | 'practice' | 'fp2' | 'q1' | 'q2' | 'qualifying' | 'sprint' | 'warmup' | 'race';
 
 export interface SessionResult {
   id: SessionResultId;

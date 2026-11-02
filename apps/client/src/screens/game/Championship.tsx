@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Pos, Tabs } from '../../design-system/components.tsx';
 
-type View = 'riders' | 'teams' | 'constructors' | 'races';
+type View = 'riders' | 'teams' | 'constructors' | 'independent' | 'races';
 
 export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
   const [cat, setCat] = useState(categoryId);
@@ -28,6 +28,7 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
             { id: 'riders', label: 'Piloti' },
             { id: 'teams', label: 'Squadre' },
             { id: 'constructors', label: 'Costruttori' },
+            { id: 'independent', label: 'Indipendenti' },
             { id: 'races', label: 'Gare' },
           ]}
         />
@@ -151,6 +152,51 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
               </table>
               {c.constructors.length === 0 && <p className="muted">Nessuna gara ancora disputata.</p>}
             </Card>
+          )}
+          {view === 'independent' && (
+            <div className="grid12">
+              <Card title="Miglior pilota indipendente" aside="squadre non ufficiali" className="s6">
+                <table className="std static">
+                  <tbody>
+                    {c.independentRiders.map((r, i) => (
+                      <tr key={r.riderId} className={r.teamId === c.myTeamId ? 'mine' : ''}>
+                        <td style={{ width: '2.6rem' }}>
+                          <Pos value={i + 1} />
+                        </td>
+                        <td>
+                          <span className="swatch" style={{ background: r.color }} />
+                          <Flag code={r.nationality} size={0.85} /> <b>{r.name}</b>
+                        </td>
+                        <td className="t2">{r.team}</td>
+                        <td className="r">
+                          <b>{r.points}</b>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+              <Card title="Miglior squadra indipendente" className="s6">
+                <table className="std static">
+                  <tbody>
+                    {c.independentTeams.map((t, i) => (
+                      <tr key={t.teamId} className={t.teamId === c.myTeamId ? 'mine' : ''}>
+                        <td style={{ width: '2.6rem' }}>
+                          <Pos value={i + 1} />
+                        </td>
+                        <td>
+                          <span className="swatch" style={{ background: t.color }} />
+                          <b>{t.team}</b>
+                        </td>
+                        <td className="r">
+                          <b>{t.points}</b>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+            </div>
           )}
           {view === 'races' && (
             <Card title="Gare della stagione">

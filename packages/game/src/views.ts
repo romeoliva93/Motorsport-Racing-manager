@@ -26,6 +26,7 @@ import { payrollMonthly, runningCostMonthly, sponsorMonthly } from './economy.ts
 import { activeRiderContract, buyoutFor } from './market.ts';
 import { riderDetail, type RiderDetail } from './queries.ts';
 import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
+import { engineStatus, teamConcession, type ConcessionRank } from './regulations.ts';
 import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
@@ -122,6 +123,7 @@ export const SESSION_NAME: Record<SessionKind, { name: string; day: string }> = 
   q2: { name: 'Qualifiche 2', day: 'Sabato' },
   qualifying: { name: 'Qualifiche', day: 'Sabato' },
   sprint: { name: 'Sprint', day: 'Sabato' },
+  warmup: { name: 'Warm Up', day: 'Domenica' },
   race: { name: 'Gara', day: 'Domenica' },
 };
 
@@ -271,6 +273,7 @@ export function weekendView(s: GameState): WeekendView {
       q1: ['soft', 'medium', 'hard'],
       q2: ['soft', 'medium', 'hard'],
       qualifying: ['soft', 'medium', 'hard'],
+      warmup: ['medium', 'hard', 'soft'],
     };
     const byForecast = (['soft', 'medium', 'hard', 'wet'] as const)
       .slice()
@@ -583,6 +586,10 @@ export interface BikeView {
   /** Qualità della moto 0–100 con gli upgrade montati, e media delle avversarie di categoria. */
   rating: number;
   rivalsAvg: number;
+  /** Fascia di concessione del costruttore (solo MotoGP). */
+  concession: ConcessionRank | null;
+  /** Motori della stagione per pilota (solo MotoGP). */
+  engines: { name: string; used: number; allocation: number; overLimit: boolean }[];
   parts: {
     key: PartKey;
     name: string;
@@ -620,6 +627,23 @@ export function bikeView(s: GameState): BikeView | null {
     balance,
     manufacturer: s.tables.manufacturers[entry.manufacturerId]!.name,
     rating: rating(entry.teamId),
+    concession: teamConcession(s, entry.teamId),
+    engines:
+      teamConcession(s, entry.teamId) === null
+        ? []
+        : entry.seats.flatMap((seat) => {
+            const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
+            if (!r) return [];
+            const e = engineStatus(s, r.id, entry.seasonId, entry.teamId);
+            return [
+              {
+                name: `${r.firstName} ${r.lastName}`,
+                used: e.used,
+                allocation: e.allocation,
+                overLimit: e.overLimit,
+              },
+            ];
+          }),
     rivalsAvg: Math.round(rivals.reduce((t, e) => t + rating(e.teamId), 0) / Math.max(1, rivals.length)),
     parts: PARTS.map((p) => {
       const cost = upgradeCost(s, entry.teamId, p.key);

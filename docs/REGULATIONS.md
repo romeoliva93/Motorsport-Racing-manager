@@ -89,3 +89,33 @@ Controlli da eseguire in `tools/content-check` e nei test del generatore del mon
 - ogni sostituto rispetta licenza ed età della categoria;
 - nessun pilota iscritto contemporaneamente a due eventi nello stesso fine settimana;
 - nessun contratto duplicato (titolare + sostituto sullo stesso posto nello stesso evento).
+
+
+## Confronto con il regolamento MotoGP (novembre 2026)
+
+Versione di gioco: regole semplificate ma con la stessa logica di quelle reali. Legenda: ✅ nel gioco · 🟡 parziale ·
+❌ non ancora.
+
+| Regola | Stato | Come funziona nel gioco |
+|---|---|---|
+| Formato del weekend (FP1, Prove, FP2, Q1/Q2, Sprint, Warm Up, Gara) | ✅ | MotoGP con Warm Up la domenica; Moto2/Moto3 senza FP2/Sprint/Warm Up; Rookies con qualifica unica |
+| Accesso alla Q2 dalle Prove (10 MotoGP, 14 Moto2/Moto3) e promossi dalla Q1 (2/4) | ✅ | Griglia ufficiale = Q2 + resto della Q1 |
+| Punti gara (25…1) e Sprint (12…1) | ✅ | Vittorie e podi solo dalla gara della domenica |
+| Classifiche piloti, squadre, costruttori (miglior pilota per marca) | ✅ | |
+| Miglior squadra e miglior pilota indipendente | ✅ | Squadre non ufficiali |
+| Dotazione gomme per weekend, gomme da pioggia | ✅ | Un treno per sessione |
+| Limiti della pista, Long Lap (singola e doppia), posizione persa all'ultimo giro | ✅ | Soglie 3 (Sprint) / 5 (gara) |
+| Partenza anticipata | ✅ | Doppia Long Lap |
+| Contatto / guida irresponsabile | ✅ | Long Lap |
+| Bandiera gialla (divieto di sorpasso) | ✅ | 25 s nel tratto della caduta |
+| Bandiera rossa, ripartenza, regola dei 2/3 | ✅ | Gara conclusa oltre i 2/3, altrimenti ripartenza da fermo con gomme nuove |
+| Concessioni ai costruttori (fasce A–D) | ✅ | Costo e tempi degli upgrade, motori a stagione |
+| Limite di motori a stagione, partenza dai box se superato | ✅ | 8 motori (10 in fascia D), durata 3 weekend |
+| Meteo, gara bagnata | ✅ | Condizioni per sessione |
+| Bandiera bianca e cambio moto (flag-to-flag) | ❌ | Richiede pioggia che cambia in gara e Moto A/B |
+| Pressione minima delle gomme | ❌ | Richiede il modello della pressione |
+| Giornate di test e collaudatori con concessioni | ❌ | Arriva con i test stagionali (M5) |
+| Wildcard | ❌ | |
+| Peso minimo pilota+moto, carburante | 🟡 | Il carburante incide sul tempo sul giro; niente limiti di serbatoio |
+| Penalità in griglia (posizioni indietro) | ❌ | |
+| Bandiera nera / nero-arancio | ❌ | Ritiri per guasto già simulati |

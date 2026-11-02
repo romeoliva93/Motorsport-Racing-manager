@@ -54,6 +54,8 @@ export interface Scene {
   /** Distanza della barriera dalla linea centrale, per indice e lato (sinistra, destra). */
   barrier: [number[], number[]];
   stands: Stand[];
+  /** Motorhome delle squadre nel paddock, dietro ai camion. */
+  motorhomes: { quad: [V, V, V, V]; color: string; color2: string; dir: V }[];
   trees: { at: V; r: number; palm: boolean }[];
   buildings: { quad: [V, V, V, V]; color: string; roof: string }[];
   paths: V[][];
@@ -303,6 +305,19 @@ export function buildScene(
     });
   }
 
+  // Motorhome: una fila per squadra dietro ai camion (lato box), con tendalino verso il paddock.
+  const motorhomes: Scene['motorhomes'] = [];
+  for (let g = 0; g < nG; g++) {
+    const k = Math.round(pitBoxStart + ((g + 0.5) / nG) * (pitBoxEnd - pitBoxStart));
+    const i = (pitEntryIdx + k) % N;
+    motorhomes.push({
+      quad: boxQuad(k - 3, k + 2, 0.066, 0.075),
+      color: teams[g]?.color ?? '#888',
+      color2: teams[g]?.color2 ?? '#333',
+      dir: mul(nor[i]!, pitSide),
+    });
+  }
+
   // Confini della scena.
   const xs = pts.map((p) => p[0]),
     ys = pts.map((p) => p[1]);
@@ -411,6 +426,7 @@ export function buildScene(
     ...pitLane,
     ...stands.flatMap((s) => s.quad),
     ...buildings.flatMap((b) => b.quad),
+    ...motorhomes.flatMap((m) => m.quad),
     ...parking.flatMap((p) => p),
   ];
   const nearTrack = (p: V, d: number) => {
@@ -454,6 +470,7 @@ export function buildScene(
     gravel,
     barrier,
     stands,
+    motorhomes,
     trees,
     buildings,
     paths,
@@ -655,6 +672,61 @@ export function drawStatic(ctx: CanvasRenderingContext2D, sc: Scene, v: View, w:
     ctx.strokeStyle = b.roof;
     ctx.lineWidth = 2;
     ctx.stroke();
+  }
+
+  // Motorhome: carrozzeria nei colori della squadra, tetto con finestre, tendalino e tavolini.
+  for (const m of sc.motorhomes) {
+    const q = m.quad.map(P) as [V, V, V, V];
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    poly(q.map((p) => [p[0] + 3, p[1] + 3] as V));
+    ctx.fill();
+    poly(q);
+    ctx.fillStyle = m.color;
+    ctx.fill();
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // Fascia centrale del tetto e finestre.
+    const a = add(q[0], mul(sub(q[3], q[0]), 0.35)),
+      b = add(q[1], mul(sub(q[2], q[1]), 0.35)),
+      c = add(q[1], mul(sub(q[2], q[1]), 0.65)),
+      d = add(q[0], mul(sub(q[3], q[0]), 0.65));
+    poly([a, b, c, d]);
+    ctx.fillStyle = m.color2;
+    ctx.fill();
+    ctx.fillStyle = 'rgba(180,215,240,0.8)';
+    for (let k = 1; k < 6; k++) {
+      const t = k / 6;
+      const p = add(q[0], mul(sub(q[1], q[0]), t));
+      ctx.fillRect(p[0] - 1, p[1] - 1, 2.5, 2.5);
+    }
+    // Tendalino a strisce verso il paddock, con tavolini.
+    const out = mul(m.dir, -0.006);
+    const t0 = q[0],
+      t1 = q[1],
+      t2 = P(add(m.quad[1], out)),
+      t3 = P(add(m.quad[0], out));
+    poly([t0, t1, t2, t3]);
+    ctx.fillStyle = 'rgba(243,241,236,0.85)';
+    ctx.fill();
+    ctx.strokeStyle = m.color;
+    ctx.lineWidth = 1;
+    for (let k = 1; k < 8; k++) {
+      const t = k / 8;
+      const u = add(t0, mul(sub(t1, t0), t)),
+        v2 = add(t3, mul(sub(t2, t3), t));
+      ctx.beginPath();
+      ctx.moveTo(u[0], u[1]);
+      ctx.lineTo(v2[0], v2[1]);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#5a3d22';
+    for (let k = 1; k < 4; k++) {
+      const p = add(add(t3, mul(sub(t2, t3), k / 4)), mul(sub(t0, t3), -0.6));
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], Math.max(1.5, S(0.0012)), 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // Tribune (struttura; il pubblico è dinamico).
@@ -940,6 +1012,9 @@ export function drawDynamic(
     lap: string;
     crashes: V[];
     chequered: boolean;
+    /** Punti del giro (0–1) con la bandiera gialla esposta. */
+    yellow?: number[];
+    red?: boolean;
   },
 ) {
   const P = (p: V): V => [v.ox + p[0] * v.scale, v.oy + p[1] * v.scale];
@@ -1022,6 +1097,51 @@ export function drawDynamic(
     ctx.fillText(extra.lap, 0, 4);
     ctx.restore();
   }
+  // Bandiere dei commissari: gialla nel tratto della caduta, rossa ovunque se la gara è interrotta.
+  const waveFlag = (p: V, color: string, k: number) => {
+    const wave = Math.sin(time * 9 + k) * 2;
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(p[0], p[1]);
+    ctx.lineTo(p[0], p[1] - 14);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(p[0], p[1] - 14);
+    ctx.quadraticCurveTo(p[0] + 6, p[1] - 15 + wave, p[0] + 11, p[1] - 13 + wave);
+    ctx.lineTo(p[0] + 11, p[1] - 6 + wave);
+    ctx.quadraticCurveTo(p[0] + 6, p[1] - 8 + wave, p[0], p[1] - 7);
+    ctx.closePath();
+    ctx.fill();
+  };
+  const N = sc.pts.length;
+  sc.marshals.forEach((m, k) => {
+    if (extra.red) return waveFlag(P(m), '#e5484d', k);
+    if (!extra.yellow?.length) return;
+    // Postazione vicina a una zona gialla?
+    let best = 0,
+      bd = Infinity;
+    for (let i = 0; i < N; i += 3) {
+      const d = len(sub(sc.pts[i]!, m));
+      if (d < bd) {
+        bd = d;
+        best = i / N;
+      }
+    }
+    if (extra.yellow.some((y) => Math.min(Math.abs(y - best), 1 - Math.abs(y - best)) < 0.06))
+      waveFlag(P(m), '#ffd21f', k);
+  });
+  if (extra.red) {
+    ctx.fillStyle = 'rgba(229,72,77,0.9)';
+    ctx.fillRect(w / 2 - 110, 14, 220, 34);
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 16px Archivo, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('BANDIERA ROSSA', w / 2, 31);
+  }
+
   // Moto cadute nella ghiaia.
   for (const c of extra.crashes) {
     const p = P(c);

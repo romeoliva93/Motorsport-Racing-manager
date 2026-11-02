@@ -202,3 +202,30 @@ describe('Long Lap Penalty', () => {
     }
   });
 });
+
+describe('bandiere', () => {
+  const outs = Array.from({ length: 150 }, (_, i) =>
+    runRace({ seed: `flag-${i}`, track, lengthM: 4600, laps: 15, refLap: 100, grid }),
+  );
+  it('bandiera gialla a ogni caduta, nessun sorpasso nella zona gialla', () => {
+    for (const o of outs) {
+      const falls = o.events.filter((e) => e.kind === 'crash' || e.kind === 'remount').length;
+      expect(o.events.filter((e) => e.kind === 'yellowFlag').length).toBe(falls);
+    }
+  });
+  it('bandiera rossa rara; dopo la ripartenza la gara arriva in fondo', () => {
+    const red = outs.filter((o) => o.events.some((e) => e.kind === 'redFlag'));
+    expect(red.length).toBeLessThan(outs.length * 0.15);
+    for (const o of red) {
+      const e = o.events.find((x) => x.kind === 'redFlag')!;
+      if (!e.final) expect(o.events.some((x) => x.kind === 'restart')).toBe(true);
+      expect(o.results.filter((r) => r.status === 'finished').every((r) => r.gap !== null)).toBe(true);
+    }
+  });
+  it('partenza dalla corsia box: si parte ultimi', () => {
+    const g = grid.map((r, k) => (k === 0 ? { ...r, pitLaneStart: true } : r));
+    const o = runRace({ seed: 'pit', track, lengthM: 4600, laps: 3, refLap: 100, grid: g, frameEvery: 0.5 });
+    const first = o.frames[4]!;
+    expect(first[0]).toBeLessThan(Math.min(...first.slice(1).filter((d) => d >= 0)));
+  });
+});

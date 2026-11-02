@@ -112,15 +112,24 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
   const avgSpeed = L / ((data.results[0]?.time ?? duration) / data.laps);
   const finished = t >= duration;
   const winnerEvent = data.events.find((e) => e.kind === 'finish');
+  const redEvent = data.events.find((e) => e.kind === 'redFlag');
+  const restartEvent = data.events.find((e) => e.kind === 'restart');
+  const redActive =
+    racing &&
+    !!redEvent &&
+    t >= redEvent.t &&
+    (redEvent.final ? t < redEvent.t + 8 : !!restartEvent && t < restartEvent.t);
   const phase = !racing
     ? t < -INTRO + 14
       ? 'Uscita dai box'
       : t < -3
         ? 'Giro di ricognizione'
         : 'Semaforo rosso…'
-    : finished
-      ? 'Gara finita'
-      : `Giro ${lap} di ${data.laps}`;
+    : redActive
+      ? 'Bandiera rossa'
+      : finished
+        ? 'Gara finita'
+        : `Giro ${lap} di ${data.laps}`;
 
   // Autodromo disegnato una volta in alta risoluzione (fuori schermo): ogni fotogramma ne inquadra una parte.
   useEffect(() => {
@@ -265,6 +274,12 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
       lap: racing ? `${lap}/${data.laps}` : 'GRID',
       crashes,
       chequered: !!winnerEvent && t >= winnerEvent.t,
+      yellow: racing
+        ? data.events
+            .filter((e) => e.kind === 'yellowFlag' && e.t <= t && t < e.t + (e.duration ?? 0))
+            .map((e) => e.at ?? 0)
+        : [],
+      red: redActive,
     });
   });
 
@@ -318,7 +333,15 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
                       ? `Contatto: ${name(e.riderId)} tocca ${name(e.otherId)}`
                       : e.kind === 'positionDrop'
                         ? `${name(e.riderId)} oltre i limiti all'ultimo giro: perde una posizione`
-                        : `Bandiera a scacchi: vince ${name(e.riderId)}`;
+                        : e.kind === 'yellowFlag'
+                          ? `Bandiera gialla: vietato sorpassare nel tratto della caduta di ${name(e.riderId)}`
+                          : e.kind === 'redFlag'
+                            ? e.final
+                              ? 'Bandiera rossa: gara conclusa, vale la classifica al momento dello stop'
+                              : 'Bandiera rossa: gara interrotta, si riparte dalla griglia per i giri rimanenti'
+                            : e.kind === 'restart'
+                              ? 'Nuova partenza!'
+                              : `Bandiera a scacchi: vince ${name(e.riderId)}`;
 
   return (
     <div className="race-viewer">

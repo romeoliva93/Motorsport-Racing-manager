@@ -167,6 +167,7 @@ async function waitForServer(url, ms = 20000) {
     await shot('12-gara');
     step('Sprint in 2D: ' + (await page.locator('.rv-head b').innerText()));
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
+    await page.getByRole('button', { name: 'Corri Warm Up', exact: true }).click();
     await page.getByRole('button', { name: 'Via alla gara!' }).click();
     await page.locator('.rv-canvas').waitFor();
     await page.getByRole('button', { name: 'Salta alla fine' }).click();

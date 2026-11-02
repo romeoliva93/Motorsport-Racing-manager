@@ -35,6 +35,7 @@ import {
 } from '@lean-angle/sim';
 import { addNews } from './news.ts';
 import { conditionsFor, weekendWeather, type SessionWeather } from './weather.ts';
+import { engineStatus } from './regulations.ts';
 import { upgradeBonus } from './upgrades.ts';
 import { settleDeals } from './sponsors.ts';
 
@@ -184,13 +185,17 @@ const refLapOf = (s: GameState, round: Round) => {
 /**
  * Formato del weekend per categoria (sul modello del mondiale reale, in un unico giorno di gioco):
  *   MotoGP:        Prove libere 1 · Prove (i primi 10 vanno in Q2) · Prove libere 2 · Q1 (i primi 2 salgono in Q2)
- *                  · Q2 (griglia 1–12) · Sprint (metà giri, punti ai primi 9) · Gara
+ *                  · Q2 (griglia 1–12) · Sprint (metà giri, punti ai primi 9) · Warm Up (domenica mattina) · Gara
  *   Moto2 / Moto3: Prove libere 1 · Prove (primi 14 in Q2) · Q1 (primi 4 in Q2) · Q2 (griglia 1–18) · Gara
  *   Rookies Cup:   Prove libere 1 · Qualifica unica · Gara
  */
 export const WEEKEND_FORMAT: Record<CategoryTier, { sessions: SessionKind[]; toQ2: number; fromQ1: number }> =
   {
-    premier: { sessions: ['fp1', 'practice', 'fp2', 'q1', 'q2', 'sprint', 'race'], toQ2: 10, fromQ1: 2 },
+    premier: {
+      sessions: ['fp1', 'practice', 'fp2', 'q1', 'q2', 'sprint', 'warmup', 'race'],
+      toQ2: 10,
+      fromQ1: 2,
+    },
     intermediate: { sessions: ['fp1', 'practice', 'q1', 'q2', 'race'], toQ2: 14, fromQ1: 4 },
     lightweight: { sessions: ['fp1', 'practice', 'q1', 'q2', 'race'], toQ2: 14, fromQ1: 4 },
     rookies: { sessions: ['fp1', 'qualifying', 'race'], toQ2: 0, fromQ1: 0 },
@@ -228,6 +233,7 @@ const AI_ORDER: Partial<Record<SessionKind, Compound[]>> = {
   q1: ['soft', 'medium', 'hard'],
   q2: ['soft', 'medium', 'hard'],
   qualifying: ['soft', 'medium', 'hard'],
+  warmup: ['medium', 'hard', 'soft'],
 };
 
 function pickTyre(
@@ -415,6 +421,7 @@ function raceSession(
   const fmt = RACE_FORMAT[cat.tier];
   const laps = kind === 'sprint' ? sprintLaps(fmt.laps) : fmt.laps;
   const used = new Map<string, Compound>();
+  const pitStarters: Entrant[] = [];
   const cond = condOf(s, round, kind);
   const grid = gridOrder.map((e) => {
     const left = tyresLeft(s, round, e.rider.id);
@@ -423,7 +430,13 @@ function raceSession(
       ? { mode: mine.mode, compound: pickTyre(left, mine.compound, kind, cond.grip) }
       : aiStrategy(e.rider, rng, laps, left, cond);
     used.set(e.rider.id, st.compound);
-    return toRaceRider(s, e, st);
+    const rr = toRaceRider(s, e, st);
+    // Troppi motori usati (solo MotoGP): partenza dalla corsia box.
+    if (cat.tier === 'premier' && engineStatus(s, e.rider.id, season.id, e.teamId).overLimit) {
+      rr.pitLaneStart = true;
+      pitStarters.push(e);
+    }
+    return rr;
   });
   const circuit = s.tables.circuits[round.circuitId]!;
   const track = trackFor(s, round);
@@ -510,6 +523,14 @@ function raceSession(
       body: `${w.firstName} ${w.lastName} (${s.tables.teams[winner.teamId]!.name}) vince ${kind === 'sprint' ? 'la gara Sprint' : 'il Gran Premio'}. ${rowsOut.filter((x) => x.status === 'dnf').length} ritirati.`,
     });
   }
+  for (const e of pitStarters.filter((x) => x.teamId === playerTeam && kind === 'race'))
+    addNews(s, ids, {
+      day: s.meta.currentDay,
+      tag: 'gara',
+      mine: true,
+      title: `${e.rider.firstName} ${e.rider.lastName} parte dalla corsia box`,
+      body: 'Ha superato il numero di motori consentiti in stagione: il regolamento lo fa partire dopo il gruppo.',
+    });
   // Notizie sulle penalità dei nostri piloti.
   for (const row of rowsOut.filter((x) => x.teamId === playerTeam && x.penalty)) {
     const p = row.penalty!;
@@ -621,7 +642,7 @@ export function runNextSession(
   const kind = nextSession(s, round);
   if (!kind) return null;
   let replay: ReplayData | null = null;
-  if (kind === 'fp1' || kind === 'fp2' || kind === 'practice')
+  if (kind === 'fp1' || kind === 'fp2' || kind === 'practice' || kind === 'warmup')
     timedSession(s, ids, round, kind, entrants(s, round), strategies);
   else if (kind === 'q1' || kind === 'q2' || kind === 'qualifying')
     qualifyingSessions(s, ids, round, kind, strategies);
@@ -666,6 +687,9 @@ export interface StandingsView {
   }[];
   teams: { teamId: string; team: string; color: string; points: number; wins: number }[];
   constructors: { manufacturerId: string; name: string; points: number; wins: number }[];
+  /** Squadre e piloti indipendenti (non ufficiali): classifiche separate come nel mondiale. */
+  independentTeams: { teamId: string; team: string; color: string; points: number; wins: number }[];
+  independentRiders: StandingsView['riders'];
   racesDone: number;
 }
 
@@ -742,6 +766,12 @@ export function standings(s: GameState, seasonId: string): StandingsView {
     riders: sort([...rmap.values()]),
     teams: sort([...tmap.values()]),
     constructors: sort([...mmap.values()]),
+    independentTeams: sort([...tmap.values()]).filter(
+      (t) => s.tables.teams[t.teamId as TeamId]!.type !== 'factory',
+    ),
+    independentRiders: sort([...rmap.values()]).filter(
+      (r) => s.tables.teams[r.teamId as TeamId]!.type !== 'factory',
+    ),
     racesDone: races.filter((r) => r.kind === 'race').length,
   };
 }

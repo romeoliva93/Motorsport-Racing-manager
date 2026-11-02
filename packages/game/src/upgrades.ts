@@ -24,6 +24,7 @@ import {
   type UpgradeOrderId,
 } from '@lean-angle/data';
 import { addNews } from './news.ts';
+import { CONCESSION_COST, teamConcession } from './regulations.ts';
 
 export function partLevel(s: GameState, teamId: string, key: PartKey): number {
   return s.upgrades?.[teamId]?.[key] ?? 0;
@@ -46,7 +47,8 @@ export function factoryFactor(s: GameState, teamId: string): number {
 }
 
 export function leadDays(s: GameState, teamId: string, key: PartKey, level: number): number {
-  return Math.round(UPGRADE_LEAD_DAYS[key][level - 1]! * factoryFactor(s, teamId));
+  const conc = CONCESSION_COST[teamConcession(s, teamId) ?? 'A'];
+  return Math.round(UPGRADE_LEAD_DAYS[key][level - 1]! * factoryFactor(s, teamId) * conc);
 }
 
 export function upgradeCost(s: GameState, teamId: string, key: PartKey): number | null {
@@ -56,7 +58,8 @@ export function upgradeCost(s: GameState, teamId: string, key: PartKey): number 
   const entry = rows(s, 'teamEntries').find((e) => e.teamId === teamId);
   if (!entry) return null;
   const base = UPGRADE_BASE_COST[s.tables.categories[entry.categoryId]!.tier];
-  return base > 0 ? base * (lvl + 1) : null;
+  const conc = CONCESSION_COST[teamConcession(s, teamId) ?? 'A'];
+  return base > 0 ? Math.round((base * (lvl + 1) * conc) / 10_000) * 10_000 : null;
 }
 
 /** Bonus complessivo degli upgrade montati. */

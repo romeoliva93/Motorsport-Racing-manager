@@ -75,6 +75,32 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
           <span className="muted">Soldi in cassa</span>
           <b>{formatMoney(b.balance)}</b>
         </div>
+        {b.concession && (
+          <div className="row">
+            <span className="muted">
+              Concessioni
+              <Help>
+                Fascia decisa dai punti del costruttore nella stagione precedente: A per chi vince di più, D
+                per chi è più indietro. Più la fascia è bassa, più gli upgrade costano meno, arrivano prima e
+                si hanno più motori (D: 10 invece di 8).
+              </Help>
+            </span>
+            <b>Fascia {b.concession}</b>
+          </div>
+        )}
+        {b.engines.map((e) => (
+          <div key={e.name} className="row">
+            <span className="muted">Motori · {e.name}</span>
+            <b className={e.overLimit ? 'bad' : e.allocation - e.used <= 1 ? 'warn' : ''}>
+              {e.used} di {e.allocation}
+            </b>
+          </div>
+        ))}
+        {b.engines.some((e) => e.overLimit) && (
+          <p className="bad" style={{ fontSize: '.85rem' }}>
+            Motori finiti: al prossimo GP partirà dalla corsia box.
+          </p>
+        )}
         <Explain style={{ marginTop: '.8rem' }}>
           La moto di serie è nera. Ogni upgrade si ordina alla fabbrica e si paga subito; viene montato solo
           alla consegna (i giorni dipendono dal pezzo e dal livello dei tuoi reparti tecnici). Sul disegno i

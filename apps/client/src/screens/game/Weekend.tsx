@@ -62,6 +62,8 @@ function explain(kind: Session['kind'], w: WeekendView): string {
       return `Qualifiche 2: i migliori ${toQ2 + fromQ1} si giocano la pole position e le prime file della griglia.`;
     case 'qualifying':
       return 'Qualifica unica: vale il giro migliore e decide l’ordine di partenza.';
+    case 'warmup':
+      return 'Warm Up della domenica mattina: 10 minuti per controllare la moto prima della gara. Il tempo non conta.';
     case 'sprint':
       return `Gara Sprint del sabato, a metà distanza (${w.nextLaps} giri): punti ai primi 9, 12 al vincitore. Limiti della pista: alla 3ª uscita c’è la Long Lap Penalty, da scontare entro 3 giri passando nell’anello segnato sul circuito.`;
     case 'race':

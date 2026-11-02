@@ -45,6 +45,8 @@ export interface RaceRider {
   reliability: number;
   compound: Compound;
   mode: PaceMode;
+  /** Parte dalla corsia box (es. troppi motori usati): dietro a tutti, quando il gruppo è passato. */
+  pitLaneStart?: boolean;
 }
 
 export interface RaceSetup {
@@ -78,15 +80,22 @@ export interface RaceEvent {
     | 'longLap'
     | 'jumpStart'
     | 'contact'
-    | 'positionDrop';
+    | 'positionDrop'
+    | 'yellowFlag'
+    | 'redFlag'
+    | 'restart';
   riderId: string;
   otherId?: string;
   /** trackLimits: numero di infrazioni; longLapPenalty: quante Long Lap (1 o 2). */
   count?: number;
   /** longLapPenalty: motivo. */
   reason?: 'trackLimits' | 'jumpStart' | 'contact';
-  /** longLap: durata del passaggio nell'anello (s). */
+  /** longLap: durata del passaggio nell'anello (s); yellowFlag: durata della zona gialla. */
   duration?: number;
+  /** yellowFlag: punto del giro (0–1) dove sventola la bandiera. */
+  at?: number;
+  /** redFlag: true = gara conclusa (≥ 2/3 della distanza), false = nuova partenza. */
+  final?: boolean;
 }
 
 export interface RacePenalty {
@@ -253,7 +262,22 @@ interface State {
   serving: number;
   servingRate: number;
   lastLapTL: boolean;
+  /** Fermo fino a questo istante (partenza dai box, bandiera rossa). */
+  holdUntil: number;
+  /** Giri della gomma montata (si azzera alla ripartenza dopo la bandiera rossa). */
+  tyreFrom: number;
 }
+
+/**
+ * Bandiere (regolamento MotoGP, versione di gioco):
+ *  - gialla: dopo una caduta, divieto di sorpasso per 25 s nel tratto (±3% del giro) dove sono i commissari;
+ *  - rossa: due cadute entro 15 s fermano la gara nell'80% dei casi, una caduta singola nel 9% (barriere
+ *    danneggiate, moto in pista). Con almeno 2/3 dei giri completati dal leader la
+ *    gara finisce e vale l'ordine al momento dell'interruzione; altrimenti nuova partenza da fermo per i giri
+ *    rimanenti, griglia nell'ordine di gara, gomme nuove, dopo 40 s di sosta.
+ */
+const YELLOW_TIME = 25;
+const YELLOW_SPAN = 0.03;
 
 /**
  * Long Lap Penalty (regolamento MotoGP, versione di gioco):
@@ -279,7 +303,7 @@ export function runRace(setup: RaceSetup): RaceOutcome {
   const st: State[] = setup.grid.map((r, i) => ({
     r,
     form: rng.normal(0, 0.0035),
-    dist: -i * 9 - 2, // partenza sfalsata in griglia
+    dist: r.pitLaneStart ? -setup.grid.length * 9 - 30 : -i * 9 - 2, // griglia sfalsata o corsia box
     lap: 0,
     lapStart: 0,
     lapTime: 0,
@@ -297,7 +321,23 @@ export function runRace(setup: RaceSetup): RaceOutcome {
     serving: 0,
     servingRate: 0,
     lastLapTL: false,
+    holdUntil: r.pitLaneStart ? 6 : 0,
+    tyreFrom: 0,
   }));
+  const yellow: { at: number; until: number }[] = [];
+  let lastCrash = -Infinity;
+  let redFlagged = false;
+  const inYellow = (dist: number, now: number) => {
+    const f = (((dist % L) + L) % L) / L;
+    return yellow.some(
+      (y) => y.until > now && Math.min(Math.abs(f - y.at), 1 - Math.abs(f - y.at)) < YELLOW_SPAN,
+    );
+  };
+  const raiseYellow = (s: State, now: number) => {
+    const at = (((s.dist % L) + L) % L) / L;
+    yellow.push({ at, until: now + YELLOW_TIME });
+    events.push({ t: now, lap: s.lap + 1, kind: 'yellowFlag', riderId: s.r.id, at, duration: YELLOW_TIME });
+  };
   const llLoss = setup.refLap * LONG_LAP_LOSS;
   const llEntry = ((track.longLap - LONG_LAP_SPAN + N) % N) / N; // frazione di giro dell'ingresso nell'anello
   const llSeg = ((2 * LONG_LAP_SPAN) / N) * L;
@@ -316,7 +356,7 @@ export function runRace(setup: RaceSetup): RaceOutcome {
     }
   const lapTimeFor = (s: State) => {
     const r = s.r;
-    const tyreAge = s.lap;
+    const tyreAge = s.lap - s.tyreFrom;
     const t = tyreModel(r.compound, cond);
     const m = MODE[r.mode];
     const tyre = t.base + t.deg * degScale(laps) * tyreAge * m.deg * (1.3 - 0.6 * r.tyreManagement);
@@ -325,6 +365,38 @@ export function runRace(setup: RaceSetup): RaceOutcome {
     return baseLap(setup.refLap, r) * (1 + tyre + fuel + m.pace + noise + s.form);
   };
   for (const s of st) s.lapTime = lapTimeFor(s) * 1.06; // primo giro con partenza da fermo
+
+  function redFlag(now: number) {
+    const running = st.filter((s) => !s.out && !s.finished).sort((a, b) => b.dist - a.dist);
+    if (running.length === 0) return;
+    const leadLaps = Math.floor(running[0]!.dist / L);
+    if (leadLaps >= Math.ceil((laps * 2) / 3)) {
+      // Gara conclusa: vale l'ordine al momento dell'interruzione.
+      const v = L / setup.refLap;
+      running.forEach((s) => {
+        s.finished = true;
+        s.lap = laps; // gara dichiarata conclusa: classifica valida
+        s.finishTime = now + (running[0]!.dist - s.dist) / v;
+      });
+      leaderDone = true;
+      events.push({ t: now, lap: leadLaps, kind: 'redFlag', riderId: running[0]!.r.id, final: true });
+      return;
+    }
+    // Nuova partenza per i giri rimanenti: griglia nell'ordine di gara, gomme nuove.
+    events.push({ t: now, lap: leadLaps + 1, kind: 'redFlag', riderId: running[0]!.r.id, final: false });
+    const restartAt = now + 40;
+    running.forEach((s, i) => {
+      s.dist = leadLaps * L - i * 9 - 2;
+      s.lap = leadLaps;
+      s.tyreFrom = leadLaps;
+      s.lapStart = restartAt;
+      s.holdUntil = restartAt;
+      s.serving = 0;
+      s.lapTime = lapTimeFor(s) * 1.06;
+    });
+    yellow.length = 0;
+    events.push({ t: restartAt, lap: leadLaps + 1, kind: 'restart', riderId: running[0]!.r.id });
+  }
   let fastest = { riderId: '', time: Infinity };
   const frames: number[][] = [];
   let t = 0;
@@ -339,6 +411,7 @@ export function runRace(setup: RaceSetup): RaceOutcome {
       const pos = ((s.dist % L) + L) % L;
       const idx = Math.floor((pos / L) * N) % N;
       let v = (L / s.lapTime) * track.speed[idx]!;
+      if (t < s.holdUntil) continue; // fermo in corsia box o dopo la bandiera rossa
       // Nell'anello della Long Lap: fuori traiettoria, avanza più lentamente e non blocca nessuno.
       if (s.serving > 0) {
         s.serving -= dt;
@@ -353,7 +426,7 @@ export function runRace(setup: RaceSetup): RaceOutcome {
         const vAhead = (L / ahead.lapTime) * track.speed[idx]!;
         if (v > vAhead) {
           s.blockedFor += dt;
-          const zone = track.overtake[idx]!;
+          const zone = inYellow(s.dist, t) ? 0 : track.overtake[idx]!; // bandiera gialla: niente sorpassi
           const edge =
             1.6 * (s.r.overtaking - ahead.r.defending) + (30 * (ahead.lapTime - s.lapTime)) / s.lapTime;
           const p =
@@ -444,7 +517,16 @@ export function runRace(setup: RaceSetup): RaceOutcome {
             s.out = true;
             s.reason = 'crash';
             events.push({ t, lap: s.lap, kind: 'crash', riderId: s.r.id });
+            raiseYellow(s, t);
+            // Due cadute ravvicinate: bandiera rossa.
+            // Due cadute ravvicinate, oppure barriere danneggiate / moto in pista dopo una caduta singola.
+            if (!redFlagged && rng.chance(t - lastCrash < 15 ? 0.8 : 0.09)) {
+              redFlagged = true;
+              redFlag(t);
+            }
+            lastCrash = t;
           } else {
+            raiseYellow(s, t);
             s.dist -= (L / s.lapTime) * 14; // ripartenza dopo la scivolata: ~14 s persi
             events.push({ t, lap: s.lap, kind: 'remount', riderId: s.r.id });
           }

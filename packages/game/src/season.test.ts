@@ -31,7 +31,16 @@ describe('stagione giocabile', () => {
     expect(e.dispatch({ type: 'ContinueToNextEvent' }).ok).toBe(true);
     const w = weekendView(e.state);
     expect(w.state).toBe('today');
-    expect(w.sessions.map((x) => x.kind)).toEqual(['fp1', 'practice', 'fp2', 'q1', 'q2', 'sprint', 'race']);
+    expect(w.sessions.map((x) => x.kind)).toEqual([
+      'fp1',
+      'practice',
+      'fp2',
+      'q1',
+      'q2',
+      'sprint',
+      'warmup',
+      'race',
+    ]);
     expect(e.dispatch({ type: 'AdvanceDays', days: 1 }).ok).toBe(false);
     const res = (k: string) =>
       rows(e.state, 'sessionResults').find((x) => x.kind === k && x.categoryId === w.categoryId)!;
@@ -64,6 +73,7 @@ describe('stagione giocabile', () => {
     expect(e.dispatch({ type: 'RunSession', strategies: {} }).ok).toBe(true);
     expect(res('sprint').rows.filter((r) => r.points > 0).length).toBeLessThanOrEqual(9);
     expect(e.lastReplay!.kind).toBe('sprint');
+    expect(e.dispatch({ type: 'RunSession', strategies: {} }).ok).toBe(true); // Warm Up
     expect(e.dispatch({ type: 'RunSession', strategies: {} }).ok).toBe(true);
     expect(e.lastReplay!.kind).toBe('race');
     // Tutte le categorie hanno corso lo stesso giorno.
