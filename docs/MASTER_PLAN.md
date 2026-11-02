@@ -79,3 +79,20 @@ Strumenti verificati nel container: nessuna GPU, `huggingface.co` bloccato dalla
   storico coerente con la classifica, round trip del salvataggio, selettore dai contratti); e2e con switch piloti.
 - **Verifiche**: Fabrizio Vitellino (nato il 21/4/2010) corre in Moto3 con il Lupo Blu Junior Team nel 2027,
   coerente con la fascia d'età 16–23 della categoria.
+
+## Ritratti — pipeline pronta (in attesa dell'accesso di rete)
+
+- **Universo fisso**: ogni nuova carriera parte dagli stessi piloti, tecnici e squadre (`UNIVERSE_SEED`), mentre
+  gare, meteo, mercato ed eventi dipendono dal seme della carriera. Serve perché ogni personaggio abbia la sua foto.
+- **Chiave del ritratto**: nome, cognome e giorno di nascita (`portraitKey`), quindi il volto resta lo stesso
+  anche se il personaggio cambia squadra. I personaggi nati in carriera usano un volto di riserva stabile
+  (`poolPortraitKey`: 120 ragazzi con la tuta ufficiale Rookies, 60 giovani con polo neutra).
+- **Strumenti** (`tools/portraits/`): `export.ts` crea l'elenco (135 piloti, 252 tecnici principali, 180 volti
+  di riserva) con età, nazionalità, ruolo e colori della squadra; `generate.py` crea le foto con SDXL-Turbo
+  (gratuito, gira senza scheda grafica, ~30–60 s a foto), riprende da dove si è fermato e dà sempre lo stesso
+  volto alla stessa persona; `setup.sh` installa le librerie.
+- **Nel gioco**: il componente `Portrait` mostra la foto se esiste, altrimenti il volto di riserva, altrimenti il
+  casco. L'elenco dei file è noto alla compilazione (nessuna richiesta a vuoto).
+- **Blocco**: la rete dell'ambiente cloud non consente `huggingface.co`, `cdn-lfs.huggingface.co`,
+  `cas-bridge.xethub.hf.co` e `download.pytorch.org`. Vanno aggiunti fra i domini consentiti nelle impostazioni
+  dell'ambiente (operazione gratuita, la può fare solo il proprietario dell'account).

@@ -8,6 +8,7 @@ export * from './schema/market.ts';
 export * from './schema/results.ts';
 export * from './schema/upgrades.ts';
 export * from './schema/state.ts';
+export * from './portraits.ts';
 export * from './tables.ts';
 export * from './validate.ts';
 export * from './serialize.ts';

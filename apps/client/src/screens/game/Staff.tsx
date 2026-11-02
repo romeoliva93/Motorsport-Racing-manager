@@ -1,3 +1,4 @@
+import { Portrait } from '../../design-system/Portrait.tsx';
 import { Flag, FlagName } from '../../design-system/Flag.tsx';
 import { useMemo, useState } from 'react';
 import { formatMoney } from '@lean-angle/core';
@@ -92,7 +93,12 @@ function StaffDetailPanel({ staffId, color }: { staffId: string; color: string }
     <div className="detail">
       <Card>
         <div className="hero">
-          <Monogram name={m.name} color={color} size={4.4} />
+          <Portrait
+            portrait={m.portrait}
+            name={m.name}
+            size={4.4}
+            fallback={<Monogram name={m.name} color={color} size={4.4} />}
+          />
           <div>
             <div className="nm">{m.name}</div>
             <div className="muted" style={{ fontSize: '.8rem', marginTop: '.3rem' }}>

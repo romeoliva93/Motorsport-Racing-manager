@@ -1,3 +1,4 @@
+import { Portrait } from '../../design-system/Portrait.tsx';
 import { useState } from 'react';
 import { formatMoney } from '@lean-angle/core';
 import type { RiderProfile } from '@lean-angle/game';
@@ -66,7 +67,13 @@ export function RidersScreen({
             className={`rs-card ${r.id === current ? 'on' : ''}`}
             onClick={() => setSelected(r.id)}
           >
-            <Helmet team={teamName} colors={colors} size={3.4} />
+            <Portrait
+              portrait={r.portrait}
+              name={r.name}
+              size={3.2}
+              round
+              fallback={<Helmet team={teamName} colors={colors} size={3.4} />}
+            />
             <span className="rs-num" style={{ color: colors.primary }}>
               {r.number ?? '–'}
             </span>
@@ -115,8 +122,17 @@ function RiderProfileView({
     <>
       <div className="card accent rider-hero" style={{ ['--team' as string]: colors.primary }}>
         <div className="rh-portrait">
-          <Helmet team={teamName} colors={colors} size={9} />
-          <small className="muted">Ritratto in arrivo</small>
+          <Portrait
+            portrait={r.portrait}
+            name={r.name}
+            size={8.5}
+            fallback={
+              <>
+                <Helmet team={teamName} colors={colors} size={9} />
+                <small className="muted">Ritratto in arrivo</small>
+              </>
+            }
+          />
         </div>
         <NumberPlate number={r.number} colors={colors} size={6.5} />
         <div className="rh-id">

@@ -1,3 +1,4 @@
+import { Portrait } from '../design-system/Portrait.tsx';
 import { FlagName } from '../design-system/Flag.tsx';
 import { Helmet } from '../design-system/Helmet.tsx';
 import { useEffect, useMemo, useState } from 'react';
@@ -273,7 +274,13 @@ function SelectedTeam({
       <Card title="Piloti">
         {team.riders.map((r) => (
           <div key={r.id} className="row" style={{ justifyContent: 'flex-start', gap: '.7rem' }}>
-            <Helmet team={team.name} colors={team.colors} number={r.number} size={3.2} />
+            <Portrait
+              portrait={r.portrait}
+              name={r.name}
+              size={2.6}
+              round
+              fallback={<Helmet team={team.name} colors={team.colors} size={3.2} />}
+            />
             <span style={{ flex: 1 }}>
               <b>
                 #{r.number} {r.name}

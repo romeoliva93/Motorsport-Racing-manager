@@ -1,3 +1,4 @@
+import { Portrait } from '../../design-system/Portrait.tsx';
 import { FlagName } from '../../design-system/Flag.tsx';
 import { Helmet } from '../../design-system/Helmet.tsx';
 import { formatMoney } from '@lean-angle/core';
@@ -270,7 +271,12 @@ function RiderCards({
           <div key={r.id} className="tile rider-tile">
             <span className="ghost-num">{r.number}</span>
             <div style={{ display: 'flex', gap: '.8rem', alignItems: 'center' }}>
-              <Helmet team={teamName} colors={colors} number={r.number} size={5.2} />
+              <Portrait
+                portrait={r.portrait}
+                name={r.name}
+                size={4.2}
+                fallback={<Helmet team={teamName} colors={colors} size={5.2} />}
+              />
               <div>
                 <div className="display" style={{ fontSize: '1.2rem' }}>
                   {r.name}

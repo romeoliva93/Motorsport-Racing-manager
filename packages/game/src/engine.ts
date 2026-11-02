@@ -54,11 +54,20 @@ import { dealWindowOpen, signDeal } from './sponsors.ts';
 import { seasonFinished, startNextSeason } from './season.ts';
 
 export interface NewCareerOptions {
+  /** Seme della carriera: gare, meteo, mercato ed eventi. */
   seed: string;
   saveName: string;
   teamId?: TeamId;
   startYear?: number;
+  /**
+   * Seme dell'universo di partenza (piloti, staff, squadre). Di default è fisso, così ogni nuova carriera parte
+   * dagli stessi personaggi, ognuno con il proprio ritratto; i test possono passarne uno diverso.
+   */
+  worldSeed?: string;
 }
+
+/** Universo di partenza condiviso da tutte le carriere. */
+export const UNIVERSE_SEED = 'lean-angle-universo-1';
 
 const MAX_ADVANCE_DAYS = 60;
 const MAX_SALARY = 30_000_000;
@@ -81,10 +90,13 @@ export class GameEngine {
 
   static newCareer(opts: NewCareerOptions): GameEngine {
     const state = generateWorld({
-      seed: opts.seed,
+      seed: opts.worldSeed ?? UNIVERSE_SEED,
       saveName: opts.saveName,
       ...(opts.startYear ? { startYear: opts.startYear } : {}),
     });
+    // Il mondo è quello dell'universo fisso; da qui in poi tutto il caso dipende dal seme della carriera.
+    state.meta.seed = opts.seed;
+    state.rng = {};
     const engine = new GameEngine(state);
     if (opts.teamId) {
       const r = engine.dispatch({ type: 'SetPlayerTeam', teamId: opts.teamId });

@@ -68,3 +68,22 @@ describe('classifiche e statistiche', () => {
     expect(a!.current!.starts).toBe(6);
   });
 });
+
+describe('universo fisso', () => {
+  it('ogni carriera parte dagli stessi personaggi, ma le gare cambiano', () => {
+    const a = career('carriera-a');
+    const b = career('carriera-b');
+    const names = (e: GameEngine) =>
+      rows(e.state, 'riders')
+        .map((r) => `${r.firstName} ${r.lastName}`)
+        .sort();
+    expect(names(a)).toEqual(names(b));
+    playRaces(a, 1);
+    playRaces(b, 1);
+    const winner = (e: GameEngine) =>
+      championship(e.state)!
+        .riders.map((r) => r.riderId)
+        .join();
+    expect(winner(a)).not.toEqual(winner(b));
+  });
+});

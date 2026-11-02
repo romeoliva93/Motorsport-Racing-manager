@@ -1,3 +1,4 @@
+import { Portrait } from '../../design-system/Portrait.tsx';
 import { Flag, FlagName } from '../../design-system/Flag.tsx';
 import { Helmet } from '../../design-system/Helmet.tsx';
 import { useEffect, useState } from 'react';
@@ -205,11 +206,17 @@ function NegotiationForm({
     <div className="detail">
       <Card>
         <div className="hero">
-          <Helmet
-            team={r.team ?? ''}
-            colors={r.teamColors ?? { primary: '#6b6e75', secondary: '#3a3c42' }}
-            number={r.number ?? null}
-            size={6}
+          <Portrait
+            portrait={r.portrait}
+            name={r.name}
+            size={5.5}
+            fallback={
+              <Helmet
+                team={r.team ?? ''}
+                colors={r.teamColors ?? { primary: '#6b6e75', secondary: '#3a3c42' }}
+                size={6}
+              />
+            }
           />
           <div>
             <div className="nm">{r.name}</div>

@@ -8,6 +8,8 @@ import {
   NAMES_CONTENT,
   OPENING_BALANCE,
   RIDER_ATTRIBUTES,
+  portraitKey,
+  poolPortraitKey,
   rows,
   teamBalance,
   type CategoryTier,
@@ -36,6 +38,12 @@ import { activeRiderContract, askingSalary, buyoutFor, ineligibility, marketOpen
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+
+/** Chiave del ritratto e volto di riserva. */
+export function portraitOf(s: GameState, p: { firstName: string; lastName: string; birthDay: number }) {
+  const key = portraitKey(p);
+  return { key, pool: poolPortraitKey(key, cal(s).ageOn(p.birthDay, s.meta.currentDay)) };
+}
 
 export const riderRating = (r: Rider) => Math.round(mean(RIDER_ATTRIBUTES.map((a) => r.attributes[a])));
 export const staffRating = (m: StaffMember) => Math.round(mean(Object.values(m.skills)));
@@ -72,7 +80,15 @@ export interface TeamCard {
   manufacturer: string;
   ownerName: string;
   balance: number | null;
-  riders: { id: string; name: string; number: number; nationality: string; age: number; rating: number }[];
+  riders: {
+    id: string;
+    name: string;
+    number: number;
+    nationality: string;
+    portrait: { key: string; pool: string };
+    age: number;
+    rating: number;
+  }[];
 }
 
 export interface CategoryTab {
@@ -131,6 +147,7 @@ export function teamCards(s: GameState, categoryId: string): TeamCard[] {
               name: `${r.firstName} ${r.lastName}`,
               number: seat.number,
               nationality: r.nationality,
+              portrait: portraitOf(s, r),
               age: c.ageOn(r.birthDay, s.meta.currentDay),
               rating: riderRating(r),
             },
@@ -255,6 +272,8 @@ export interface RiderRow {
   morale: number;
   contractEnd: string | null;
   salary: number | null;
+  /** Ritratto: file proprio, con un volto di riserva se il file non esiste (personaggi nati in carriera). */
+  portrait: { key: string; pool: string };
 }
 
 export function teamRiders(s: GameState, teamId: TeamId): RiderRow[] {
@@ -279,6 +298,7 @@ export function teamRiders(s: GameState, teamId: TeamId): RiderRow[] {
         lastName: r.lastName,
         number: seatNumber.get(r.id) ?? null,
         nationality: r.nationality,
+        portrait: portraitOf(s, r),
         age: c.ageOn(r.birthDay, s.meta.currentDay),
         role: r.role,
         rating: riderRating(r),
@@ -349,6 +369,7 @@ export function riderDetail(s: GameState, riderId: string): RiderDetail | null {
       lastName: r.lastName,
       number: null,
       nationality: r.nationality,
+      portrait: portraitOf(s, r),
       age: c.ageOn(r.birthDay, s.meta.currentDay),
       role: r.role,
       rating: riderRating(r),
@@ -383,6 +404,7 @@ export interface StaffRow {
   assignedTo: string | null;
   contractEnd: string | null;
   salary: number | null;
+  portrait: { key: string; pool: string };
 }
 
 export function teamStaff(s: GameState, teamId: TeamId): StaffRow[] {
@@ -404,6 +426,7 @@ export function teamStaff(s: GameState, teamId: TeamId): StaffRow[] {
         name: `${m.firstName} ${m.lastName}`,
         role: m.role,
         nationality: m.nationality,
+        portrait: portraitOf(s, m),
         age: c.ageOn(m.birthDay, s.meta.currentDay),
         rating: staffRating(m),
         experienceYears: m.experienceYears,
@@ -443,6 +466,7 @@ export function staffDetail(s: GameState, staffId: string): StaffDetail | null {
       name: `${m.firstName} ${m.lastName}`,
       role: m.role,
       nationality: m.nationality,
+      portrait: portraitOf(s, m),
       age: c.ageOn(m.birthDay, s.meta.currentDay),
       rating: staffRating(m),
       experienceYears: m.experienceYears,
@@ -516,6 +540,7 @@ export interface MarketRow {
   age: number;
   team: string | null;
   teamColors: { primary: string; secondary: string } | null;
+  portrait: { key: string; pool: string };
   /** Numero di gara se ha un posto in griglia. */
   number: number | null;
   category: string | null;
@@ -558,6 +583,7 @@ export function marketRiders(s: GameState, filter: MarketFilter = 'all', search 
         id: r.id,
         name: `${r.firstName} ${r.lastName}`,
         nationality: r.nationality,
+        portrait: portraitOf(s, r),
         age: c.ageOn(r.birthDay, s.meta.currentDay),
         team: team ? team.name : null,
         teamColors: team ? { primary: team.colors.primary, secondary: team.colors.secondary } : null,

@@ -888,3 +888,16 @@ table.std tbody tr.mine td:first-child {
   font-size: 0.75rem;
   color: var(--text-3);
 }
+
+/* --- Ritratti ---------------------------------------------------------------- */
+.portrait {
+  display: block;
+  object-fit: cover;
+  border-radius: var(--r-2);
+  background: var(--bg-3);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  flex: none;
+}
+.portrait.round {
+  border-radius: 50%;
+}
