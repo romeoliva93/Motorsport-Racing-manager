@@ -169,3 +169,33 @@
     padding: 0 1rem 1rem;
   }
 }
+
+.settings-card {
+  margin-top: 0.8rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 34rem;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.settings-row > span {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+}
+.settings-row small {
+  font-weight: 400;
+  color: var(--text-3);
+  font-size: 0.78rem;
+  max-width: 20rem;
+}

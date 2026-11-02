@@ -34,9 +34,14 @@ async function waitForServer(url, ms = 20000) {
   let page;
   try {
     await waitForServer(URL);
-    browser = await chromium.launch();
+    // WebGL software (SwiftShader): la vista 3D funziona anche senza scheda grafica.
+    browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
     page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    const warnings = [];
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+      if (m.type() === 'warning' && /WebGL/i.test(m.text())) warnings.push(m.text());
+    });
     page.on('pageerror', (e) => errors.push(e.message));
     const shot = async (name) =>
       SHOTS && page.screenshot({ path: path.join(ROOT, `docs/images/app-${name}.png`) });
@@ -165,6 +170,57 @@ async function waitForServer(url, ms = 20000) {
       { timeout: 20000 },
     );
     await shot('12-gara');
+
+    // --- Cambio 2D ↔ 3D: la gara non si riavvia e non cambia ---
+    const snap = async () => ({
+      clock: await page.locator('.rv-clock').innerText(),
+      lap: await page.locator('.rv-lap b').innerText(),
+      board: await page.locator('.rv-board li .num').allInnerTexts(),
+    });
+    await page.getByRole('button', { name: '❚❚' }).click();
+    await page.waitForTimeout(300);
+    const before = await snap();
+    await page.getByRole('button', { name: '3D', exact: true }).click();
+    await page.locator('.rv-3d canvas').waitFor({ timeout: 30000 });
+    await page.waitForTimeout(1500);
+    const in3d = await snap();
+    if (JSON.stringify(in3d) !== JSON.stringify(before))
+      throw new Error('Il passaggio al 3D ha cambiato la gara: ' + JSON.stringify({ before, in3d }));
+    if (!(await page.getByRole('button', { name: '❚❚' }).evaluate((b) => b.classList.contains('on'))))
+      throw new Error('La pausa non è stata mantenuta');
+    await shot('12-gara-3d');
+    await page.getByRole('button', { name: '2D', exact: true }).click();
+    await page.waitForTimeout(500);
+    if (JSON.stringify(await snap()) !== JSON.stringify(before))
+      throw new Error('Il ritorno al 2D ha cambiato la gara');
+    // Velocità mantenuta e tempo che continua a scorrere dopo il cambio.
+    await page.getByRole('button', { name: '4×' }).click();
+    await page.getByRole('button', { name: '3D', exact: true }).click();
+    await page.locator('.rv-3d canvas').waitFor({ timeout: 30000 });
+    if (!(await page.getByRole('button', { name: '4×' }).evaluate((b) => b.classList.contains('on'))))
+      throw new Error('La velocità è cambiata passando al 3D');
+    await page.waitForTimeout(2000);
+    if ((await snap()).clock === before.clock) throw new Error('Il tempo di gara non scorre in 3D');
+    // Cambi ripetuti: niente contesti 3D accumulati, una sola tela per volta, memoria stabile.
+    const heap = () => page.evaluate(() => performance.memory?.usedJSHeapSize ?? 0);
+    const h0 = await heap();
+    for (let i = 0; i < 10; i++) {
+      await page.getByRole('button', { name: '2D', exact: true }).click();
+      await page.waitForTimeout(150);
+      await page.getByRole('button', { name: '3D', exact: true }).click();
+      await page.locator('.rv-3d canvas').waitFor({ timeout: 30000 });
+      await page.waitForTimeout(250);
+    }
+    const canv = await page.locator('.rv-stage canvas').count();
+    const h1 = await heap();
+    if (canv !== 1) throw new Error(`Tele sovrapposte dopo i cambi: ${canv}`);
+    if (warnings.some((w) => /too many active WebGL contexts/i.test(w)))
+      throw new Error('Contesti WebGL non liberati');
+    await page.getByRole('button', { name: '2D', exact: true }).click();
+    step(
+      `2D↔3D: stessa gara in pausa (${before.clock}, giro ${before.lap.replace('\n', '')}), velocità mantenuta, ` +
+        `10 cambi senza perdite (memoria JS ${Math.round(h0 / 1e6)} → ${Math.round(h1 / 1e6)} MB)`,
+    );
     if ((await page.locator('.rv-rider').count()) !== 2) throw new Error('Pannelli piloti mancanti');
     step('Sprint in 2D: giro ' + (await page.locator('.rv-lap b').innerText()) + ', 2 pannelli piloti');
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
@@ -178,7 +234,8 @@ async function waitForServer(url, ms = 20000) {
 
     await page.locator('.nav button', { hasText: 'Moto e upgrade' }).click();
     await page.locator('.gar-tile').first().waitFor();
-    if ((await page.locator('.gar-tile').count()) !== 14) throw new Error('Il garage non mostra 14 componenti');
+    if ((await page.locator('.gar-tile').count()) !== 14)
+      throw new Error('Il garage non mostra 14 componenti');
     await page.locator('.gar-tile', { hasText: 'Frizione' }).click();
     await shot('18-garage');
     const fix = page.getByRole('button', { name: /^Revisiona i \d+ pezzi/ });

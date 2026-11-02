@@ -1,22 +1,14 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { ReplayData } from '@lean-angle/game';
 import { Flag } from '../../design-system/Flag.tsx';
 import { lapTime, raceTime } from '../../design-system/components.tsx';
 import { Portrait } from '../../design-system/Portrait.tsx';
 import { Helmet } from '../../design-system/Helmet.tsx';
 import { NumberPlate } from '../../design-system/NumberPlate.tsx';
-import {
-  buildScene,
-  drawDynamic,
-  drawStatic,
-  fitView,
-  type View,
-  onLongLap,
-  onPitLane,
-  onTrack,
-  type BikeDraw,
-  type V,
-} from '../../race/circuitScene.ts';
+import { buildScene, drawDynamic, drawStatic, fitView, type View } from '../../race/circuitScene.ts';
+import { INTRO, duration, lastDistances, raceFrame, teamsOf } from '../../race/raceState.ts';
+import { usePrefs, webglAvailable } from '../../prefs.ts';
+import type { Cam3D } from '../../race/Race3D.tsx';
 
 const SPEEDS = [0, 1, 2, 4, 8, 16] as const;
 /** Vista 3D caricata solo quando richiesta (Three.js). */
@@ -24,11 +16,31 @@ const Race3D = lazy(() => import('../../race/Race3D.tsx'));
 type Cam = 'all' | 'mine' | 'leader';
 const CAMS: { id: Cam; label: string }[] = [
   { id: 'all', label: 'Tutto il circuito' },
-  { id: 'mine', label: 'Il mio pilota' },
+  { id: 'mine', label: 'Pilota selezionato' },
   { id: 'leader', label: 'Il leader' },
 ];
-/** Secondi (tempo di gara) della fase box: uscita dai garage, corsia box, giro di ricognizione, griglia. */
-const INTRO = 45;
+const CAMS3D: { id: Cam3D; label: string }[] = [
+  { id: 'auto', label: 'Regia' },
+  { id: 'tv', label: 'TV' },
+  { id: 'chase', label: 'Inseguimento' },
+  { id: 'trackside', label: 'Bordo pista' },
+  { id: 'box', label: 'Box' },
+  { id: 'all', label: 'Panoramica' },
+];
+
+/** Se il 3D non si carica (niente WebGL, errore del driver) si torna al 2D senza toccare la gara. */
+class Fallback3D extends Component<{ onFail: () => void; children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  override componentDidCatch() {
+    this.props.onFail();
+  }
+  override render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 /**
  * Vista 2D dall'alto della gara. Riproduce i fotogrammi registrati dalla simulazione (la gara è già stata
@@ -38,23 +50,27 @@ const INTRO = 45;
  */
 export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => void }) {
   const fg = useRef<HTMLCanvasElement>(null);
+  const prefs = usePrefs();
   const [cam, setCam] = useState<Cam>('mine');
-  const [mode3d, setMode3d] = useState(false);
+  const [cam3d, setCam3d] = useState<Cam3D>('auto');
+  const [no3d, setNo3d] = useState(() => !webglAvailable());
+  const [mode3d, setMode3d] = useState(() => prefs.raceView === '3d' && webglAvailable());
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => data.riders.find((r) => r.mine)?.id ?? null,
+  );
   const camRef = useRef<{ x: number; y: number; z: number } | null>(null);
   const offRef = useRef<{ canvas: HTMLCanvasElement; view: View; w: number; h: number } | null>(null);
+  // Zoom e spostamento manuali della mappa 2D (null = segue la telecamera scelta).
+  const [manual, setManual] = useState<{ x: number; y: number; z: number } | null>(null);
+  const viewRef = useRef<View | null>(null);
   const [speed, setSpeed] = useState<number>(8);
   const [t, setT] = useState(-INTRO);
   const [, setTick] = useState(0);
   const tRef = useRef(-INTRO);
-  const duration = (data.frames.length - 1) * data.frameEvery;
+  const dur = duration(data);
   const L = data.lengthM;
 
-  const teams = useMemo(() => {
-    const seen = new Map<string, { team: string; color: string; color2: string }>();
-    for (const r of data.riders)
-      if (!seen.has(r.team)) seen.set(r.team, { team: r.team, color: r.color, color2: r.color2 });
-    return [...seen.values()];
-  }, [data]);
+  const teams = useMemo(() => teamsOf(data), [data]);
   const scene = useMemo(
     () =>
       buildScene(
@@ -67,153 +83,35 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
       ),
     [data, teams],
   );
+  const lastDist = useMemo(() => lastDistances(data), [data]);
 
-  const distAt = (time: number): number[] => {
-    const f = Math.max(0, time) / data.frameEvery;
-    const i = Math.max(0, Math.min(data.frames.length - 1, Math.floor(f)));
-    const j = Math.min(data.frames.length - 1, i + 1);
-    const a = data.frames[i]!,
-      b = data.frames[j]!;
-    const k = f - i;
-    return a.map((d, n) => (d < 0 || b[n]! < 0 ? (d < 0 ? -1 : d) : d + (b[n]! - d) * k));
-  };
-  // Ultima distanza nota di ogni pilota prima del ritiro (per la moto caduta nella ghiaia).
-  const lastDist = useMemo(
-    () =>
-      data.riders.map((_, n) => {
-        let last = 0;
-        for (const fr of data.frames) {
-          if (fr[n]! < 0) break;
-          last = fr[n]!;
-        }
-        return last;
-      }),
-    [data],
-  );
-
-  // Ciclo di riproduzione (pubblico e bandiere si muovono anche in pausa).
+  // Ciclo di riproduzione (pubblico e bandiere si muovono anche in pausa). È lo stesso per 2D e 3D: cambiare
+  // vista non lo ferma e non lo riavvia.
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
     const step = (now: number) => {
       const dt = Math.max(0, (now - last) / 1000);
       last = now;
-      if (speed > 0 && tRef.current < duration) {
-        tRef.current = Math.min(duration, tRef.current + dt * speed);
+      if (speed > 0 && tRef.current < dur) {
+        tRef.current = Math.min(dur, tRef.current + dt * speed);
         setT(tRef.current);
       } else setTick((x) => (x + 1) % 1000);
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [speed, duration]);
+  }, [speed, dur]);
 
-  const racing = t >= 0;
-  const dists = distAt(t);
-  const order = data.riders
-    .map((r, i) => ({ r, d: racing ? dists[i]! : data.frames[0]![i]!, i }))
-    .sort((a, b) => (racing && a.d < 0 ? 1 : racing && b.d < 0 ? -1 : b.d - a.d));
+  // Stato della gara in questo istante: una sola funzione per entrambe le viste.
+  const f = raceFrame(data, scene, teams, lastDist, t, selectedId);
+  const { racing, dists, order, lap, avgSpeed, finished, phase, bikes, crashes, rain } = f;
   const leader = order[0]!;
-  const lap = Math.min(data.laps, Math.floor(Math.max(0, leader.d) / L) + 1);
-  const avgSpeed = L / ((data.results[0]?.time ?? duration) / data.laps);
-  const finished = t >= duration;
-  const winnerEvent = data.events.find((e) => e.kind === 'finish');
-  const redEvent = data.events.find((e) => e.kind === 'redFlag');
-  const restartEvent = data.events.find((e) => e.kind === 'restart');
-  const redActive =
-    racing &&
-    !!redEvent &&
-    t >= redEvent.t &&
-    (redEvent.final ? t < redEvent.t + 8 : !!restartEvent && t < restartEvent.t);
-  const phase = !racing
-    ? t < -INTRO + 14
-      ? 'Uscita dai box'
-      : t < -3
-        ? 'Giro di ricognizione'
-        : 'Semaforo rosso…'
-    : redActive
-      ? 'Bandiera rossa'
-      : finished
-        ? 'Gara finita'
-        : `Giro ${lap} di ${data.laps}`;
 
   // Autodromo disegnato una volta in alta risoluzione (fuori schermo): ogni fotogramma ne inquadra una parte.
   useEffect(() => {
     offRef.current = null;
   }, [scene]);
-
-  // Posizione di ogni moto in questo istante (la stessa per la vista 2D e per quella 3D).
-  const nG = scene.garages.length;
-  const span = scene.pitLane.length - 1;
-  const exitFrac = scene.pitExitIdx / scene.pts.length;
-  const posLabel = new Map(order.map((o, k) => [o.r.id, k + 1]));
-  const bikes: BikeDraw[] = [];
-  data.riders.forEach((r, i) => {
-    const lateral = ((i % 3) - 1) * scene.width * 0.28;
-    let pd: { pos: V; dir: V } | null = null;
-    if (!racing) {
-      // Fase box: garage → corsia box → giro di ricognizione → casella di griglia.
-      const g = Math.max(
-        0,
-        teams.findIndex((x) => x.team === r.team),
-      );
-      const fGarage = (scene.pitBoxStart + ((g + 0.5) / nG) * (scene.pitBoxEnd - scene.pitBoxStart)) / span;
-      const gridFrac = 1 + data.frames[0]![i]! / L; // poco prima del traguardo
-      const leave = -INTRO + 1 + i * 0.55;
-      const tPit = (1 - fGarage) * 10;
-      const arrive = -4;
-      if (t < leave) {
-        const gr = scene.garages[g]!;
-        pd = {
-          pos: [gr.at[0] + gr.dir[0] * 0.004, gr.at[1] + gr.dir[1] * 0.004],
-          dir: [-gr.dir[0], -gr.dir[1]],
-        };
-      } else if (t < leave + tPit) {
-        pd = onPitLane(scene, fGarage + ((t - leave) / tPit) * (1 - fGarage));
-      } else if (t < arrive) {
-        const k = (t - leave - tPit) / (arrive - leave - tPit);
-        const e = k * k * (3 - 2 * k);
-        pd = onTrack(scene, exitFrac + e * (gridFrac - exitFrac), lateral * e);
-      } else pd = onTrack(scene, gridFrac, ((i % 2) - 0.5) * scene.width * 0.5);
-    } else {
-      const d = dists[i]!;
-      // Nell'anello della Long Lap?
-      const ll = data.events.find(
-        (e) => e.kind === 'longLap' && e.riderId === r.id && e.t <= t && t < e.t + (e.duration ?? 0),
-      );
-      if (ll && d >= 0) pd = onLongLap(scene, (t - ll.t) / (ll.duration ?? 1));
-      else if (d >= 0) pd = onTrack(scene, d / L, lateral);
-    }
-    if (!pd) return;
-    const pos = posLabel.get(r.id) ?? 0;
-    bikes.push({
-      ...pd,
-      color: r.color,
-      color2: r.color2,
-      number: r.number,
-      mine: r.mine,
-      label: r.mine || (racing && pos <= 3) ? `${racing ? `${pos}. ` : ''}${r.short}` : null,
-    });
-  });
-  bikes.sort((a, b) => Number(a.mine) - Number(b.mine));
-  const crashes: V[] = racing
-    ? data.events
-        .filter((e) => e.kind === 'crash' && e.t <= t)
-        .map((e) => {
-          const n = data.riders.findIndex((r) => r.id === e.riderId);
-          const frac = lastDist[n]! / L;
-          const i = Math.floor((((frac % 1) + 1) % 1) * scene.pts.length) % scene.pts.length;
-          const side = scene.curv[i]! > 0 ? -1 : 1;
-          return onTrack(scene, frac, (scene.width / 2 + 0.014) * side).pos;
-        })
-    : [];
-  const yellowNow = racing
-    ? data.events
-        .filter((e) => e.kind === 'yellowFlag' && e.t <= t && t < e.t + (e.duration ?? 0))
-        .map((e) => e.at ?? 0)
-    : [];
-
-  const rain = data.weather.grip === 'wet' ? 1 : data.weather.sky === 'drizzle' ? 0.45 : 0;
 
   // Elementi animati (vista 2D).
   useEffect(() => {
@@ -244,18 +142,18 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
     }
     const off = offRef.current;
 
-    // Telecamera: tutto il circuito, il mio pilota o il leader, con movimento morbido.
+    // Telecamera: zoom manuale, oppure tutto il circuito / pilota selezionato / leader, con movimento morbido.
     const full = fitView(scene, w, h);
     const fullC = { x: (w / 2 - full.ox) / full.scale, y: (h / 2 - full.oy) / full.scale, z: 1 };
     const targetBike =
       cam === 'mine'
-        ? bikes.filter((x) => x.mine).at(-1)
+        ? (bikes.find((x) => x.selected) ?? bikes.filter((x) => x.mine).at(-1))
         : cam === 'leader'
           ? bikes.find((x) => x.number === leader.r.number)
           : undefined;
-    const goal = targetBike ? { x: targetBike.pos[0], y: targetBike.pos[1], z: 2.4 } : fullC;
+    const goal = manual ?? (targetBike ? { x: targetBike.pos[0], y: targetBike.pos[1], z: 2.4 } : fullC);
     const c0 = camRef.current ?? goal;
-    const k = 0.18;
+    const k = manual ? 0.5 : 0.18;
     const camNow = {
       x: c0.x + (goal.x - c0.x) * k,
       y: c0.y + (goal.y - c0.y) * k,
@@ -281,6 +179,7 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
       ox: -((sx - off.view.ox) / off.view.scale) * view.scale,
       oy: -((sy - off.view.oy) / off.view.scale) * view.scale,
     };
+    viewRef.current = view;
     ctx.fillStyle = '#2c3a24';
     ctx.fillRect(0, 0, w, h);
     ctx.drawImage(off.canvas, sx, sy, sw, sh, 0, 0, w, h);
@@ -289,11 +188,63 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
       leaderNumber: racing ? leader.r.number : null,
       lap: racing ? `${lap}/${data.laps}` : 'GRID',
       crashes,
-      chequered: !!winnerEvent && t >= winnerEvent.t,
-      yellow: yellowNow,
-      red: redActive,
+      chequered: f.chequered,
+      yellow: f.yellow,
+      red: f.redActive,
     });
   });
+
+  // Interazioni sulla mappa 2D: rotella = zoom, trascina = sposta, clic = seleziona il pilota più vicino.
+  const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const toWorld = (ev: { clientX: number; clientY: number }) => {
+    const c = fg.current!,
+      v = viewRef.current!;
+    const r = c.getBoundingClientRect();
+    return [(ev.clientX - r.left - v.ox) / v.scale, (ev.clientY - r.top - v.oy) / v.scale] as const;
+  };
+  const cur = () => manual ?? camRef.current ?? { x: 0.5, y: 0.5, z: 1 };
+  const onWheel = (ev: React.WheelEvent) => {
+    if (!viewRef.current) return;
+    const [wx, wy] = toWorld(ev);
+    const c0 = cur();
+    const z = Math.max(1, Math.min(2.6, c0.z * (ev.deltaY < 0 ? 1.2 : 1 / 1.2)));
+    // Zoom verso il punto indicato dal mouse.
+    const kz = 1 - c0.z / z;
+    setManual({ x: c0.x + (wx - c0.x) * kz, y: c0.y + (wy - c0.y) * kz, z });
+  };
+  const onDown = (ev: React.PointerEvent) => {
+    drag.current = { x: ev.clientX, y: ev.clientY, moved: false };
+    (ev.target as Element).setPointerCapture?.(ev.pointerId);
+  };
+  const onMove = (ev: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d || !viewRef.current) return;
+    const dx = ev.clientX - d.x,
+      dy = ev.clientY - d.y;
+    if (!d.moved && Math.hypot(dx, dy) < 4) return;
+    d.moved = true;
+    d.x = ev.clientX;
+    d.y = ev.clientY;
+    const c0 = cur();
+    const sc = viewRef.current.scale;
+    setManual({ x: c0.x - dx / sc, y: c0.y - dy / sc, z: c0.z });
+  };
+  const onUp = (ev: React.PointerEvent) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || d.moved || !viewRef.current) return;
+    const [wx, wy] = toWorld(ev);
+    let best: { id: string; d: number } | null = null;
+    for (const b of bikes) {
+      const dd = Math.hypot(b.pos[0] - wx, b.pos[1] - wy) * viewRef.current.scale;
+      if (dd < 22 && (!best || dd < best.d)) best = { id: b.id, d: dd };
+    }
+    if (best) setSelectedId(best.id);
+  };
+  const resetView = () => {
+    setManual(null);
+    setCam('all');
+  };
 
   const pendingLL = (id: string) =>
     !racing
@@ -401,7 +352,12 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
             const gap = i === 0 || out ? null : (leader.d - d) / avgSpeed;
             const lv = live(n);
             return (
-              <li key={r.id} className={`${r.mine ? 'mine' : ''} ${out ? 'out' : ''}`}>
+              <li
+                key={r.id}
+                className={`${r.mine ? 'mine' : ''} ${out ? 'out' : ''} ${r.id === selectedId ? 'sel' : ''}`}
+                onClick={() => setSelectedId(r.id)}
+                title="Seleziona: le telecamere lo seguono"
+              >
                 <span className="p">{out ? '–' : i + 1}</span>
                 <span className="c" style={{ background: r.color }} />
                 <span className="num">{r.number}</span>
@@ -438,18 +394,40 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
       <div className="rv-center">
         <div className="rv-stage">
           {mode3d ? (
-            <Suspense fallback={<div className="loading">Preparo la vista 3D…</div>}>
-              <Race3D
-                scene={scene}
-                bikes={bikes}
-                cam={cam}
-                leaderNumber={racing ? leader.r.number : null}
-                rain={rain}
-                crashes={crashes}
-              />
-            </Suspense>
+            <Fallback3D
+              onFail={() => {
+                setMode3d(false);
+                setNo3d(true);
+              }}
+            >
+              <Suspense fallback={<div className="loading">Preparo la vista 3D… la gara continua</div>}>
+                <Race3D
+                  scene={scene}
+                  frame={f}
+                  tier={data.tier}
+                  cam={cam3d}
+                  leaderNumber={racing ? leader.r.number : null}
+                  quality={prefs.quality}
+                />
+              </Suspense>
+            </Fallback3D>
           ) : (
-            <canvas ref={fg} className="rv-canvas rv-top" aria-label="Circuito con le moto in pista" />
+            <>
+              <canvas
+                ref={fg}
+                className="rv-canvas rv-top"
+                aria-label="Circuito con le moto in pista: rotella per lo zoom, trascina per spostare, clic su una moto per selezionarla"
+                onWheel={onWheel}
+                onPointerDown={onDown}
+                onPointerMove={onMove}
+                onPointerUp={onUp}
+              />
+              {manual && (
+                <button className="btn rv-reset" onClick={resetView}>
+                  Vista completa
+                </button>
+              )}
+            </>
           )}
           <div className="rv-phase">
             <b className="display">{phase}</b>
@@ -479,16 +457,34 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
             <button className={!mode3d ? 'on' : ''} onClick={() => setMode3d(false)}>
               2D
             </button>
-            <button className={mode3d ? 'on' : ''} onClick={() => setMode3d(true)}>
+            <button
+              className={mode3d ? 'on' : ''}
+              disabled={no3d}
+              title={no3d ? 'Il 3D non è disponibile su questo dispositivo: resta la vista 2D' : undefined}
+              onClick={() => setMode3d(true)}
+            >
               3D
             </button>
           </div>
           <div className="rv-speeds" role="group" aria-label="Inquadratura">
-            {CAMS.map((c) => (
-              <button key={c.id} className={cam === c.id ? 'on' : ''} onClick={() => setCam(c.id)}>
-                {c.label}
-              </button>
-            ))}
+            {mode3d
+              ? CAMS3D.map((c) => (
+                  <button key={c.id} className={cam3d === c.id ? 'on' : ''} onClick={() => setCam3d(c.id)}>
+                    {c.label}
+                  </button>
+                ))
+              : CAMS.map((c) => (
+                  <button
+                    key={c.id}
+                    className={cam === c.id && !manual ? 'on' : ''}
+                    onClick={() => {
+                      setManual(null);
+                      setCam(c.id);
+                    }}
+                  >
+                    {c.label}
+                  </button>
+                ))}
           </div>
           <span className="muted rv-clock">{racing ? raceTime(t) : 'pre-gara'}</span>
           <span className="spacer" />

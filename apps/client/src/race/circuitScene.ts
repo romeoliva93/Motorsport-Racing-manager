@@ -976,6 +976,8 @@ export function drawStatic(ctx: CanvasRenderingContext2D, sc: Scene, v: View, w:
 
 // ---------------------------------------------------------------------------------------------
 export interface BikeDraw {
+  /** Pilota (stesso id della simulazione). */
+  id: string;
   pos: V;
   dir: V;
   color: string;
@@ -983,6 +985,10 @@ export interface BikeDraw {
   number: number;
   label: string | null;
   mine: boolean;
+  /** Pilota selezionato dal giocatore (evidenziato in 2D e seguito dalle telecamere). */
+  selected: boolean;
+  /** In lotta con chi lo precede o lo segue (meno di 0,6 s). */
+  battle: boolean;
 }
 
 const CROWD = [
@@ -996,6 +1002,13 @@ const CROWD = [
   '#c9ccd2',
   '#8d1f26',
 ];
+
+/** Bianco o nero, il più leggibile sul colore dato. */
+function contrastInk(hex: string): string {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+  return lum > 150 ? '#111' : '#fff';
+}
 
 /** Elementi animati: pubblico, gente sui vialetti, bandiere, maxischermi, moto, pioggia. */
 export function drawDynamic(
@@ -1116,6 +1129,23 @@ export function drawDynamic(
     ctx.fill();
   };
   const N = sc.pts.length;
+  // Tratto di pista in regime di bandiera gialla (±3% del giro): striscia gialla trasparente sull'asfalto.
+  for (const y of extra.yellow ?? []) {
+    const i0 = Math.floor(((((y - 0.03) % 1) + 1) % 1) * N);
+    const cnt = Math.floor(0.06 * N);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 210, 31, ${0.35 + 0.15 * Math.sin(time * 6)})`;
+    ctx.lineWidth = Math.max(4, S(sc.width) * 1.1);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let k = 0; k <= cnt; k++) {
+      const p = P(sc.pts[(i0 + k) % N]!);
+      if (k === 0) ctx.moveTo(p[0], p[1]);
+      else ctx.lineTo(p[0], p[1]);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
   sc.marshals.forEach((m, k) => {
     if (extra.red) return waveFlag(P(m), '#e5484d', k);
     if (!extra.yellow?.length) return;
@@ -1159,9 +1189,31 @@ export function drawDynamic(
   // Moto viste dall'alto.
   const L = Math.max(10, S(0.012)),
     W = L * 0.36;
+  // Battaglie: alone arancio pulsante sotto le moto a meno di 0,6 s l'una dall'altra.
+  for (const b of bikes) {
+    if (!b.battle) continue;
+    const p = P(b.pos);
+    ctx.fillStyle = `rgba(255, 122, 26, ${0.18 + 0.1 * Math.sin(time * 5)})`;
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], L * 0.95, 0, Math.PI * 2);
+    ctx.fill();
+  }
   for (const b of bikes) {
     const p = P(b.pos);
     const ang = Math.atan2(b.dir[1], b.dir[0]);
+    if (b.selected) {
+      // Pilota selezionato: anello bianco/arancio.
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], L * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = '#ff7a1a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], L * 0.85 + 2.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     ctx.save();
     ctx.translate(p[0], p[1]);
     ctx.rotate(ang);
@@ -1196,12 +1248,27 @@ export function drawDynamic(
     ctx.arc(L * 0.14, 0, W * 0.26, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+    // Numero di gara accanto a ogni moto (piccola tabella nel colore della squadra).
+    if (L >= 9) {
+      const nt = String(b.number);
+      ctx.font = 'italic 800 9px Archivo, system-ui, sans-serif';
+      const nw = ctx.measureText(nt).width + 5;
+      ctx.fillStyle = b.color;
+      ctx.fillRect(p[0] - nw / 2, p[1] + W * 0.9, nw, 11);
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(p[0] - nw / 2, p[1] + W * 0.9, nw, 11);
+      ctx.fillStyle = contrastInk(b.color);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(nt, p[0], p[1] + W * 0.9 + 5.8);
+    }
     if (b.label) {
       ctx.font = '700 10px Archivo, system-ui, sans-serif';
       const tw = ctx.measureText(b.label).width;
-      ctx.fillStyle = b.mine ? '#ff7a1a' : 'rgba(16,17,19,0.85)';
+      ctx.fillStyle = b.mine ? '#ff7a1a' : b.selected ? '#ffffff' : 'rgba(16,17,19,0.85)';
       ctx.fillRect(p[0] + 8, p[1] - 17, tw + 8, 14);
-      ctx.fillStyle = b.mine ? '#17150c' : '#f3f1ec';
+      ctx.fillStyle = b.mine || b.selected ? '#17150c' : '#f3f1ec';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText(b.label, p[0] + 12, p[1] - 6);

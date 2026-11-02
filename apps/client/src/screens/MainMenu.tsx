@@ -3,6 +3,7 @@ import type { SaveMeta } from '@lean-angle/persistence';
 import { engine } from '../engine/engine.ts';
 import type { AppScreen } from '../App.tsx';
 import { Backdrop } from '../design-system/Backdrop.tsx';
+import { setPrefs, usePrefs, webglAvailable } from '../prefs.ts';
 import './menu.css';
 
 const TRACK =
@@ -11,6 +12,7 @@ const TRACK =
 export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
   const [saves, setSaves] = useState<SaveMeta[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [settings, setSettings] = useState(false);
   useEffect(() => {
     engine.listSaves().then(setSaves, (e: Error) => setError(e.message));
   }, []);
@@ -88,13 +90,64 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
           <button className="item" onClick={() => go({ name: 'newCareer', mode: 'create' })}>
             Crea la tua squadra <small>Parti da zero</small>
           </button>
-          <button className="item" disabled>
-            Impostazioni <span className="soon">In sviluppo</span>
+          <button className="item" onClick={() => setSettings((x) => !x)} aria-expanded={settings}>
+            Impostazioni <small>Vista della gara e grafica 3D</small>
           </button>
         </nav>
+        {settings && <Settings />}
         {error && <div className="bad">{error}</div>}
       </div>
       <footer className="menu-foot">Versione di prova · piloti, squadre e marchi sono inventati</footer>
+    </div>
+  );
+}
+
+/** Preferenze: si salvano subito nel browser e valgono per tutte le carriere. */
+function Settings() {
+  const p = usePrefs();
+  const gl = webglAvailable();
+  return (
+    <div className="settings-card" role="region" aria-label="Impostazioni">
+      <div className="settings-row">
+        <span>
+          Visualizzazione gara preferita
+          <small>Con questa si apre ogni Sprint e gara; durante la gara si cambia quando vuoi.</small>
+        </span>
+        <div className="rv-speeds" role="group" aria-label="Visualizzazione gara preferita">
+          <button className={p.raceView === '2d' ? 'on' : ''} onClick={() => setPrefs({ raceView: '2d' })}>
+            2D strategica
+          </button>
+          <button
+            className={p.raceView === '3d' ? 'on' : ''}
+            disabled={!gl}
+            title={gl ? undefined : 'Questo dispositivo non supporta la grafica 3D (WebGL)'}
+            onClick={() => setPrefs({ raceView: '3d' })}
+          >
+            3D immersiva
+          </button>
+        </div>
+      </div>
+      <div className="settings-row">
+        <span>
+          Qualità della grafica 3D
+          <small>
+            Bassa per computer poco potenti: meno pubblico, niente ombre, moto semplificate prima.
+          </small>
+        </span>
+        <div className="rv-speeds" role="group" aria-label="Qualità 3D">
+          {(
+            [
+              ['low', 'Bassa'],
+              ['medium', 'Media'],
+              ['high', 'Alta'],
+            ] as const
+          ).map(([k, l]) => (
+            <button key={k} className={p.quality === k ? 'on' : ''} onClick={() => setPrefs({ quality: k })}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

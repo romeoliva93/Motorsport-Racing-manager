@@ -56,3 +56,48 @@ Proposta: tenere il **2D come vista principale** e il 3D come opzione, finché i
 ## 8. Prossime milestone (da approvare)
 1. **Strategia in gara** (5 ritmi, 3 mappe carburante, modificabili mentre si corre): richiede di dividere la simulazione in segmenti giro per giro — modifica strutturale, serve approvazione.
 2. 3D: telecamere TV/box/automatica, pubblico che reagisce, spruzzi e asfalto che si asciuga.
+
+## 9. Gara in 2D e 3D — prototipo comparativo (fatto)
+**Architettura.** Un solo motore di gara (`packages/sim`) calcola tutto prima del via; la vista riceve i
+fotogrammi e gli eventi. `apps/client/src/race/raceState.ts → raceFrame(t)` è l'unica funzione che, dato l'istante,
+restituisce classifica, posizioni, giro, bandiere, cadute, battaglie, meteo. Il 2D (`circuitScene.ts`) e il 3D
+(`Race3D.tsx` + `bikeModel.ts`) disegnano lo stesso risultato. Tempo, velocità e pausa vivono nel visore: cambiare
+vista non li tocca. Classifica a sinistra, pannelli piloti a destra e barra comandi sono gli stessi nelle due viste.
+
+**2D.** Moto viste dall'alto che ruotano col tracciato, nei colori della squadra, con numero; pilota selezionato
+(clic sulla moto o sulla classifica) con anello e seguito dalla telecamera; battaglie (< 0,6 s) evidenziate; tratto
+in bandiera gialla colorato; rotella = zoom, trascina = sposta, "Vista completa" per tornare.
+
+**3D.** Moto per categoria (MotoGP con alette e codone alto, Moto2, Moto3, Rookies) con carena a sezioni,
+cupolino, ruote con dischi e pinze, forcella, forcellone, scarico, numero su muso e codone; pilota con casco e
+visiera, tuta in due colori, guanti, stivali, che piega e si sposta verso l'interno curva. Asfalto con grana (lucido
+sul bagnato), erba e ghiaia con texture, pannelli pubblicitari originali, pubblico che esulta (battaglie, ultimo giro,
+traguardo), commissari con bandiere gialle/rosse, pioggia e spruzzi. Telecamere: Regia automatica, TV, Inseguimento,
+Bordo pista, Box, Panoramica. LOD (moto semplificate da lontano), parti fuse per materiale, qualità Bassa/Media/Alta.
+
+**Preferenze.** Menu principale → Impostazioni: vista preferita (2D/3D) e qualità 3D, salvate nel browser. Senza
+WebGL il 3D è disattivato e la gara resta in 2D; se il 3D si guasta durante la gara si torna al 2D senza fermarla.
+
+**Prestazioni misurate** (stessa Sprint, 1920×1080, macchina cloud *senza scheda grafica*: il 3D è disegnato dal
+processore, quindi i valori assoluti del 3D sono molto più bassi di un PC reale; conta il confronto):
+| Vista | fotogrammi/s | caricamento |
+|---|---|---|
+| 2D | 60 | immediato |
+| 3D bassa | 5,8 | 1,6 s |
+| 3D media | 3,7 | 1,6 s |
+| 3D alta (ombre) | 3,3 | 2,4 s |
+10 cambi 2D↔3D consecutivi: memoria JS invariata (29 → 29 MB), un solo contesto 3D attivo.
+
+**Test.** `raceState.test.ts`: stessa t → stesse posizioni; selezione/vista non cambiano classifica; il giro non
+torna indietro; all'arrivo la classifica coincide col risultato della simulazione (ha trovato e corretto un errore
+di ordine all'arrivo). E2E: pausa mantenuta, stesso tempo/giro/classifica dopo 2D→3D→2D, velocità mantenuta, tempo che
+scorre in 3D, 10 cambi senza contesti WebGL accumulati. Prova separata senza WebGL: si apre in 2D, 3D disattivato.
+
+**Ancora da fare (prossime milestone).**
+- Vista 2D/3D anche in prove libere e qualifiche: oggi quelle sessioni si calcolano in un istante (solo il giro
+  migliore), serve far produrre alla simulazione i fotogrammi anche lì.
+- Strategie modificabili durante la gara (ritmo, gomme, carburante): richiede di far avanzare la simulazione a
+  segmenti invece che tutta prima del via.
+- Salvare a metà gara e riprendere allo stesso secondo (oggi il risultato è già salvato, la visione riparte).
+- Modelli 3D: costruiti in codice, molto migliori dei cubi ma non fotorealistici; per il livello dell'infografica
+  servono modelli 3D professionali (file glTF) — da valutare fonti gratuite con licenza libera.

@@ -968,3 +968,23 @@ b.bad {
     grid-template-columns: 1fr;
   }
 }
+
+/* Vista 2D interattiva e selezione */
+.rv-top {
+  cursor: grab;
+  touch-action: none;
+}
+.rv-top:active {
+  cursor: grabbing;
+}
+.rv-reset {
+  position: absolute;
+  right: 0.8rem;
+  top: 0.8rem;
+}
+.rv2 .rv-board li {
+  cursor: pointer;
+}
+.rv2 .rv-board li.sel {
+  box-shadow: 0 0 0 1px #fff inset;
+}

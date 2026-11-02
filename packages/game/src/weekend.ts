@@ -383,6 +383,8 @@ export interface ReplayData {
   /** 'sprint' o 'race'. */
   kind: 'sprint' | 'race';
   categoryName: string;
+  /** Categoria tecnica: decide il modello di moto nella vista 3D. */
+  tier: CategoryTier;
   circuit: string;
   /** Codice del paese del circuito (ambiente: deserto, verde, tropicale…). */
   country: string;
@@ -593,6 +595,7 @@ function raceSession(
       roundId: round.id,
       kind,
       categoryName: cat.name,
+      tier: cat.tier,
       circuit: circuit.name,
       laps,
       lengthM: circuit.lengthM,
