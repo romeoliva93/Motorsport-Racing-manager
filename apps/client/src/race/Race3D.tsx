@@ -342,11 +342,25 @@ export default function Race3D(props: Race3DProps) {
       shadow.rotation.x = -Math.PI / 2;
       shadow.position.y = 0.26;
       shadow.scale.set(1.3, 0.6, 1);
-      g.add(body, tail, rider, helmet, w1, w2b, shadow);
+      // Le parti della moto stanno in un perno a terra che si inclina in curva (rollio sull'asse di marcia).
+      const lean = new THREE.Group();
+      lean.name = 'lean';
+      lean.add(body, tail, rider, helmet, w1, w2b);
+      g.add(lean, shadow);
       g.scale.setScalar(1.6);
       world.add(g);
       return g;
     };
+    // Curvatura di riferimento della pista (95° percentile): lì la moto arriva a ~57° di piega.
+    const curv = sc.pts.map((p0, i) => {
+      const t0 = sc.tan[i]!,
+        t1 = sc.tan[(i + 1) % N]!;
+      const ang = Math.abs(Math.atan2(t0[0] * t1[1] - t0[1] * t1[0], t0[0] * t1[0] + t0[1] * t1[1]));
+      const p1 = sc.pts[(i + 1) % N]!;
+      return ang / Math.max(1e-6, Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) * K);
+    });
+    const kRef = [...curv].sort((a, b) => a - b)[Math.floor(N * 0.95)] || 1;
+    const prev = new Map<string, { x: number; z: number; yaw: number; lean: number }>();
     const crashGroup = new THREE.Group();
     world.add(crashGroup);
 
@@ -358,8 +372,13 @@ export default function Race3D(props: Race3DProps) {
       ((sc.bounds.y0 + sc.bounds.y1) / 2) * K,
     );
     let raf = 0;
+    let last = 0;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
+      // Morbidezza indipendente dai fotogrammi al secondo: su PC lenti la telecamera non resta indietro.
+      const dt = last ? Math.min(0.25, (now - last) / 1000) : 1 / 60;
+      last = now;
+      const k = (a60: number) => 1 - Math.pow(1 - a60, dt * 60);
       const p = live.current;
       // Aggiorna le moto.
       const seen = new Set<string>();
@@ -372,8 +391,24 @@ export default function Race3D(props: Race3DProps) {
           bikeMeshes.set(key, m);
         }
         m.visible = true;
-        m.position.set(X(b.pos), 0.2, Z(b.pos));
-        m.rotation.y = -Math.atan2(b.dir[1], b.dir[0]);
+        const x = X(b.pos),
+          z = Z(b.pos),
+          yaw = -Math.atan2(b.dir[1], b.dir[0]);
+        m.position.set(x, 0.2, z);
+        m.rotation.y = yaw;
+        const pr = prev.get(key);
+        let lean = pr?.lean ?? 0;
+        if (pr) {
+          const dist = Math.hypot(x - pr.x, z - pr.z);
+          if (dist > 0.05 && dist < 60) {
+            let dy = yaw - pr.yaw;
+            dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+            const target = Math.max(-1, Math.min(1, dy / dist / kRef)) * 0.85;
+            lean += (target - lean) * k(0.25);
+          } else if (dist >= 60) lean = 0;
+        }
+        prev.set(key, { x, z, yaw, lean });
+        m.getObjectByName('lean')!.rotation.x = -lean; // sinistra (yaw +) → piega a sinistra (−Z)
       }
       for (const [k, m] of bikeMeshes) if (!seen.has(k)) m.visible = false;
       // Moto cadute.
@@ -395,16 +430,16 @@ export default function Race3D(props: Race3DProps) {
           tz = Z(target.pos);
         const dx = target.dir[0],
           dz = target.dir[1];
-        camPos.lerp(new THREE.Vector3(tx - dx * 28, 12, tz - dz * 28), 0.08);
-        camLook.lerp(new THREE.Vector3(tx + dx * 25, 1.5, tz + dz * 25), 0.12);
+        camPos.lerp(new THREE.Vector3(tx - dx * 17, 6.5, tz - dz * 17), k(0.08));
+        camLook.lerp(new THREE.Vector3(tx + dx * 18, 1.5, tz + dz * 18), k(0.12));
       } else {
         const a = now / 1000 / 25;
         const r = Math.max(bw, bh) * 0.6;
         camPos.lerp(
           new THREE.Vector3(center.x + Math.cos(a) * r, r * 0.55, center.z + Math.sin(a) * r),
-          0.05,
+          k(0.05),
         );
-        camLook.lerp(center, 0.1);
+        camLook.lerp(center, k(0.1));
       }
       camera.position.copy(camPos);
       camera.lookAt(camLook);
