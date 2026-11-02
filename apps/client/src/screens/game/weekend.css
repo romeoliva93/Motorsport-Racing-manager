@@ -487,3 +487,11 @@ table.std tbody tr.cut td {
 .rv-feed li.contact {
   color: var(--info);
 }
+
+.rv-3d {
+  position: absolute;
+  inset: 0;
+}
+.rv-3d canvas {
+  display: block;
+}

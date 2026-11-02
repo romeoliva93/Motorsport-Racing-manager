@@ -12,7 +12,7 @@
 | 3 | Ritratti fotorealistici | ❌ | Caschi illustrati per scuderia; pipeline foto sul branch `assets/photoreal-pilot` (in pausa) | Uno strumento di generazione: nel container non c'è GPU e Hugging Face è bloccato → **serve una decisione dell'utente** |
 | 4 | Bandiere a colori | ✅ M1 (Accademia/Rookies/Podio arriveranno con le rispettive schermate) | Solo codici (ITA, ESP…) e nomi dei paesi | Bandiere SVG (flag-icons, MIT) in tutte le schermate |
 | 5 | Classifiche dinamiche | ✅ M1 | Punti, vittorie, podi per piloti/squadre/costruttori; Sprint conteggiata; aggiornamento dopo ogni sessione | Pole position, giri veloci, storico gara per gara per pilota, statistiche stagionali e di carriera, test anti-duplicazione e dopo il caricamento |
-| 6 | Circuiti ricchi e animati, moto viste dall'alto | ✅ 2D (manca il prototipo 3D di valutazione) | Canvas 2D con nastro d'asfalto, traguardo, puntini colorati | Cordoli, tribune, box, pit lane, vie di fuga, vegetazione, meteo animato, sagome delle moto, settori; valutazione 3D |
+| 6 | Circuiti ricchi e animati, moto viste dall'alto | ✅ 2D + prototipo 3D (switch nella vista di gara) | Canvas 2D con nastro d'asfalto, traguardo, puntini colorati | Cordoli, tribune, box, pit lane, vie di fuga, vegetazione, meteo animato, sagome delle moto, settori; valutazione 3D |
 | 7 | Prove libere interattive (uscite, giri, rientri, feedback, confidenza) | ❌ | FP a tempo istantanee con scelta gomma | Programma di prova, giri, confidenza pista/moto, feedback pilota, proposte di ingegnere e capotecnico, tempo e personale per le modifiche |
 | 8 | Sessioni rapide (giri indicativi), interventi limitati dopo FP1 | 🟡 | Formato FP1/Practice/FP2/Q1/Q2 reale | Numero di giri configurabile, traffico e momento d'uscita in qualifica, limiti agli interventi |
 | 9 | Gare 10/12/15 giri | 🟡 | 15/13/12/10 per categoria | Lunghezza per circuito (breve/standard/lunga) |
@@ -111,3 +111,14 @@ Vista di gara: moto viste dall'alto con colori della squadra e casco; prima del 
 giro di ricognizione e schieramento nella casella di griglia della simulazione; moto cadute nella ghiaia;
 bandiera a scacchi; telecamera "tutto il circuito / il mio pilota / il leader" (immagine dell'autodromo
 disegnata una volta ad alta risoluzione e inquadrata a ogni fotogramma).
+
+## Vista 3D (prototipo con switch 2D/3D)
+
+`apps/client/src/race/Race3D.tsx` (Three.js, MIT, caricato solo su richiesta: ~130 KB compressi). Stessa geometria
+dell'autodromo 2D e stesse posizioni delle moto: pista, cordoli, ghiaia, erba, barriere, corsia box, box e motorhome,
+tribune a gradoni con pubblico, alberi/palme, anello della Long Lap, moto con carena, pilota e casco. Telecamere: dietro
+al mio pilota, dietro al leader, giro attorno al circuito. Il 2D resta la vista principale.
+
+**Confronto 2D/3D** — 2D: leggibile su ogni dispositivo, tutto il circuito in un colpo d'occhio, leggero.
+3D: più spettacolare in camera car, ma meno leggibile per la strategia e più pesante sui telefoni. Proposta: tenere il
+2D come vista principale e il 3D come "TV mode" opzionale, da migliorare (modelli moto, ombre, inclinazione in curva).
