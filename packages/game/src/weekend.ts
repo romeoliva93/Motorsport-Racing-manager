@@ -2,6 +2,7 @@
  * Weekend di gara a sessioni (prove, qualifiche Q1/Q2, Sprint, gara) per tutte le categorie, punti, premi e notizie.
  * La simulazione vera e propria è nel pacchetto sim; qui si traducono piloti, moto e strutture in parametri.
  */
+import { setupFactor, setupMatch, turnsOf } from './setup.ts';
 import {
   addSessionMileage,
   aiMaintenance,
@@ -166,12 +167,26 @@ function aiStrategy(
   return { compound, mode };
 }
 
-function toRaceRider(s: GameState, e: Entrant, strat: Strategy): RaceRider {
+function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, wet = false): RaceRider {
   const a = e.rider.attributes;
   const { bike, reliability } = bikeOf(s, e.teamId, e.manufacturerId);
   return {
     id: e.rider.id,
-    skill: riderSkill(e.rider),
+    // Assetto: intesa fra le regolazioni scelte e quelle ideali per pilota e circuito (±1,5% di ritmo).
+    skill:
+      riderSkill(e.rider) *
+      (round
+        ? setupFactor(
+            setupMatch(
+              s,
+              e.rider,
+              tierOf(s, round),
+              turnsOf(s, round),
+              wet,
+              e.teamId === s.meta.playerTeamId,
+            ),
+          )
+        : 1),
     overtaking: unit(a.overtaking),
     defending: unit(a.defending),
     consistency: unit(a.consistency),
@@ -314,7 +329,9 @@ function timedSession(
   const q = runQualifying(
     `${s.meta.seed}::${round.id}::${kind}`,
     refLapOf(s, round),
-    list.map((e) => toRaceRider(s, e, { compound: tyre.get(e.rider.id)!, mode: 'normal' })),
+    list.map((e) =>
+      toRaceRider(s, e, { compound: tyre.get(e.rider.id)!, mode: 'normal' }, round, cond.grip !== 'dry'),
+    ),
     cond,
   );
   const out = q.map((x) => {
@@ -453,7 +470,7 @@ function raceSession(
       ? { mode: mine.mode, compound: pickTyre(left, mine.compound, kind, cond.grip) }
       : aiStrategy(e.rider, rng, laps, left, cond);
     used.set(e.rider.id, st.compound);
-    const rr = toRaceRider(s, e, st);
+    const rr = toRaceRider(s, e, st, round, cond.grip !== 'dry');
     // Troppi motori usati (solo MotoGP): partenza dalla corsia box.
     if (cat.tier === 'premier' && engineStatus(s, e.rider.id, season.id, e.teamId).overLimit) {
       rr.pitLaneStart = true;

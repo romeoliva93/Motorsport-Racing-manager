@@ -10,7 +10,8 @@ const TAG: Record<string, { label: string; tone: string }> = {
   finanze: { label: 'Finanze', tone: '' },
 };
 
-export function NewsScreen() {
+/** Notizie del capotecnico: un pulsante apre il garage sul gruppo tecnico più consumato. */
+export function NewsScreen({ openGarage }: { openGarage?: () => void }) {
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const q = useQuery('newsFeed', filter, 80);
   return (
@@ -42,6 +43,11 @@ export function NewsScreen() {
             </div>
             <h3 style={{ margin: '0 0 .25rem', fontSize: '1.1rem' }}>{n.title}</h3>
             <div className="t2">{n.body}</div>
+            {openGarage && n.mine && n.title.startsWith('Capotecnico') && (
+              <button className="btn" style={{ marginTop: '.6rem' }} onClick={openGarage}>
+                Apri il garage sul componente
+              </button>
+            )}
           </Card>
         ))
       )}

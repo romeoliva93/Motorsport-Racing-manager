@@ -41,7 +41,10 @@ export type Command =
   /** Compra il livello successivo di un componente della moto. */
   | { type: 'BuyUpgrade'; part: PartKey }
   | { type: 'ServiceParts'; bikeId: string; parts: GarageKey[] }
-  | { type: 'SetGarageAuto'; auto: boolean }
+  | { type: 'SetGarageMode'; mode: 'auto' | 'assisted' | 'manual' }
+  | { type: 'BuySpare'; group: string }
+  | { type: 'ReplaceGroup'; bikeId: string; group: string }
+  | { type: 'SetSetup'; riderId: string; condition: 'dry' | 'wet'; values: Record<string, number> }
   /** Firma l'offerta dello sponsor con obiettivo stagionale. */
   | { type: 'SignSponsorDeal'; risk: SponsorRisk };
 
@@ -67,6 +70,9 @@ export type GameEvents = {
   SeasonStarted: { year: number };
   UpgradeBought: { part: string; level: number };
   PartsServiced: { bikeId: string; parts: string[]; cost: number };
-  GarageAutoSet: { auto: boolean };
+  GarageModeSet: { mode: string };
+  SpareBought: { group: string; cost: number };
+  GroupReplaced: { bikeId: string; group: string };
+  SetupChanged: { riderId: string; condition: string };
   SponsorSigned: { risk: string };
 };

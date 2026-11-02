@@ -4,6 +4,7 @@ import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Tabs } from '../../design-system/components.tsx';
 import { BikeArt, type BikeTier, type BikeZone } from '../../design-system/BikeArt.tsx';
+import { GarageV2 } from './GarageV2.tsx';
 
 type Tab = 'overview' | 'status' | 'maintenance' | 'development';
 const TABS: { id: Tab; label: string }[] = [
@@ -29,8 +30,31 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
   const [riderIdx, setRiderIdx] = useState(0);
   const [slot, setSlot] = useState<'A' | 'B'>('A');
   const [sel, setSel] = useState<string | null>(null);
+  const [proto, setProto] = useState(true);
   if (q.status !== 'ready' || !q.data) return <div className="loading">Caricamento…</div>;
   const b = q.data;
+  const switcher = (
+    <div className="gx-switch">
+      <span className="muted">Garage:</span>
+      <div className="rv-speeds" role="group" aria-label="Versione del garage">
+        <button className={proto ? 'on' : ''} onClick={() => setProto(true)}>
+          Nuovo (prototipo)
+        </button>
+        <button className={!proto ? 'on' : ''} onClick={() => setProto(false)}>
+          Versione attuale
+        </button>
+      </div>
+    </div>
+  );
+  if (proto)
+    return (
+      <div className="grid12">
+        <div className="s12">{switcher}</div>
+        <div className="s12">
+          <GarageV2 b={b} notify={notify} />
+        </div>
+      </div>
+    );
   const diff = b.rating - b.rivalsAvg;
   const g = b.garage[Math.min(riderIdx, b.garage.length - 1)];
   const bike = g?.bikes.find((x) => x.slot === slot) ?? g?.bikes[0];
@@ -94,6 +118,7 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
 
   return (
     <div className="grid12">
+      <div className="s12">{switcher}</div>
       {g && bike && group && (
         <Card className="s12 garage">
           <div className="gar-top">
@@ -132,7 +157,13 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
             </div>
             <div className="gar-kpi">
               <small>Manutenzione</small>
-              <b className={b.garageAuto ? 'ok' : 'warn'}>{b.garageAuto ? 'al capotecnico' : 'manuale'}</b>
+              <b className={b.garageMode === 'auto' ? 'ok' : 'warn'}>
+                {b.garageMode === 'auto'
+                  ? 'al capotecnico'
+                  : b.garageMode === 'assisted'
+                    ? 'assistita'
+                    : 'manuale'}
+              </b>
             </div>
           </div>
           {b.decisions.length > 0 && (
@@ -276,20 +307,20 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
                 </span>
                 <div className="rv-speeds" role="group" aria-label="Manutenzione">
                   <button
-                    className={b.garageAuto ? 'on' : ''}
+                    className={b.garageMode === 'auto' ? 'on' : ''}
                     disabled={busy}
                     onClick={() =>
-                      run({ type: 'SetGarageAuto', auto: true }, 'Manutenzione affidata al capotecnico.')
+                      run({ type: 'SetGarageMode', mode: 'auto' }, 'Manutenzione affidata al capotecnico.')
                     }
                   >
                     Al capotecnico
                   </button>
                   <button
-                    className={!b.garageAuto ? 'on' : ''}
+                    className={b.garageMode === 'manual' ? 'on' : ''}
                     disabled={busy}
                     onClick={() =>
                       run(
-                        { type: 'SetGarageAuto', auto: false },
+                        { type: 'SetGarageMode', mode: 'manual' },
                         'Manutenzione manuale: le revisioni le decidi tu.',
                       )
                     }

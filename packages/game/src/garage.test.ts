@@ -109,7 +109,7 @@ describe('garage: gruppi tecnici e capotecnico', () => {
   it('in modalità manuale il capotecnico non tocca nulla', () => {
     const e = career('g5');
     const team = e.state.meta.playerTeamId!;
-    expect(e.dispatch({ type: 'SetGarageAuto', auto: false }).ok).toBe(true);
+    expect(e.dispatch({ type: 'SetGarageMode', mode: 'manual' }).ok).toBe(true);
     weekend(e);
     weekend(e);
     e.dispatch({ type: 'ContinueToNextEvent' });

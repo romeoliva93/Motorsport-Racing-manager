@@ -24,6 +24,7 @@ import {
   type UpgradeOrderId,
 } from '@lean-angle/data';
 import { addNews } from './news.ts';
+import { fitNewParts } from './garage.ts';
 import { CONCESSION_COST, teamConcession } from './regulations.ts';
 
 export function partLevel(s: GameState, teamId: string, key: PartKey): number {
@@ -110,6 +111,7 @@ export function deliverUpgrades(s: GameState, ids: IdFactory): void {
     o.status = 'delivered';
     s.upgrades = s.upgrades ?? {};
     s.upgrades[o.teamId] = { ...(s.upgrades[o.teamId] ?? {}), [o.part]: o.level };
+    fitNewParts(s, o.teamId, o.part);
     if (o.teamId === s.meta.playerTeamId) {
       const part = PARTS.find((p) => p.key === o.part)!;
       addNews(s, ids, {

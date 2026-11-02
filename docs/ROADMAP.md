@@ -1,5 +1,24 @@
 # Roadmap
 
+## Priorità aggiornate (2 novembre 2026) — sostituiscono quelle sotto
+
+Il 3D non deve rallentare il gameplay manageriale. Ogni milestone su un ramo dedicato, nessun merge senza
+autorizzazione.
+
+| Milestone | Contenuto | Stato |
+|---|---|---|
+| **A — Correzioni grafiche immediate** | ritratti coerenti (36 rigenerati), foto moto corrette e tolte dalle schermate, garage a gruppi tecnici, moto centrale migliorata, garage prototipo "moto al centro", rifinitura 2D | **fatta** (prototipo garage da approvare) |
+| **B — Simulazione incrementale** | gare non precalcolate, ritmo 5 livelli, carburante 3 mappe, gomme 3 gestioni, IA con le stesse leve, salvataggio a metà gara | **piano pronto, attende approvazione** (`PIANO-SIMULAZIONE-INCREMENTALE.md`) |
+| **C — Prove e briefing** | sessioni simulate, confidenza circuito/moto, feedback pilota, consigli capotecnico, tempi interventi, riunione post-sessione | pianificata (dopo B) |
+| **D — Sviluppo tecnico** | gruppi tecnici (fatto), manutenzione delegabile (fatto), upgrade con compromessi, centro R&D, moto della stagione successiva, progetti paralleli | parziale |
+| **E — Test e costruttori** | test ufficiali pre/metà/post stagione, test privati, componenti sperimentali, squadre ufficiali e satellite, condivisione dati | pianificata |
+| **F — 3D professionale** | solo dopo un modello di moto approvato: moto, piloti, ambienti, telecamere, ottimizzazione su GPU reale | congelata |
+
+---
+
+## Roadmap originale (storica)
+
+
 > Stato: **PROPOSTA**. Ogni milestone corrisponde a un branch e a una Pull Request.
 > Nessuna milestone viene integrata in `main` senza approvazione.
 > "Completato" significa: implementato, testato, collegato ai dati reali e documentato.

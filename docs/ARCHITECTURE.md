@@ -205,3 +205,39 @@ l'archivio statistico (vedi [ADR-0002](adr/0002-state-and-persistence.md)).
   avanzamento di una giornata di gioco < 50 ms.
 - **Scala UI**: layout in `rem` con scala radice legata alla risoluzione (1080p = 100%,
   1440p = 125%, 4K = 200%), testato con screenshot Playwright.
+
+---
+
+## Stato effettivo (2 novembre 2026)
+
+### Simulazione
+- `packages/sim/src/race.ts`: gara simulata per intero (`simulateRace`) → fotogrammi, eventi, risultati, tempi e
+  usura gomme giro per giro. Qualifiche/prove: `runQualifying` (solo giro migliore). Deterministica dal seme.
+- `packages/game/src/weekend.ts`: traduce piloti/moto/assetti in parametri (`toRaceRider`), esegue le sessioni,
+  salva risultati e notizie, aggiunge i chilometri al garage. Piano per la versione incrementale:
+  `docs/PIANO-SIMULAZIONE-INCREMENTALE.md`.
+
+### Renderer
+- `apps/client/src/race/raceState.ts → raceFrame(t)`: unica funzione di stato per un istante (classifica,
+  posizioni, bandiere, cadute, battaglie). Il 2D (`circuitScene.ts`, canvas) e il 3D (`Race3D.tsx` + `bikeModel.ts`,
+  Three.js caricato su richiesta) disegnano lo stesso risultato. Tempo, velocità e pausa vivono nel visore.
+
+### Garage e usura
+- Modello fisico: 14 componenti per moto (`content/garage.ts`), chilometri per sessione (prove divise fra moto A e
+  B), usura = km / vita; affidabilità del pezzo piena fino a metà vita, poi in calo; la moto in gara usa
+  affidabilità base × prodotto dei componenti^0,2.
+- Vista giocatore: gruppi tecnici per categoria (`TECH_GROUPS`), stato del gruppo (`groupStatus`), manutenzione
+  `garageMode` auto/assistita/manuale (`crewChiefMaintenance`), ricambi (`spares`), decisioni importanti
+  (`pendingDecisions`). Upgrade consegnati → pezzi nuovi (`fitNewParts`).
+- Assetto: `packages/game/src/setup.ts` (per pilota, asciutto/bagnato, ideale nascosto da attributi e circuito).
+
+### Salvataggi
+- `GameState` normalizzato, schema 5. Campi opzionali aggiunti senza migrazione: `garageMode`, `spares`, `setups`,
+  `Bike.parts`. La sessione in corso non è ancora salvata (Milestone B: `liveSession`).
+
+### Asset
+- Vedi `docs/ASSETS_E_LICENZE.md`. Ritratti in atlanti (`assets/atlas/index.json` chiave → foglio/colonna/riga).
+
+### Test
+- Vitest: `packages/*/src/**/*.test.ts` e `apps/client/src/**/*.test.ts` (137). Playwright: `tools/e2e/smoke.cjs`
+  (carriera completa, 2D/3D, garage, salvataggio).

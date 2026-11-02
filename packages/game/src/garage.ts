@@ -186,8 +186,13 @@ export function servicePart(s: GameState, ids: IdFactory, b: Bike, key: GarageKe
  */
 export function crewChiefMaintenance(s: GameState, ids: IdFactory, round: Round) {
   const teamId = s.meta.playerTeamId;
-  if (!teamId || s.garageAuto?.[teamId] === false) return;
+  if (!teamId) return;
+  const mode = garageModeOf(s, teamId);
   const cat = s.tables.seasons[round.seasonId]!.categoryId;
+  if (mode !== 'auto') {
+    if (mode === 'assisted') assistedWarnings(s, ids, teamId, cat);
+    return;
+  }
   let n = 0,
     spent = 0,
     skipped = 0;
@@ -220,6 +225,85 @@ export function crewChiefMaintenance(s: GameState, ids: IdFactory, round: Round)
         ? `Da decidere nel garage: ${major.map((m) => `${m.name.toLowerCase()} moto ${m.slot} (${m.wear}%)`).join(', ')}.`
         : ''),
   });
+}
+
+export const garageModeOf = (s: GameState, teamId: string) => s.garageMode?.[teamId] ?? 'auto';
+
+/**
+ * Manutenzione assistita: il capotecnico non interviene ma avvisa, gruppo per gruppo, quando un gruppo tecnico
+ * scende sotto il 30% di condizione ("revisione consigliata prima del prossimo Gran Premio").
+ */
+function assistedWarnings(s: GameState, ids: IdFactory, teamId: string, categoryId: string) {
+  const lines: string[] = [];
+  for (const b of rows(s, 'bikes')) {
+    if (b.teamId !== teamId || b.categoryId !== categoryId || !b.riderId) continue;
+    const r = s.tables.riders[b.riderId];
+    for (const g of groupsFor(s, b)) {
+      const st = groupStatus(b, g);
+      if (st.condition < 30)
+        lines.push(`${g.name} (moto ${b.slot} di ${r ? r.lastName : ''}: condizione ${st.condition}%)`);
+    }
+  }
+  if (!lines.length) return;
+  addNews(s, ids, {
+    day: s.meta.currentDay,
+    tag: 'squadra',
+    mine: true,
+    title: 'Capotecnico: revisioni consigliate',
+    body: `Usura elevata: ${lines.join('; ')}. Consigliata una revisione prima del prossimo Gran Premio (Moto e upgrade → Componenti).`,
+  });
+}
+
+/** Ricambi: un gruppo completo nuovo in magazzino costa il 120% della revisione del gruppo. */
+export function spareCost(s: GameState, teamId: string, groupKey: string): number | null {
+  const b = rows(s, 'bikes').find((x) => x.teamId === teamId && x.riderId);
+  const g = b && groupsFor(s, b).find((x) => x.key === groupKey);
+  if (!b || !g) return null;
+  const cost = g.parts.filter((k) => canService(s, b, k)).reduce((t, k) => t + serviceCost(s, b, k), 0);
+  return Math.round((cost * 1.2) / 1000) * 1000;
+}
+export const sparesOf = (s: GameState, teamId: string, groupKey: string) =>
+  s.spares?.[teamId]?.[groupKey] ?? 0;
+
+export function buySpare(s: GameState, ids: IdFactory, teamId: string, groupKey: string): number {
+  const cost = spareCost(s, teamId, groupKey)!;
+  s.spares = s.spares ?? {};
+  s.spares[teamId] = { ...(s.spares[teamId] ?? {}), [groupKey]: sparesOf(s, teamId, groupKey) + 1 };
+  if (cost > 0) {
+    const trx = ids.next('trx');
+    s.tables.transactions[trx] = {
+      id: trx,
+      teamId: teamId as Bike['teamId'],
+      day: s.meta.currentDay,
+      amount: -cost,
+      category: 'repairs',
+      note: `Ricambio: gruppo ${groupKey}`,
+    };
+  }
+  return cost;
+}
+
+/** Sostituzione con un ricambio dal magazzino: i componenti del gruppo tornano nuovi, senza altre spese. */
+export function replaceGroup(s: GameState, b: Bike, groupKey: string) {
+  const g = groupsFor(s, b).find((x) => x.key === groupKey)!;
+  b.parts = b.parts ?? {};
+  for (const k of g.parts) {
+    if (!canService(s, b, k)) continue;
+    const cur = b.parts[k] ?? { km: 0, services: 0 };
+    b.parts[k] = { km: 0, services: cur.services + 1 };
+  }
+  s.spares![b.teamId]![groupKey] = sparesOf(s, b.teamId, groupKey) - 1;
+}
+
+/** Upgrade consegnato dalla fabbrica: i componenti nuovi montati partono da zero chilometri. */
+export function fitNewParts(s: GameState, teamId: string, upgrade: string) {
+  for (const b of rows(s, 'bikes')) {
+    if (b.teamId !== teamId) continue;
+    for (const p of GARAGE_PARTS) {
+      if (p.upgrade !== upgrade || !b.parts?.[p.key]) continue;
+      b.parts[p.key] = { km: 0, services: b.parts[p.key]!.services };
+    }
+  }
 }
 
 /** Squadre IA: revisionano i pezzi oltre il 90% prima del weekend, se hanno i soldi. */

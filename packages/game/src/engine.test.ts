@@ -31,7 +31,10 @@ describe('GameEngine', () => {
       'WithdrawNegotiation',
       'BuyUpgrade',
       'ServiceParts',
-      'SetGarageAuto',
+      'SetGarageMode',
+      'BuySpare',
+      'ReplaceGroup',
+      'SetSetup',
       'SignSponsorDeal',
     ]);
   });

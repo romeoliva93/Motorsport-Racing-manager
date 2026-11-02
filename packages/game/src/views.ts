@@ -40,7 +40,11 @@ import {
   partWear,
   pendingDecisions,
   serviceCost,
+  garageModeOf,
+  spareCost,
+  sparesOf,
 } from './garage.ts';
+import { SETUP_KEYS, setupFeedback, setupMatch, setupOf, turnsOf } from './setup.ts';
 import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
@@ -623,8 +627,27 @@ export interface BikeView {
     inProduction: { level: number; ready: string; daysLeft: number } | null;
   }[];
   /** Garage: moto di ogni pilota (A, e B solo dove il regolamento la concede) con i 14 componenti. */
-  /** Manutenzione delegata al capotecnico. */
-  garageAuto: boolean;
+  /** Manutenzione: automatica (capotecnico), assistita (avvisi) o manuale. */
+  garageMode: 'auto' | 'assisted' | 'manual';
+  /** Circuito del prossimo Gran Premio (per i commenti sull'assetto). */
+  nextCircuit: string | null;
+  /** Assetto di ogni pilota: regolazioni consentite, valori asciutto/bagnato, commenti, intesa. */
+  setups: {
+    riderId: string;
+    rider: string;
+    feedbackQuality: 'preciso' | 'vago';
+    keys: { key: string; name: string; low: string; high: string }[];
+    dry: {
+      values: Record<string, number>;
+      feedback: { key: string; text: string; ok: boolean }[];
+      match: number;
+    };
+    wet: {
+      values: Record<string, number>;
+      feedback: { key: string; text: string; ok: boolean }[];
+      match: number;
+    };
+  }[];
   /** Sostituzioni importanti che aspettano la decisione del manager. */
   decisions: {
     bikeId: string;
@@ -661,6 +684,20 @@ export interface BikeView {
         parts: GarageKey[];
         serviceable: GarageKey[];
         serviceCost: number;
+        /** Indice di prestazione 0–100 (costruttore + sviluppo) e quello col prossimo pacchetto. */
+        performance: number;
+        next: {
+          partKey: string;
+          part: string;
+          level: number;
+          performance: number;
+          cost: number | null;
+          leadDays: number | null;
+          affordable: boolean;
+          inProduction: { level: number; ready: string; daysLeft: number } | null;
+        } | null;
+        spares: number;
+        spareCost: number | null;
       }[];
       /** Componenti di fornitura (gestiti dal fornitore, es. motore unico Moto2). */
       supplier: string[];
@@ -719,7 +756,38 @@ export function bikeView(s: GameState): BikeView | null {
               },
             ];
           }),
-    garageAuto: s.garageAuto?.[entry.teamId] !== false,
+    garageMode: garageModeOf(s, entry.teamId),
+    ...(() => {
+      const next = seasonRounds(s, entry.seasonId).find((r) => r.status !== 'raced');
+      const tier = s.tables.categories[entry.categoryId]!.tier;
+      const turns = turnsOf(s, next);
+      return {
+        nextCircuit: next ? s.tables.circuits[next.circuitId]!.name : null,
+        setups: entry.seats.flatMap((seat) => {
+          const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
+          if (!r) return [];
+          const side = (wet: boolean) => {
+            const values = setupOf(s, r.id, wet);
+            return {
+              values,
+              feedback: setupFeedback(r, tier, turns, wet, values),
+              match: Math.round(setupMatch(s, r, tier, turns, wet, true) * 100),
+            };
+          };
+          return [
+            {
+              riderId: r.id,
+              rider: `${r.firstName} ${r.lastName}`,
+              feedbackQuality:
+                r.attributes.technicalFeedback >= 70 ? ('preciso' as const) : ('vago' as const),
+              keys: SETUP_KEYS[tier],
+              dry: side(false),
+              wet: side(true),
+            },
+          ];
+        }),
+      };
+    })(),
     decisions: pendingDecisions(s, entry.teamId).map((d) => {
       const r = s.tables.riders[d.riderId as keyof typeof s.tables.riders];
       return { ...d, rider: r ? `${r.firstName} ${r.lastName}` : '' };
@@ -759,6 +827,46 @@ export function bikeView(s: GameState): BikeView | null {
                 parts: g.parts,
                 serviceable,
                 serviceCost: serviceable.reduce((t, k) => t + serviceCost(s, b, k), 0),
+                ...(() => {
+                  const base = s.tables.manufacturers[entry.manufacturerId]!.engineeringStrength;
+                  const lvl = (u: string) => partLevel(s, entry.teamId, u as PartKey);
+                  const perf = (bonus: number) => Math.min(100, Math.round(base * 0.8 + bonus));
+                  const levels = g.upgrade.map(lvl);
+                  const avg = levels.length ? levels.reduce((t, x) => t + x, 0) / levels.length : 0;
+                  // Prossimo pacchetto: il reparto del gruppo col livello più basso.
+                  const target = g.upgrade.length
+                    ? g.upgrade.reduce((a2, u) => (lvl(u) < lvl(a2) ? u : a2), g.upgrade[0]!)
+                    : null;
+                  const order = target ? pendingOrder(s, entry.teamId, target as PartKey) : undefined;
+                  const cost = target ? upgradeCost(s, entry.teamId, target as PartKey) : null;
+                  return {
+                    performance: perf(avg * 6),
+                    next:
+                      target && (lvl(target) < MAX_PART_LEVEL || order)
+                        ? {
+                            partKey: target,
+                            part: PARTS.find((x) => x.key === target)!.name,
+                            level: order ? order.level : lvl(target) + 1,
+                            performance: perf(((avg * levels.length + 1) / levels.length) * 6),
+                            cost,
+                            leadDays:
+                              cost !== null
+                                ? leadDays(s, entry.teamId, target as PartKey, lvl(target) + 1)
+                                : null,
+                            affordable: cost !== null && cost <= balance,
+                            inProduction: order
+                              ? {
+                                  level: order.level,
+                                  ready: cal(s).format(order.readyDay),
+                                  daysLeft: order.readyDay - s.meta.currentDay,
+                                }
+                              : null,
+                          }
+                        : null,
+                    spares: sparesOf(s, entry.teamId, g.key),
+                    spareCost: spareCost(s, entry.teamId, g.key),
+                  };
+                })(),
               };
             }),
             supplier: GARAGE_PARTS.filter((p) => isSupplierPart(s, b, p.key)).map((p) => p.name),

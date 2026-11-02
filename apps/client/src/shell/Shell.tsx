@@ -14,6 +14,7 @@ import { ChampionshipScreen } from '../screens/game/Championship.tsx';
 import { FinanceScreen } from '../screens/game/Finance.tsx';
 import { NewsScreen } from '../screens/game/News.tsx';
 import { BikeScreen } from '../screens/game/BikeScreen.tsx';
+import { garageFocus } from '../screens/game/GarageV2.tsx';
 import { SponsorsScreen } from '../screens/game/Sponsors.tsx';
 
 export type Section =
@@ -281,7 +282,12 @@ export function Shell({
         ) : section === 'finance' ? (
           <FinanceScreen />
         ) : section === 'news' ? (
-          <NewsScreen />
+          <NewsScreen
+            openGarage={() => {
+              garageFocus.worst = true;
+              go('bike');
+            }}
+          />
         ) : section === 'bike' ? (
           <BikeScreen notify={notify} />
         ) : section === 'sponsors' ? (

@@ -52,7 +52,17 @@ import {
 import { addNews } from './news.ts';
 import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
 import { dealWindowOpen, signDeal } from './sponsors.ts';
-import { canService, serviceCost, servicePart } from './garage.ts';
+import {
+  buySpare,
+  canService,
+  groupsFor,
+  replaceGroup,
+  serviceCost,
+  servicePart,
+  spareCost,
+  sparesOf,
+} from './garage.ts';
+import { SETUP_KEYS } from './setup.ts';
 import { seasonFinished, startNextSeason } from './season.ts';
 
 export interface NewCareerOptions {
@@ -130,7 +140,7 @@ export class GameEngine {
       if (this.nextRound()) out.push('ContinueToNextEvent');
     }
     if (marketOpen(s)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
-    out.push('BuyUpgrade', 'ServiceParts', 'SetGarageAuto');
+    out.push('BuyUpgrade', 'ServiceParts', 'SetGarageMode', 'BuySpare', 'ReplaceGroup', 'SetSetup');
     if (dealWindowOpen(s)) out.push('SignSponsorDeal');
     return out;
   }
@@ -275,8 +285,37 @@ export class GameEngine {
         if (total > teamBalance(s, b.teamId)) return err('Soldi insufficienti per la revisione');
         return ok(true);
       }
-      case 'SetGarageAuto':
-        return s.meta.playerTeamId ? ok(true) : err('Scegli prima una squadra');
+      case 'SetGarageMode':
+        if (!s.meta.playerTeamId) return err('Scegli prima una squadra');
+        return ['auto', 'assisted', 'manual'].includes(cmd.mode) ? ok(true) : err('Modalità sconosciuta');
+      case 'BuySpare': {
+        const teamId = s.meta.playerTeamId;
+        if (!teamId) return err('Scegli prima una squadra');
+        const cost = spareCost(s, teamId, cmd.group);
+        if (cost === null) return err('Gruppo tecnico sconosciuto per questa categoria');
+        if (cost > teamBalance(s, teamId)) return err('Soldi insufficienti per il ricambio');
+        return ok(true);
+      }
+      case 'ReplaceGroup': {
+        const b = s.tables.bikes[cmd.bikeId as keyof typeof s.tables.bikes];
+        if (!b || b.teamId !== s.meta.playerTeamId) return err('Moto non trovata');
+        if (!groupsFor(s, b).some((g) => g.key === cmd.group)) return err('Gruppo tecnico sconosciuto');
+        if (sparesOf(s, b.teamId, cmd.group) < 1) return err('Nessun ricambio in magazzino: ordinalo prima');
+        return ok(true);
+      }
+      case 'SetSetup': {
+        const r = s.tables.riders[cmd.riderId as keyof typeof s.tables.riders];
+        const entry = rows(s, 'teamEntries').find(
+          (e) => e.teamId === s.meta.playerTeamId && e.seats.some((x) => x.riderId === cmd.riderId),
+        );
+        if (!r || !entry) return err('Pilota non della tua squadra');
+        const allowed = SETUP_KEYS[s.tables.categories[entry.categoryId]!.tier].map((k) => k.key);
+        for (const [k, v] of Object.entries(cmd.values)) {
+          if (!allowed.includes(k)) return err('Regolazione non consentita in questa categoria');
+          if (!Number.isInteger(v) || v < -5 || v > 5) return err('Valore fuori scala (da −5 a +5)');
+        }
+        return ok(true);
+      }
       case 'SignSponsorDeal':
         if (!['safe', 'balanced', 'ambitious'].includes(cmd.risk)) return err('Offerta non valida');
         return dealWindowOpen(s)
@@ -357,10 +396,29 @@ export class GameEngine {
         this.events.emit('PartsServiced', s.meta.currentDay, { bikeId: b.id, parts: cmd.parts, cost });
         return;
       }
-      case 'SetGarageAuto':
-        s.garageAuto = { ...(s.garageAuto ?? {}), [s.meta.playerTeamId!]: cmd.auto };
-        this.events.emit('GarageAutoSet', s.meta.currentDay, { auto: cmd.auto });
+      case 'SetGarageMode':
+        s.garageMode = { ...(s.garageMode ?? {}), [s.meta.playerTeamId!]: cmd.mode };
+        this.events.emit('GarageModeSet', s.meta.currentDay, { mode: cmd.mode });
         return;
+      case 'BuySpare': {
+        const cost = buySpare(s, this.ids, s.meta.playerTeamId!, cmd.group);
+        this.events.emit('SpareBought', s.meta.currentDay, { group: cmd.group, cost });
+        return;
+      }
+      case 'ReplaceGroup':
+        replaceGroup(s, s.tables.bikes[cmd.bikeId as keyof typeof s.tables.bikes]!, cmd.group);
+        this.events.emit('GroupReplaced', s.meta.currentDay, { bikeId: cmd.bikeId, group: cmd.group });
+        return;
+      case 'SetSetup': {
+        s.setups = s.setups ?? {};
+        const cur = s.setups[cmd.riderId] ?? { dry: {}, wet: {} };
+        s.setups[cmd.riderId] = { ...cur, [cmd.condition]: { ...cur[cmd.condition], ...cmd.values } };
+        this.events.emit('SetupChanged', s.meta.currentDay, {
+          riderId: cmd.riderId,
+          condition: cmd.condition,
+        });
+        return;
+      }
       case 'SignSponsorDeal':
         signDeal(s, this.ids, cmd.risk);
         this.events.emit('SponsorSigned', s.meta.currentDay, { risk: cmd.risk });

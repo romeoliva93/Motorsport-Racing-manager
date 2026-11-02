@@ -351,3 +351,28 @@ Versione di gioco del regolamento MotoGP, uguale per MotoGP, Moto2, Moto3 e Rook
   strada persa; la doppia si sconta in due giri diversi.
 - **Se non c'è più tempo**: ogni Long Lap rimasta diventa una penalità in secondi di pari durata, aggiunta al tempo finale.
 - Frequenze misurate su 60 gare simulate: ~15 avvisi per i limiti della pista e ~0,6 Long Lap a gara.
+
+## 23. Gestione tecnica semplificata (revisione 2/11/2026)
+Il giocatore vede **gruppi tecnici**, non viti: MotoGP 6 (motore e trasmissione, telaio e geometria, sospensioni e
+avantreno, freni, aerodinamica e alette, elettronica), Moto2 4 (telaio, sospensioni, freni, regolazioni
+elettroniche consentite; il motore unico lo cura il fornitore), Moto3 3 (geometria, sospensioni, motore e
+trasmissione), Rookies 2 (sospensioni, bilanciamento e assetto consentito). Sotto restano i 14 componenti fisici.
+Il capotecnico gestisce la manutenzione ordinaria (automatica), oppure avvisa (assistita), oppure decide il manager
+(manuale). Telaio e forcellone: sempre decisione del manager. Ricambi acquistabili e montabili.
+
+## 24. Garage "moto al centro" (prototipo)
+Moto della squadra vista dall'alto, nella livrea reale e con il numero del pilota, al centro; intorno le schede dei
+gruppi (immagine, livello di sviluppo, prestazione, usura, affidabilità, stato, aggiornamento disponibile). Sotto,
+confronto installato / nuovo pacchetto e azioni (revisiona, sostituisci con ricambio, ordina ricambio, sviluppa).
+Due schede: **Componenti** e **Assetto** (non si mescolano).
+
+## 25. Assetto per pilota
+Ogni pilota ha il suo assetto (asciutto e bagnato), con le regolazioni consentite dalla categoria. L'ideale dipende
+dallo stile del pilota e dal circuito; il pilota lo descrive a parole (preciso o vago secondo il suo feedback
+tecnico). Intesa alta = fino a +1,5% di ritmo, bassa = fino a −1,5%.
+
+## 26. Pianificato: strategie in gara, prove, confidenza, briefing, test
+Vedi `PIANO-SIMULAZIONE-INCREMENTALE.md` (ritmo a 5 livelli, carburante a 3 mappe, gomme a 3 gestioni modificabili
+in gara, IA con le stesse leve, salvataggio a metà sessione), poi prove con uscite e briefing brevi, confidenza col
+circuito e con la moto, test ufficiali e privati (Milestone C–E). Grafica: 2D modalità principale; 3D congelato
+finché un modello di moto non è approvato.

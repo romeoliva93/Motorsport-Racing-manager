@@ -121,12 +121,9 @@ async function waitForServer(url, ms = 20000) {
     step('sponsor con obiettivo firmato');
 
     await page.locator('.nav').getByRole('button', { name: 'Moto e upgrade' }).click();
-    await page.getByRole('tab', { name: 'Sviluppo' }).click();
-    await page
-      .getByRole('button', { name: /Ordina il livello 1/ })
-      .first()
-      .click();
-    await page.getByText(/ordinato/).waitFor();
+    await page.locator('.gx-card', { hasText: 'Motore e trasmissione' }).click();
+    await page.getByRole('button', { name: /^Sviluppa: ordina livello 1/ }).click();
+    await page.getByText(/ordinato alla fabbrica/).waitFor();
     await page.getByText('In produzione').first().waitFor();
     await shot('17-moto');
     step('upgrade ordinato alla fabbrica');
@@ -234,23 +231,32 @@ async function waitForServer(url, ms = 20000) {
     step('gara e risultati');
 
     await page.locator('.nav button', { hasText: 'Moto e upgrade' }).click();
-    await page.locator('.gar-groups button').first().waitFor();
-    const nGroups = await page.locator('.gar-groups button').count();
-    if (nGroups !== 6) throw new Error(`Il garage MotoGP deve mostrare 6 gruppi tecnici, ne mostra ${nGroups}`);
+    await page.locator('.gx-card').first().waitFor();
+    const nCards = await page.locator('.gx-card').count();
+    if (nCards !== 6) throw new Error(`Il garage MotoGP deve mostrare 6 schede, ne mostra ${nCards}`);
     if ((await page.locator('.bike-photo').count()) !== 0) throw new Error('Foto esterna della moto ancora presente');
-    await page.locator('.gar-groups button', { hasText: 'Freni' }).click();
-    await page.locator('.gar-group-name', { hasText: 'Freni' }).waitFor();
-    await page.waitForTimeout(400); // fine della dissolvenza fra le zone della moto
+    await page.getByRole('button', { name: 'Moto B', exact: true }).click();
+    await page.getByRole('button', { name: 'Moto A', exact: true }).click();
+    await page.locator('.gx-card', { hasText: 'Freni' }).click();
+    await page.locator('.gx-detail h3', { hasText: 'Freni' }).waitFor();
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(400);
     await shot('18-garage');
-    await page.getByRole('tab', { name: 'Stato tecnico' }).click();
-    await page.getByText('Vita residua').first().waitFor();
-    await shot('18-garage-stato');
-    await page.getByRole('tab', { name: 'Manutenzione' }).click();
-    await page.getByRole('button', { name: 'Manuale' }).click();
-    await page.getByText(/Manutenzione manuale/).waitFor();
-    await page.getByRole('button', { name: 'Al capotecnico' }).click();
-    await page.getByText(/affidata al capotecnico/).waitFor();
-    step('garage: 6 gruppi tecnici, stato tecnico, manutenzione delegata');
+    await page.getByRole('button', { name: /^Ordina ricambio/ }).click();
+    await page.getByText(/ricambio ordinato/).waitFor();
+    await page.getByRole('button', { name: /Sostituisci con ricambio \(1 in magazzino\)/ }).click();
+    await page.getByText(/sostituito con un ricambio/).waitFor();
+    await page.getByRole('tab', { name: 'Assetto' }).click();
+    const slider = page.locator('.gx-sliders input').first();
+    await slider.focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await page.getByRole('button', { name: 'Applica assetto' }).click();
+    await page.getByText(/Assetto asciutto di .* salvato/).waitFor();
+    await shot('18-garage-assetto');
+    await page.getByRole('button', { name: 'Versione attuale' }).click();
+    await page.locator('.gar-groups button').first().waitFor();
+    step('garage (prototipo): 6 schede, Moto A/B, ricambio ordinato e montato, assetto salvato; versione attuale ok');
 
     await page.locator('.nav button', { hasText: 'Classifiche' }).click();
     await page.getByText('Classifica piloti').waitFor();

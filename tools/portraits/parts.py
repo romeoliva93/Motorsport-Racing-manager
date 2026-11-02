@@ -10,8 +10,8 @@ OUT = os.path.join(ROOT, 'apps', 'client', 'src', 'assets', 'parts')
 STYLE = ('product photo on a plain dark graphite studio background, soft rim light, centered, sharp focus, '
          'photorealistic, high detail, no text, no logo')
 PARTS = {
-    'powertrain': 'racing motorcycle V4 engine with gearbox and titanium exhaust headers',
-    'chassis': 'aluminium twin spar racing motorcycle frame with swingarm',
+    'powertrain': 'isolated racing motorcycle V4 engine block on an engine stand, gearbox and titanium exhaust headers, no motorcycle',
+    'chassis': 'isolated bare polished aluminium twin spar motorcycle racing frame and swingarm, no wheels, no engine, no bodywork',
     'suspension': 'gold racing motorcycle front fork and rear shock absorber with spring',
     'brakes': 'carbon ceramic motorcycle brake disc with gold radial brake caliper',
     'aero': 'motorcycle racing front fairing with aerodynamic winglets, carbon fibre',
