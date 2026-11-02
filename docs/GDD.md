@@ -338,3 +338,16 @@ di San Marino, sul modello di Misano) hanno un tracciato fisso; gli altri circui
 giorni = base (motore e telaio 21/28/35, aerodinamica 14/21/28, sospensioni 12/16/21, freni ed elettronica
 10/14/18, scarico 7/10/14) × (1,3 − 0,1 × livello medio dei reparti tecnici, fra 0,7 e 1,3).
 Un solo ordine alla volta per componente.
+
+## 22. Long Lap Penalty
+
+Versione di gioco del regolamento MotoGP, uguale per MotoGP, Moto2, Moto3 e Rookies Cup:
+- **Limiti della pista**: nella Sprint la Long Lap arriva alla 3ª infrazione; in gara alla 5ª, con avviso alla 3ª.
+  Probabilità di infrazione per giro = 4,2% × ritmo (attacco 2, normale 1, prudente 0,4) × (1,35 − concentrazione)
+  × (1 + aggressività/2) × 1,4 sul bagnato. Oltre i limiti all'ultimo giro guadagnandoci: una posizione in meno.
+- **Partenza anticipata**: doppia Long Lap. **Contatto in sorpasso**: una Long Lap (e il pilota toccato perde ~1 s).
+- **Come si sconta**: entro 3 giri, passando nell'anello asfaltato all'esterno della curva più lenta del circuito
+  (diverso per ogni pista, disegnato sulla mappa); costa il 2,2% del giro di riferimento (≈ 2,6 s su 2 minuti) più la
+  strada persa; la doppia si sconta in due giri diversi.
+- **Se non c'è più tempo**: ogni Long Lap rimasta diventa una penalità in secondi di pari durata, aggiunta al tempo finale.
+- Frequenze misurate su 60 gare simulate: ~15 avvisi per i limiti della pista e ~0,6 Long Lap a gara.

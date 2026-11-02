@@ -373,7 +373,7 @@ export interface ReplayData {
   laps: number;
   lengthM: number;
   /** Tracciato: punti normalizzati e indici dei due confini di settore (S1|S2|S3). */
-  track: { points: [number, number][]; sectors: [number, number] };
+  track: { points: [number, number][]; sectors: [number, number]; longLap: number };
   /** Meteo della sessione. */
   weather: { sky: string; grip: string; airTemp: number; trackTemp: number };
   riders: {
@@ -437,6 +437,7 @@ function raceSession(
     grid,
     frameEvery: isPlayers ? 0.5 : 1000,
     conditions: cond,
+    sprint: kind === 'sprint',
   });
   const table = kind === 'sprint' ? SPRINT_POINTS : reg.points;
   const rowsOut: ResultRow[] = out.results.map((r) => {
@@ -452,6 +453,7 @@ function raceSession(
       bestLap: r.bestLap,
       points: r.position !== null ? (table[r.position - 1] ?? 0) : 0,
       compound: used.get(e.rider.id)!,
+      ...(r.penalty ? { penalty: r.penalty } : {}),
       ...(r.reason ? { reason: r.reason } : {}),
     };
   });
@@ -508,6 +510,25 @@ function raceSession(
       body: `${w.firstName} ${w.lastName} (${s.tables.teams[winner.teamId]!.name}) vince ${kind === 'sprint' ? 'la gara Sprint' : 'il Gran Premio'}. ${rowsOut.filter((x) => x.status === 'dnf').length} ritirati.`,
     });
   }
+  // Notizie sulle penalità dei nostri piloti.
+  for (const row of rowsOut.filter((x) => x.teamId === playerTeam && x.penalty)) {
+    const p = row.penalty!;
+    const r = s.tables.riders[row.riderId]!;
+    const parts = [
+      p.longLaps ? `${p.longLaps} Long Lap Penalty (${p.served} scontate in pista)` : '',
+      p.timeAdded
+        ? `${p.timeAdded.toFixed(1).replace('.', ',')} s aggiunti per Long Lap non scontate in tempo`
+        : '',
+      p.positionDrop ? 'una posizione persa per i limiti della pista all’ultimo giro' : '',
+    ].filter(Boolean);
+    addNews(s, ids, {
+      day: s.meta.currentDay,
+      tag: 'gara',
+      mine: true,
+      title: `${r.firstName} ${r.lastName} penalizzato ${kind === 'sprint' ? 'nella Sprint' : 'in gara'}`,
+      body: `Direzione gara: ${parts.join('; ')}.`,
+    });
+  }
   let replay: ReplayData | null = null;
   if (isPlayers) {
     if (kind === 'race') {
@@ -535,7 +556,7 @@ function raceSession(
       laps,
       lengthM: circuit.lengthM,
       country: circuit.country,
-      track: { points: track.points, sectors: track.sectors },
+      track: { points: track.points, sectors: track.sectors, longLap: track.longLap },
       weather: (() => {
         const w = weatherOf(s, round).find((x) => x.kind === kind);
         return w

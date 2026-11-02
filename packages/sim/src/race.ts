@@ -16,7 +16,7 @@
  *   caduta/giro  = 0,0025 × ritmo × (1,3 − concentrazione) × (1 + aggressività/2)
  */
 import { Rng, clamp } from '@lean-angle/core';
-import type { TrackShape } from './track.ts';
+import { LONG_LAP_SPAN, type TrackShape } from './track.ts';
 
 export type Compound = 'soft' | 'medium' | 'hard' | 'wet';
 /** Condizione dell'asfalto: asciutto, umido (pioggerella o pista che si asciuga), bagnato. */
@@ -59,14 +59,44 @@ export interface RaceSetup {
   frameEvery?: number;
   /** Meteo e asfalto (default: asciutto, 35 °C). */
   conditions?: Conditions;
+  /** Gara Sprint: soglia dei limiti della pista più bassa. */
+  sprint?: boolean;
 }
 
 export interface RaceEvent {
   t: number;
   lap: number;
-  kind: 'overtake' | 'crash' | 'remount' | 'mechanical' | 'fastestLap' | 'finish';
+  kind:
+    | 'overtake'
+    | 'crash'
+    | 'remount'
+    | 'mechanical'
+    | 'fastestLap'
+    | 'finish'
+    | 'trackLimits'
+    | 'longLapPenalty'
+    | 'longLap'
+    | 'jumpStart'
+    | 'contact'
+    | 'positionDrop';
   riderId: string;
   otherId?: string;
+  /** trackLimits: numero di infrazioni; longLapPenalty: quante Long Lap (1 o 2). */
+  count?: number;
+  /** longLapPenalty: motivo. */
+  reason?: 'trackLimits' | 'jumpStart' | 'contact';
+  /** longLap: durata del passaggio nell'anello (s). */
+  duration?: number;
+}
+
+export interface RacePenalty {
+  /** Long Lap ricevute e scontate in pista. */
+  longLaps: number;
+  served: number;
+  /** Secondi aggiunti per Long Lap non scontate in tempo. */
+  timeAdded: number;
+  /** Posizione persa per i limiti della pista all'ultimo giro. */
+  positionDrop: boolean;
 }
 
 export interface RaceResultRow {
@@ -78,6 +108,7 @@ export interface RaceResultRow {
   gap: number | null;
   bestLap: number;
   reason?: 'crash' | 'mechanical';
+  penalty?: RacePenalty;
 }
 
 export interface RaceOutcome {
@@ -213,7 +244,29 @@ interface State {
   blockedFor: number;
   mechLap: number | null;
   form: number;
+  /** Limiti della pista e Long Lap Penalty. */
+  tl: number;
+  llp: number;
+  llpTotal: number;
+  llpServed: number;
+  llpFrom: number;
+  serving: number;
+  servingRate: number;
+  lastLapTL: boolean;
 }
+
+/**
+ * Long Lap Penalty (regolamento MotoGP, versione di gioco):
+ *  - limiti della pista: Long Lap alla 3ª infrazione nella Sprint, alla 5ª in gara (avviso alla 3ª), tutte le
+ *    categorie; probabilità per giro = 4,2% × ritmo (attacco 2, normale 1, prudente 0,4) × (1,35 − concentrazione)
+ *    × (1 + aggressività/2) × 1,4 sul bagnato;
+ *  - partenza anticipata: doppia Long Lap; contatto in sorpasso: una Long Lap;
+ *  - va scontata entro 3 giri passando nell'anello all'esterno della curva indicata: si perde
+ *    LONG_LAP_LOSS × giro di riferimento (≈ 2,6 s su 2 minuti); una per giro se doppia;
+ *  - se non c'è più tempo, ogni Long Lap rimasta diventa una penalità in secondi di pari durata;
+ *  - oltre i limiti all'ultimo giro guadagnandoci (≈ 1 infrazione su 3): una posizione in meno.
+ */
+export const LONG_LAP_LOSS = 0.022;
 
 export function runRace(setup: RaceSetup): RaceOutcome {
   const rng = Rng.fromSeed(`${setup.seed}::race`);
@@ -236,7 +289,31 @@ export function runRace(setup: RaceSetup): RaceOutcome {
     finishTime: 0,
     blockedFor: 0,
     mechLap: rng.chance(0.03 * (1.4 - r.reliability)) ? rng.int(1, laps) : null,
+    tl: 0,
+    llp: 0,
+    llpTotal: 0,
+    llpServed: 0,
+    llpFrom: 1,
+    serving: 0,
+    servingRate: 0,
+    lastLapTL: false,
   }));
+  const llLoss = setup.refLap * LONG_LAP_LOSS;
+  const llEntry = ((track.longLap - LONG_LAP_SPAN + N) % N) / N; // frazione di giro dell'ingresso nell'anello
+  const llSeg = ((2 * LONG_LAP_SPAN) / N) * L;
+  const tlLimit = setup.sprint ? 3 : 5;
+  const givePenalty = (s: State, n: number, reason: 'trackLimits' | 'jumpStart' | 'contact', at: number) => {
+    s.llp += n;
+    s.llpTotal += n;
+    s.llpFrom = Math.max(1, s.lap + 1);
+    events.push({ t: at, lap: s.lap + 1, kind: 'longLapPenalty', riderId: s.r.id, count: n, reason });
+  };
+  // Partenza anticipata.
+  for (const s of st)
+    if (rng.chance(0.0015 * (1.3 - s.r.concentration) * (1 + s.r.aggression))) {
+      events.push({ t: 0, lap: 1, kind: 'jumpStart', riderId: s.r.id });
+      givePenalty(s, 2, 'jumpStart', 0);
+    }
   const lapTimeFor = (s: State) => {
     const r = s.r;
     const tyreAge = s.lap;
@@ -262,7 +339,15 @@ export function runRace(setup: RaceSetup): RaceOutcome {
       const pos = ((s.dist % L) + L) % L;
       const idx = Math.floor((pos / L) * N) % N;
       let v = (L / s.lapTime) * track.speed[idx]!;
-      const ahead = order[k - 1];
+      // Nell'anello della Long Lap: fuori traiettoria, avanza più lentamente e non blocca nessuno.
+      if (s.serving > 0) {
+        s.serving -= dt;
+        s.dist += s.servingRate * dt;
+        continue;
+      }
+      let ai = k - 1;
+      while (ai >= 0 && order[ai]!.serving > 0) ai--;
+      const ahead = ai >= 0 ? order[ai] : undefined;
       if (ahead && ahead.dist - s.dist < 12 && ahead.dist - s.dist > 0) {
         // In scia: non può passare finché il sorpasso non riesce.
         const vAhead = (L / ahead.lapTime) * track.speed[idx]!;
@@ -277,6 +362,12 @@ export function runRace(setup: RaceSetup): RaceOutcome {
             s.dist = ahead.dist + 3;
             events.push({ t, lap: s.lap + 1, kind: 'overtake', riderId: s.r.id, otherId: ahead.r.id });
             s.blockedFor = 0;
+            // Sorpasso troppo deciso: contatto e Long Lap.
+            if (rng.chance(0.003 * s.r.aggression * (s.r.mode === 'attack' ? 2 : 1))) {
+              events.push({ t, lap: s.lap + 1, kind: 'contact', riderId: s.r.id, otherId: ahead.r.id });
+              ahead.dist -= vAhead * 1.2;
+              givePenalty(s, 1, 'contact', t);
+            }
             continue;
           }
           v = vAhead * 0.995;
@@ -284,6 +375,19 @@ export function runRace(setup: RaceSetup): RaceOutcome {
       }
       const prev = s.dist;
       s.dist += v * dt;
+      // Ingresso nell'anello della Long Lap.
+      if (s.llp > 0 && s.lap + 1 >= s.llpFrom && s.lap < laps) {
+        const a = (((prev % L) + L) % L) / L,
+          b = (((s.dist % L) + L) % L) / L;
+        if (a < llEntry && b >= llEntry) {
+          const duration = llSeg / v + llLoss;
+          s.serving = duration;
+          s.servingRate = llSeg / duration;
+          s.llp--;
+          s.llpServed++;
+          events.push({ t, lap: s.lap + 1, kind: 'longLap', riderId: s.r.id, duration });
+        }
+      }
       // Traguardo e nuovo giro (istante esatto del passaggio, interpolato nel passo).
       const lapNow = Math.floor(s.dist / L);
       if (lapNow > s.lap) {
@@ -295,6 +399,25 @@ export function runRace(setup: RaceSetup): RaceOutcome {
         }
         s.lap = lapNow;
         s.lapStart = tc;
+        // Limiti della pista nel giro appena concluso.
+        const tlP =
+          0.042 *
+          (s.r.mode === 'attack' ? 2 : s.r.mode === 'conservative' ? 0.4 : 1) *
+          (1.35 - s.r.concentration) *
+          (1 + s.r.aggression / 2) *
+          (cond.grip === 'wet' ? 1.4 : 1);
+        const lastLap = s.lap >= laps || leaderDone;
+        // All'ultimo giro conta solo se il pilota ci guadagna: circa un'infrazione su tre.
+        if (rng.chance(lastLap ? tlP * 0.3 : tlP)) {
+          if (lastLap) {
+            s.lastLapTL = true;
+            events.push({ t, lap: s.lap, kind: 'positionDrop', riderId: s.r.id });
+          } else {
+            s.tl++;
+            events.push({ t, lap: s.lap, kind: 'trackLimits', riderId: s.r.id, count: s.tl });
+            if (s.tl === tlLimit) givePenalty(s, 1, 'trackLimits', t);
+          }
+        }
         if (s.lap >= laps || leaderDone) {
           s.finished = true;
           s.finishTime = tc;
@@ -337,17 +460,38 @@ export function runRace(setup: RaceSetup): RaceOutcome {
   }
   if (fastest.riderId) events.push({ t: 0, lap: 0, kind: 'fastestLap', riderId: fastest.riderId });
 
-  const finishers = st.filter((s) => s.finished).sort((a, b) => b.lap - a.lap || a.finishTime - b.finishTime);
-  const winnerTime = finishers[0]?.finishTime ?? 0;
+  // Long Lap non scontate → secondi; poi una posizione in meno per i limiti all'ultimo giro.
+  const total = (s: State) => s.finishTime + s.llp * llLoss;
+  const finishers = st.filter((s) => s.finished).sort((a, b) => b.lap - a.lap || total(a) - total(b));
+  for (let i = finishers.length - 2; i >= 0; i--) {
+    const s = finishers[i]!;
+    if (s.lastLapTL && finishers[i + 1]!.lap === s.lap) {
+      finishers[i] = finishers[i + 1]!;
+      finishers[i + 1] = s;
+    }
+  }
+  const winnerTime = finishers[0] ? total(finishers[0]) : 0;
+  const penaltyOf = (s: State): { penalty?: RacePenalty } =>
+    s.llpTotal > 0 || s.lastLapTL
+      ? {
+          penalty: {
+            longLaps: s.llpTotal,
+            served: s.llpServed,
+            timeAdded: Math.round(s.llp * llLoss * 10) / 10,
+            positionDrop: s.lastLapTL,
+          },
+        }
+      : {};
   const results: RaceResultRow[] = [
     ...finishers.map((s, i) => ({
       riderId: s.r.id,
       position: i + 1,
       status: 'finished' as const,
       laps: s.lap,
-      time: Math.round(s.finishTime * 1000) / 1000,
-      gap: s.lap < laps ? null : Math.round((s.finishTime - winnerTime) * 1000) / 1000,
+      time: Math.round(total(s) * 1000) / 1000,
+      gap: s.lap < laps ? null : Math.max(0, Math.round((total(s) - winnerTime) * 1000) / 1000),
       bestLap: Math.round(s.best * 1000) / 1000,
+      ...penaltyOf(s),
     })),
     ...st
       .filter((s) => s.out)
@@ -361,6 +505,7 @@ export function runRace(setup: RaceSetup): RaceOutcome {
         gap: null,
         bestLap: Number.isFinite(s.best) ? Math.round(s.best * 1000) / 1000 : 0,
         ...(s.reason ? { reason: s.reason } : {}),
+        ...penaltyOf(s),
       })),
   ];
   return { results, events, fastestLap: fastest, frames, frameEvery, duration: Math.round(t) };

@@ -21,6 +21,8 @@ export interface ResultRow {
   reason?: 'crash' | 'mechanical';
   /** Gomma usata in questa sessione. */
   compound?: 'soft' | 'medium' | 'hard' | 'wet';
+  /** Penalità della direzione gara (Long Lap, secondi aggiunti, posizione persa). */
+  penalty?: { longLaps: number; served: number; timeAdded: number; positionDrop: boolean };
 }
 
 export type SessionKind = 'fp1' | 'practice' | 'fp2' | 'q1' | 'q2' | 'qualifying' | 'sprint' | 'race';

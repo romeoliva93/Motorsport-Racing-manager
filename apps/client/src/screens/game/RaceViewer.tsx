@@ -8,6 +8,7 @@ import {
   drawStatic,
   fitView,
   type View,
+  onLongLap,
   onPitLane,
   onTrack,
   type BikeDraw,
@@ -49,7 +50,15 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
     return [...seen.values()];
   }, [data]);
   const scene = useMemo(
-    () => buildScene(data.circuit, data.country, data.track.points, data.track.sectors, teams),
+    () =>
+      buildScene(
+        data.circuit,
+        data.country,
+        data.track.points,
+        data.track.sectors,
+        teams,
+        data.track.longLap,
+      ),
     [data, teams],
   );
 
@@ -179,7 +188,12 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
         } else pd = onTrack(scene, gridFrac, ((i % 2) - 0.5) * scene.width * 0.5);
       } else {
         const d = dists[i]!;
-        if (d >= 0) pd = onTrack(scene, d / L, lateral);
+        // Nell'anello della Long Lap?
+        const ll = data.events.find(
+          (e) => e.kind === 'longLap' && e.riderId === r.id && e.t <= t && t < e.t + (e.duration ?? 0),
+        );
+        if (ll && d >= 0) pd = onLongLap(scene, (t - ll.t) / (ll.duration ?? 1));
+        else if (d >= 0) pd = onTrack(scene, d / L, lateral);
       }
       if (!pd) return;
       const pos = posLabel.get(r.id) ?? 0;
@@ -254,13 +268,23 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
     });
   });
 
+  const pendingLL = (id: string) =>
+    !racing
+      ? 0
+      : data.events
+          .filter((e) => e.riderId === id && e.t <= t)
+          .reduce(
+            (n, e) => n + (e.kind === 'longLapPenalty' ? (e.count ?? 1) : e.kind === 'longLap' ? -1 : 0),
+            0,
+          );
   const events = data.events
     .filter((e) => racing && e.t <= t && e.kind !== 'fastestLap')
     .filter((e) => {
-      if (e.kind !== 'overtake') return true;
       const a = data.riders.find((r) => r.id === e.riderId);
       const b = data.riders.find((r) => r.id === e.otherId);
-      return a?.mine || b?.mine;
+      if (e.kind === 'overtake') return a?.mine || b?.mine;
+      if (e.kind === 'trackLimits') return a?.mine || (e.count ?? 0) >= (data.kind === 'sprint' ? 2 : 3);
+      return true;
     })
     .slice(-6)
     .reverse();
@@ -274,7 +298,27 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
           ? `${name(e.riderId)} scivola ma riparte`
           : e.kind === 'mechanical'
             ? `Guasto: ${name(e.riderId)} si ritira`
-            : `Bandiera a scacchi: vince ${name(e.riderId)}`;
+            : e.kind === 'trackLimits'
+              ? `Limiti della pista: ${name(e.riderId)}, infrazione n. ${e.count}${
+                  e.count === (data.kind === 'sprint' ? 2 : 3) ? ' (avviso)' : ''
+                }`
+              : e.kind === 'longLapPenalty'
+                ? `${e.count === 2 ? 'Doppia Long Lap' : 'Long Lap'} Penalty per ${name(e.riderId)} (${
+                    e.reason === 'jumpStart'
+                      ? 'partenza anticipata'
+                      : e.reason === 'contact'
+                        ? 'contatto in sorpasso'
+                        : 'limiti della pista'
+                  }): va scontata entro 3 giri`
+                : e.kind === 'longLap'
+                  ? `${name(e.riderId)} sconta la Long Lap`
+                  : e.kind === 'jumpStart'
+                    ? `Partenza anticipata di ${name(e.riderId)}`
+                    : e.kind === 'contact'
+                      ? `Contatto: ${name(e.riderId)} tocca ${name(e.otherId)}`
+                      : e.kind === 'positionDrop'
+                        ? `${name(e.riderId)} oltre i limiti all'ultimo giro: perde una posizione`
+                        : `Bandiera a scacchi: vince ${name(e.riderId)}`;
 
   return (
     <div className="race-viewer">
@@ -330,6 +374,11 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
                 <span className="c" style={{ background: r.color }} />
                 <span className="n">
                   <Flag code={r.nationality} size={0.75} /> {r.name}
+                  {pendingLL(r.id) > 0 && (
+                    <em className="llp" title="Long Lap Penalty da scontare">
+                      LLP{pendingLL(r.id) > 1 ? `×${pendingLL(r.id)}` : ''}
+                    </em>
+                  )}
                 </span>
                 <span className="g">
                   {!racing

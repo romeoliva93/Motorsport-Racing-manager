@@ -14,9 +14,15 @@ export interface TrackShape {
   overtake: number[];
   /** Indici dei punti che separano i tre settori. */
   sectors: [number, number];
+  /**
+   * Long Lap Penalty: indice del vertice della curva dove si trova l'anello (sull'esterno). L'anello va da
+   * LONG_LAP_SPAN punti prima a LONG_LAP_SPAN punti dopo.
+   */
+  longLap: number;
 }
 
 const SAMPLES = 480;
+export const LONG_LAP_SPAN = 12;
 
 /**
  * Tracciati disegnati a mano (punti di controllo in senso di marcia, partenza dal traguardo).
@@ -184,11 +190,21 @@ export function generateTrack(key: string, turns: number): TrackShape {
   }
   const shift = bestLen > 0 ? (bestStart + Math.round(bestLen * 0.65)) % SAMPLES : 0;
   const rot = <T>(a: T[]) => [...a.slice(shift), ...a.slice(0, shift)];
+  const sp = rot(speed);
+  // Anello della Long Lap: all'esterno della curva più lenta, lontano da traguardo e box.
+  let longLap = Math.round(SAMPLES / 2),
+    slowest = Infinity;
+  for (let i = 60; i < SAMPLES - 60; i++)
+    if (sp[i]! < slowest) {
+      slowest = sp[i]!;
+      longLap = i;
+    }
   return {
     points: rot(points),
-    speed: rot(speed),
+    speed: sp,
     overtake: rot(overtake),
     sectors: [Math.round(SAMPLES / 3), Math.round((2 * SAMPLES) / 3)],
+    longLap,
   };
 }
 

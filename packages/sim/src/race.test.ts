@@ -147,3 +147,58 @@ describe('equilibrio delle gomme', () => {
     expect(solo(0.3, 'hard')).toBeLessThan(solo(0.3, 'soft'));
   });
 });
+
+describe('Long Lap Penalty', () => {
+  const wild = (k: number) =>
+    rider(`w${k}`, 0.85 - k * 0.004, 0.85, { concentration: 0.1, aggression: 1, mode: 'attack' });
+  const outs = Array.from({ length: 30 }, (_, i) =>
+    runRace({
+      seed: `llp-${i}`,
+      track,
+      lengthM: 4600,
+      laps: 12,
+      refLap: 100,
+      sprint: i % 2 === 0,
+      grid: Array.from({ length: 18 }, (_, k) => wild(k)),
+    }),
+  );
+
+  it("l'anello è lontano da traguardo e box", () => {
+    expect(track.longLap).toBeGreaterThan(50);
+    expect(track.longLap).toBeLessThan(track.points.length - 50);
+  });
+
+  it('ogni Long Lap viene scontata in pista o convertita in secondi', () => {
+    let given = 0;
+    for (const o of outs) {
+      const ev = o.events.filter((e) => e.kind === 'longLapPenalty').reduce((t, e) => t + (e.count ?? 0), 0);
+      const served = o.events.filter((e) => e.kind === 'longLap').length;
+      const pen = o.results.reduce((t, r) => t + (r.penalty?.longLaps ?? 0), 0);
+      const servedRes = o.results.reduce((t, r) => t + (r.penalty?.served ?? 0), 0);
+      expect(pen).toBe(ev);
+      expect(servedRes).toBe(served);
+      for (const r of o.results)
+        if (r.penalty && r.status === 'finished')
+          expect(r.penalty.timeAdded).toBeCloseTo((r.penalty.longLaps - r.penalty.served) * 2.2, 1);
+      given += ev;
+    }
+    expect(given).toBeGreaterThan(5);
+  });
+
+  it("passare nell'anello costa tempo", () => {
+    const passes = outs.flatMap((o) => o.events.filter((e) => e.kind === 'longLap'));
+    expect(passes.length).toBeGreaterThan(0);
+    for (const e of passes) expect(e.duration!).toBeGreaterThan(2.2);
+  });
+
+  it('soglie: Long Lap alla 3ª infrazione nella Sprint, alla 5ª in gara', () => {
+    for (const [i, o] of outs.entries()) {
+      for (const e of o.events.filter((x) => x.kind === 'longLapPenalty' && x.reason === 'trackLimits')) {
+        const n = o.events.filter(
+          (x) => x.kind === 'trackLimits' && x.riderId === e.riderId && x.t <= e.t,
+        ).length;
+        expect(n).toBe(i % 2 === 0 ? 3 : 5);
+      }
+    }
+  });
+});

@@ -464,3 +464,26 @@ table.std tbody tr.cut td {
     width: 100%;
   }
 }
+
+.rv-board .llp,
+.pen {
+  margin-left: 0.35rem;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  background: #1d3f8a;
+  color: #ffd21f;
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.rv-feed li.longLapPenalty,
+.rv-feed li.jumpStart,
+.rv-feed li.positionDrop {
+  color: var(--warn);
+  font-weight: 600;
+}
+.rv-feed li.trackLimits,
+.rv-feed li.longLap,
+.rv-feed li.contact {
+  color: var(--info);
+}

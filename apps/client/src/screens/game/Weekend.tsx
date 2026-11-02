@@ -63,9 +63,9 @@ function explain(kind: Session['kind'], w: WeekendView): string {
     case 'qualifying':
       return 'Qualifica unica: vale il giro migliore e decide l’ordine di partenza.';
     case 'sprint':
-      return `Gara Sprint del sabato, a metà distanza (${w.nextLaps} giri): punti ai primi 9, 12 al vincitore.`;
+      return `Gara Sprint del sabato, a metà distanza (${w.nextLaps} giri): punti ai primi 9, 12 al vincitore. Limiti della pista: alla 3ª uscita c’è la Long Lap Penalty, da scontare entro 3 giri passando nell’anello segnato sul circuito.`;
     case 'race':
-      return `La gara della domenica (${w.round?.laps} giri): punti ai primi 15, 25 al vincitore.`;
+      return `La gara della domenica (${w.round?.laps} giri): punti ai primi 15, 25 al vincitore. Limiti della pista: avviso alla 3ª uscita, Long Lap Penalty alla 5ª. Partenza anticipata = doppia Long Lap. Il ritmo «Attacco» fa uscire di pista più spesso.`;
   }
 }
 
@@ -291,6 +291,19 @@ export function WeekendScreen({
         </div>
       )}
     </div>
+  );
+}
+
+function Penalty({ p }: { p: NonNullable<ResultRowView['penalty']> }) {
+  const parts = [
+    p.longLaps ? `Long Lap ×${p.longLaps}${p.served < p.longLaps ? ` (${p.served} scontate)` : ''}` : '',
+    p.timeAdded ? `+${p.timeAdded.toFixed(1).replace('.', ',')} s` : '',
+    p.positionDrop ? '−1 posizione' : '',
+  ].filter(Boolean);
+  return (
+    <span className="pen" title={`Penalità: ${parts.join(', ')}`} style={{ marginRight: '.4rem' }}>
+      {parts.join(' · ')}
+    </span>
   );
 }
 
@@ -563,6 +576,7 @@ export function ResultTable({
                   )}
                 </td>
                 <td className="r">
+                  {r.penalty && <Penalty p={r.penalty} />}
                   {r.status === 'dnf'
                     ? r.reason === 'mechanical'
                       ? 'Guasto'

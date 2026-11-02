@@ -64,6 +64,8 @@ export interface Scene {
   sea: [V, V, V, V] | null;
   bounds: { x0: number; y0: number; x1: number; y1: number };
   sectors: [number, number];
+  /** Anello della Long Lap Penalty (all'esterno della curva indicata dalla simulazione). */
+  longLap: { path: V[]; side: 1 | -1; from: number; to: number } | null;
 }
 
 const ENV: Record<string, Env> = {
@@ -119,6 +121,7 @@ export function buildScene(
   points: [number, number][],
   sectors: [number, number],
   teams: { team: string; color: string; color2: string }[],
+  longLapIdx?: number,
 ): Scene {
   const N = points.length;
   const R = rnd(`scene::${name}`);
@@ -213,6 +216,28 @@ export function buildScene(
   const pitIdx = new Set<number>();
   for (let k = 0; k <= span; k++) pitIdx.add((pitEntryIdx + k) % N);
   for (const i of pitIdx) barrier[pitSide === 1 ? 0 : 1][i] = width / 2 + lane + 0.022;
+
+  // Anello della Long Lap: parte dal punto indicato dalla simulazione, sull'esterno della curva.
+  let longLap: Scene['longLap'] = null;
+  if (longLapIdx !== undefined) {
+    const SPAN = 12;
+    const from = longLapIdx - SPAN,
+      to = longLapIdx + SPAN;
+    const side = (curv[((longLapIdx % N) + N) % N]! > 0 ? -1 : 1) as 1 | -1;
+    const path: V[] = [];
+    for (let j = from; j <= to; j++) {
+      const t = (j - from) / (to - from);
+      const i = ((j % N) + N) % N;
+      const off = (width / 2 + 0.003 + 0.026 * Math.sin(Math.PI * t) ** 0.8) * side;
+      path.push(add(at(i), mul(nor[i]!, off)));
+      const sideIdx = side === 1 ? 0 : 1;
+      barrier[sideIdx][i] = Math.max(
+        barrier[sideIdx][i]!,
+        width / 2 + 0.042 * Math.sin(Math.PI * t) ** 0.6 + 0.008,
+      );
+    }
+    longLap = { path, side, from, to };
+  }
 
   // Tribune: rettilineo principale (lato opposto ai box) e staccate più forti.
   const stands: Stand[] = [];
@@ -439,6 +464,7 @@ export function buildScene(
     sea,
     bounds,
     sectors,
+    longLap,
   };
 }
 
@@ -717,6 +743,53 @@ export function drawStatic(ctx: CanvasRenderingContext2D, sc: Scene, v: View, w:
       ctx.lineTo(b[0], b[1]);
       ctx.stroke();
     }
+  }
+
+  // Anello della Long Lap Penalty.
+  if (sc.longLap) {
+    const lp = sc.longLap.path.map(P);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    poly(lp, false);
+    ctx.strokeStyle = '#f2f2f2';
+    ctx.lineWidth = S(0.009) + 3;
+    ctx.stroke();
+    poly(lp, false);
+    ctx.strokeStyle = '#46484e';
+    ctx.lineWidth = S(0.009);
+    ctx.stroke();
+    // Frecce gialle nel senso di marcia.
+    ctx.fillStyle = '#ffd21f';
+    for (let k = 3; k < lp.length - 3; k += 5) {
+      const a = lp[k]!,
+        b = lp[k + 1]!;
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      const r = Math.max(2.5, S(0.003));
+      ctx.save();
+      ctx.translate(a[0], a[1]);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.moveTo(r, 0);
+      ctx.lineTo(-r, -r);
+      ctx.lineTo(-r * 0.4, 0);
+      ctx.lineTo(-r, r);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    // Cartello "LONG LAP" all'esterno dell'anello.
+    const mid = sc.longLap.path[Math.floor(sc.longLap.path.length / 2)]!;
+    const i = ((Math.round((sc.longLap.from + sc.longLap.to) / 2) % N) + N) % N;
+    const lab = P(add(mid, mul(sc.nor[i]!, 0.014 * sc.longLap.side)));
+    const fs = Math.max(9, S(0.009));
+    ctx.font = `900 ${fs}px Archivo, system-ui, sans-serif`;
+    const tw = ctx.measureText('LONG LAP').width;
+    ctx.fillStyle = '#1d3f8a';
+    ctx.fillRect(lab[0] - tw / 2 - 5, lab[1] - fs * 0.75, tw + 10, fs * 1.5);
+    ctx.fillStyle = '#ffd21f';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('LONG LAP', lab[0], lab[1] + 1);
   }
 
   // Griglia di partenza (piazzole sfalsate dietro il traguardo).
@@ -1061,6 +1134,18 @@ export function onTrack(sc: Scene, frac: number, lateral: number): { pos: V; dir
 /** Posizione lungo la corsia box (0 = ingresso, 1 = uscita). */
 export function onPitLane(sc: Scene, f: number): { pos: V; dir: V } {
   const pl = sc.pitLane;
+  const x = Math.max(0, Math.min(0.9999, f)) * (pl.length - 1);
+  const i = Math.floor(x),
+    k = x - i;
+  const a = pl[i]!,
+    b = pl[i + 1]!;
+  return { pos: [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k], dir: norm(sub(b, a)) };
+}
+
+/** Posizione lungo l'anello della Long Lap (0 = ingresso, 1 = uscita). */
+export function onLongLap(sc: Scene, f: number): { pos: V; dir: V } | null {
+  const pl = sc.longLap?.path;
+  if (!pl) return null;
   const x = Math.max(0, Math.min(0.9999, f)) * (pl.length - 1);
   const i = Math.floor(x),
     k = x - i;

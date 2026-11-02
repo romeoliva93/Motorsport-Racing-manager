@@ -82,6 +82,7 @@ export interface ResultRowView {
   status: 'finished' | 'dnf';
   reason?: 'crash' | 'mechanical';
   compound?: 'soft' | 'medium' | 'hard' | 'wet';
+  penalty?: { longLaps: number; served: number; timeAdded: number; positionDrop: boolean };
 }
 
 function resultView(s: GameState, res: SessionResult | undefined): ResultRowView[] | null {
@@ -108,6 +109,7 @@ function resultView(s: GameState, res: SessionResult | undefined): ResultRowView
       status: r.status,
       ...(r.reason ? { reason: r.reason } : {}),
       ...(r.compound ? { compound: r.compound } : {}),
+      ...(r.penalty ? { penalty: r.penalty } : {}),
     };
   });
 }
