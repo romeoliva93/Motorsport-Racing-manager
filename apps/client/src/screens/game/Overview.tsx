@@ -6,7 +6,8 @@ import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Pos, ratingTone } from '../../design-system/components.tsx';
 
 import type { Section } from '../../shell/Shell.tsx';
-import { BikeArt, type BikeTier } from '../../design-system/BikeArt.tsx';
+import type { BikeTier } from '../../design-system/BikeArt.tsx';
+import { TeamBike } from '../../design-system/TeamBike.tsx';
 
 type Next = { label: string; hint: string; action: () => void } | null;
 
@@ -119,11 +120,12 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
       >
         {bike ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.4rem' }}>
-            <BikeArt
+            <TeamBike
+              team={bike.team}
               tier={bike.tier as BikeTier}
               colors={bike.colors}
               number={bike.numbers[0] ?? null}
-              width={19}
+              width={22}
             />
             <span className="muted">
               Qualità {bike.rating} · media avversarie {bike.rivalsAvg}

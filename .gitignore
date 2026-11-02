@@ -4,3 +4,4 @@ dist/
 coverage/
 *.tsbuildinfo
 e2e-failure.png
+tools/portraits/out/

@@ -1175,7 +1175,7 @@ b.bad {
 }
 .gx-main {
   display: grid;
-  grid-template-columns: minmax(0, 26rem) minmax(18rem, 1fr) minmax(0, 26rem);
+  grid-template-columns: minmax(0, 23rem) minmax(20rem, 1fr) minmax(0, 23rem);
   gap: 1.2rem;
   align-items: center;
   background: radial-gradient(ellipse at 50% 50%, #2e333c 0%, #15171b 62%);

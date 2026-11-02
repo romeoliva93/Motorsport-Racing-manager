@@ -3,7 +3,7 @@ import { formatMoney } from '@lean-angle/core';
 import type { BikeView } from '@lean-angle/game';
 import { engine } from '../../engine/engine.ts';
 import { Explain } from '../../design-system/components.tsx';
-import { BikeTop } from '../../design-system/BikeTop.tsx';
+import { TeamBike } from '../../design-system/TeamBike.tsx';
 import type { BikeTier } from '../../design-system/BikeArt.tsx';
 
 /** Immagini originali dei gruppi tecnici (tools/portraits/parts.py). */
@@ -224,7 +224,14 @@ export function GarageV2({ b, notify }: { b: BikeView; notify: (t: string, err?:
           <div className={`gx-main n${bike.groups.length}`}>
             <div className="gx-col">{bike.groups.slice(0, half).map(card)}</div>
             <div className="gx-bike">
-              <BikeTop tier={b.tier as BikeTier} colors={b.colors} number={g.number} height={38} />
+              <TeamBike
+                team={b.team}
+                tier={b.tier as BikeTier}
+                colors={b.colors}
+                number={g.number}
+                rider={g.rider}
+                width={46}
+              />
             </div>
             <div className="gx-col">{bike.groups.slice(half).map(card)}</div>
           </div>
@@ -446,7 +453,8 @@ export function GarageV2({ b, notify }: { b: BikeView; notify: (t: string, err?:
             )}
           </div>
           <Explain>
-            Ogni pilota ha il suo assetto, separato da componenti e sviluppo. I commenti arrivano dal pilota (feedback {sv.feedbackQuality}): più l'assetto si avvicina a ciò che vuole su questo circuito, più
+            Ogni pilota ha il suo assetto, separato da componenti e sviluppo. I commenti arrivano dal pilota
+            (feedback {sv.feedbackQuality}): più l'assetto si avvicina a ciò che vuole su questo circuito, più
             va forte (fino a ±1,5% di ritmo). L'intesa si aggiorna dopo aver applicato le modifiche. Le prove
             libere con giri di prova e tempi di intervento arriveranno con la milestone delle sessioni
             simulate.
