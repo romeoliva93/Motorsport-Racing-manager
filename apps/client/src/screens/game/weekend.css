@@ -256,12 +256,20 @@
   grid-template-columns: minmax(0, 1fr) 19rem;
   gap: 1rem;
 }
-.rv-canvas {
-  width: 100%;
-  height: min(62vh, 40rem);
-  background: rgba(16, 17, 19, 0.75);
+.rv-stage {
+  position: relative;
+  height: min(70vh, 46rem);
   border: 1px solid var(--line);
   border-radius: var(--r-3);
+  overflow: hidden;
+  background: #2c3a24;
+}
+.rv-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .rv-board {
   margin: 0;
@@ -270,7 +278,7 @@
   background: var(--glass);
   border: 1px solid var(--line);
   border-radius: var(--r-3);
-  max-height: min(62vh, 40rem);
+  max-height: min(70vh, 46rem);
   overflow: auto;
   font-size: 0.86rem;
 }
@@ -338,8 +346,8 @@
   .rv-body {
     grid-template-columns: minmax(0, 1fr);
   }
-  .rv-canvas {
-    height: 52vh;
+  .rv-stage {
+    height: 60vh;
   }
   .rv-board {
     max-height: 18rem;

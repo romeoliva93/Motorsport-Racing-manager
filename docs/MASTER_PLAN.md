@@ -12,7 +12,7 @@
 | 3 | Ritratti fotorealistici | ❌ | Caschi illustrati per scuderia; pipeline foto sul branch `assets/photoreal-pilot` (in pausa) | Uno strumento di generazione: nel container non c'è GPU e Hugging Face è bloccato → **serve una decisione dell'utente** |
 | 4 | Bandiere a colori | ✅ M1 (Accademia/Rookies/Podio arriveranno con le rispettive schermate) | Solo codici (ITA, ESP…) e nomi dei paesi | Bandiere SVG (flag-icons, MIT) in tutte le schermate |
 | 5 | Classifiche dinamiche | ✅ M1 | Punti, vittorie, podi per piloti/squadre/costruttori; Sprint conteggiata; aggiornamento dopo ogni sessione | Pole position, giri veloci, storico gara per gara per pilota, statistiche stagionali e di carriera, test anti-duplicazione e dopo il caricamento |
-| 6 | Circuiti ricchi e animati, moto viste dall'alto | 🟡 | Canvas 2D con nastro d'asfalto, traguardo, puntini colorati | Cordoli, tribune, box, pit lane, vie di fuga, vegetazione, meteo animato, sagome delle moto, settori; valutazione 3D |
+| 6 | Circuiti ricchi e animati, moto viste dall'alto | ✅ 2D (manca il prototipo 3D di valutazione) | Canvas 2D con nastro d'asfalto, traguardo, puntini colorati | Cordoli, tribune, box, pit lane, vie di fuga, vegetazione, meteo animato, sagome delle moto, settori; valutazione 3D |
 | 7 | Prove libere interattive (uscite, giri, rientri, feedback, confidenza) | ❌ | FP a tempo istantanee con scelta gomma | Programma di prova, giri, confidenza pista/moto, feedback pilota, proposte di ingegnere e capotecnico, tempo e personale per le modifiche |
 | 8 | Sessioni rapide (giri indicativi), interventi limitati dopo FP1 | 🟡 | Formato FP1/Practice/FP2/Q1/Q2 reale | Numero di giri configurabile, traffico e momento d'uscita in qualifica, limiti agli interventi |
 | 9 | Gare 10/12/15 giri | 🟡 | 15/13/12/10 per categoria | Lunghezza per circuito (breve/standard/lunga) |
@@ -96,3 +96,18 @@ Strumenti verificati nel container: nessuna GPU, `huggingface.co` bloccato dalla
 - **Blocco**: la rete dell'ambiente cloud non consente `huggingface.co`, `cdn-lfs.huggingface.co`,
   `cas-bridge.xethub.hf.co` e `download.pytorch.org`. Vanno aggiunti fra i domini consentiti nelle impostazioni
   dell'ambiente (operazione gratuita, la può fare solo il proprietario dell'account).
+
+## M3 (anticipata su richiesta) — autodromo 2D
+
+`apps/client/src/race/circuitScene.ts` costruisce l'autodromo attorno al tracciato della simulazione: curve
+dalla curvatura, cordoli rossi/bianchi, ghiaia all'esterno delle curve, erba, barriere (reti blu dove c'è la
+ghiaia, guard-rail altrove), corsia box sul lato interno del rettilineo principale con ingresso/uscita, box delle
+squadre nei loro colori, edificio box, paddock con camion, torre di controllo, griglia di partenza, traguardo a
+scacchi, settori S1/S2/S3 della simulazione, postazioni dei commissari, tribune con pubblico animato, vialetti
+dai parcheggi con gente che cammina, maxischermi con il leader, bandiere al vento, alberi/palme e ambiente per
+paese (deserto, arido, verde, tropicale, costa con il mare), pioggia animata. Il traguardo di ogni circuito è
+ora a metà del rettilineo più lungo (in `sim/track.ts`).
+Vista di gara: moto viste dall'alto con colori della squadra e casco; prima del via uscita dai box, corsia box,
+giro di ricognizione e schieramento nella casella di griglia della simulazione; moto cadute nella ghiaia;
+bandiera a scacchi; telecamera "tutto il circuito / il mio pilota / il leader" (immagine dell'autodromo
+disegnata una volta ad alta risoluzione e inquadrata a ogni fotogramma).

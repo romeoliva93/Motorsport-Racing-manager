@@ -368,9 +368,14 @@ export interface ReplayData {
   kind: 'sprint' | 'race';
   categoryName: string;
   circuit: string;
+  /** Codice del paese del circuito (ambiente: deserto, verde, tropicale…). */
+  country: string;
   laps: number;
   lengthM: number;
-  track: { points: [number, number][] };
+  /** Tracciato: punti normalizzati e indici dei due confini di settore (S1|S2|S3). */
+  track: { points: [number, number][]; sectors: [number, number] };
+  /** Meteo della sessione. */
+  weather: { sky: string; grip: string; airTemp: number; trackTemp: number };
   riders: {
     id: string;
     name: string;
@@ -529,7 +534,14 @@ function raceSession(
       circuit: circuit.name,
       laps,
       lengthM: circuit.lengthM,
-      track: { points: track.points },
+      country: circuit.country,
+      track: { points: track.points, sectors: track.sectors },
+      weather: (() => {
+        const w = weatherOf(s, round).find((x) => x.kind === kind);
+        return w
+          ? { sky: w.sky, grip: w.grip, airTemp: w.airTemp, trackTemp: w.trackTemp }
+          : { sky: 'sun', grip: 'dry', airTemp: 22, trackTemp: 35 };
+      })(),
       riders: gridOrder.map((e) => {
         const t = s.tables.teams[e.teamId]!;
         return {

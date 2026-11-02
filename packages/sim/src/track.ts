@@ -170,7 +170,26 @@ export function generateTrack(key: string, turns: number): TrackShape {
     const braking = v > next * 1.15 ? 0.6 : 0; // zona di staccata
     return clamp(((v - minS) / (maxS - minS || 1)) * 0.7 + braking, 0, 1);
   });
-  return { points, speed, overtake, sectors: [Math.round(SAMPLES / 3), Math.round((2 * SAMPLES) / 3)] };
+  // Traguardo sul rettilineo più lungo (al 65% del rettilineo, così i box stanno prima della linea).
+  let bestStart = 0,
+    bestLen = 0;
+  for (let i = 0; i < SAMPLES; i++) {
+    if (speed[i]! < 1.05 || speed[(i - 1 + SAMPLES) % SAMPLES]! >= 1.05) continue;
+    let n = 0;
+    while (n < SAMPLES && speed[(i + n) % SAMPLES]! >= 1.05) n++;
+    if (n > bestLen) {
+      bestLen = n;
+      bestStart = i;
+    }
+  }
+  const shift = bestLen > 0 ? (bestStart + Math.round(bestLen * 0.65)) % SAMPLES : 0;
+  const rot = <T>(a: T[]) => [...a.slice(shift), ...a.slice(0, shift)];
+  return {
+    points: rot(points),
+    speed: rot(speed),
+    overtake: rot(overtake),
+    sectors: [Math.round(SAMPLES / 3), Math.round((2 * SAMPLES) / 3)],
+  };
 }
 
 /** Posizione (x, y) normalizzata e indice per una frazione di giro 0–1. */
