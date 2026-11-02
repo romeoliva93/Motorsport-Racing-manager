@@ -150,7 +150,8 @@ def main():
     from diffusers import AutoPipelineForText2Image
 
     torch.set_num_threads(os.cpu_count() or 4)
-    pipe = AutoPipelineForText2Image.from_pretrained(a.model, torch_dtype=torch.float32)
+    # variante fp16: download dimezzato (~7 GB), poi i calcoli su CPU in float32
+    pipe = AutoPipelineForText2Image.from_pretrained(a.model, torch_dtype=torch.float32, variant='fp16')
     pipe.set_progress_bar_config(disable=True)
     t0 = time.time()
     for i, p in enumerate(todo, 1):
