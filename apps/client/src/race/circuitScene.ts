@@ -1183,7 +1183,7 @@ export function drawDynamic(
     ctx.lineTo(-L * 0.1, W * 0.5);
     ctx.quadraticCurveTo(L * 0.3, W * 0.55, L * 0.42, 0);
     ctx.fill();
-    ctx.strokeStyle = b.mine ? '#ffd21f' : 'rgba(0,0,0,0.6)';
+    ctx.strokeStyle = b.mine ? '#ff7a1a' : 'rgba(0,0,0,0.6)';
     ctx.lineWidth = b.mine ? 2 : 1;
     ctx.stroke();
     // Pilota: schiena e casco.
@@ -1199,7 +1199,7 @@ export function drawDynamic(
     if (b.label) {
       ctx.font = '700 10px Archivo, system-ui, sans-serif';
       const tw = ctx.measureText(b.label).width;
-      ctx.fillStyle = b.mine ? '#ffd21f' : 'rgba(16,17,19,0.85)';
+      ctx.fillStyle = b.mine ? '#ff7a1a' : 'rgba(16,17,19,0.85)';
       ctx.fillRect(p[0] + 8, p[1] - 17, tw + 8, 14);
       ctx.fillStyle = b.mine ? '#17150c' : '#f3f1ec';
       ctx.textAlign = 'left';

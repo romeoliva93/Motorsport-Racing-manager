@@ -1,19 +1,20 @@
 /*
- * Design tokens di LEAN ANGLE — versione 2 ("muretto box").
+ * Design tokens di LEAN ANGLE — versione 3.
  *
- * Idea: grafite calda come l'asfalto, testo chiaro leggibile, un solo colore d'azione (il giallo dei
- * cartelli dei box) e il colore della squadra del giocatore come firma (--team, impostato dalla shell).
- * Niente sfumature rosso-arancio né maiuscolo spaziato: etichette normali, frasi brevi, numeri grandi.
+ * Base scura (antracite, grafite, grigio tecnico) e colori vivaci solo per ciò che è interattivo o informativo:
+ *   arancione = azioni principali · blu = informazioni e componenti · verde = condizioni positive
+ *   giallo = attenzione · rosso = pericolo e usura critica.
+ * Il colore della squadra del giocatore personalizza le schermate (--team, impostato dalla shell).
  */
 :root {
   /* Superfici */
-  --bg-0: #101113;
-  --bg-1: #16171a;
-  --bg-2: #1c1d21;
-  --bg-3: #24262b;
-  --glass: rgba(24, 25, 29, 0.82);
-  --line: #2c2e34;
-  --line-strong: #3c3f47;
+  --bg-0: #0f1013;
+  --bg-1: #16181c;
+  --bg-2: #1d2025;
+  --bg-3: #272a31;
+  --glass: rgba(26, 28, 33, 0.86);
+  --line: #2f333b;
+  --line-strong: #434853;
 
   /* Testo */
   --text-1: #f3f1ec;
@@ -21,17 +22,18 @@
   --text-3: #8a867e;
 
   /* Azione e identità */
-  --signal: #ffd21f; /* cartello box: azioni principali */
-  --signal-ink: #17150c;
+  --signal: #ff7a1a; /* arancione: azioni principali */
+  --signal-ink: #1a0d03;
+  --accent-blue: #3d9bff; /* informazioni e componenti */
   --team: #3d7bfd; /* sostituito dalla shell con il colore della squadra */
   --orange: var(--signal);
   --accent-grad: linear-gradient(90deg, var(--signal), var(--signal));
 
   /* Stati */
-  --ok: #4cc38a;
-  --warn: #f0b429;
-  --bad: #ef5b4f;
-  --info: #6aa8ff;
+  --ok: #34d17c;
+  --warn: #ffc93d;
+  --bad: #ff4d4d;
+  --info: #3d9bff;
 
   /* Gomme (convenzione di gioco) */
   --tyre-soft: #ef5b4f;
@@ -85,7 +87,7 @@ body {
   background: var(--bg-0);
   color: var(--text-1);
   font-family: var(--font-ui);
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;

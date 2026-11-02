@@ -160,12 +160,13 @@ async function waitForServer(url, ms = 20000) {
     await page.locator('.rv-canvas').waitFor();
     await page.getByRole('button', { name: '16×' }).click();
     await page.waitForFunction(
-      () => /Giro [2-9]/.test(document.querySelector('.rv-head')?.textContent ?? ''),
+      () => parseInt(document.querySelector('.rv-lap b')?.textContent ?? '0', 10) >= 2,
       null,
       { timeout: 20000 },
     );
     await shot('12-gara');
-    step('Sprint in 2D: ' + (await page.locator('.rv-head b').innerText()));
+    if ((await page.locator('.rv-rider').count()) !== 2) throw new Error('Pannelli piloti mancanti');
+    step('Sprint in 2D: giro ' + (await page.locator('.rv-lap b').innerText()) + ', 2 pannelli piloti');
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
     await page.getByRole('button', { name: 'Corri Warm Up', exact: true }).click();
     await page.getByRole('button', { name: 'Via alla gara!' }).click();

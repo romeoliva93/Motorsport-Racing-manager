@@ -1,7 +1,10 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReplayData } from '@lean-angle/game';
 import { Flag } from '../../design-system/Flag.tsx';
-import { raceTime } from '../../design-system/components.tsx';
+import { lapTime, raceTime } from '../../design-system/components.tsx';
+import { Portrait } from '../../design-system/Portrait.tsx';
+import { Helmet } from '../../design-system/Helmet.tsx';
+import { NumberPlate } from '../../design-system/NumberPlate.tsx';
 import {
   buildScene,
   drawDynamic,
@@ -352,55 +355,87 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
                               ? 'Nuova partenza!'
                               : `Bandiera a scacchi: vince ${name(e.riderId)}`;
 
+  // Dati live di un pilota in questo istante (tutti derivati dalla simulazione).
+  const lapsDone = (n: number) => (racing ? Math.max(0, Math.floor(Math.max(0, dists[n]!) / L)) : 0);
+  const live = (n: number) => {
+    const r = data.riders[n]!;
+    const done = Math.min(r.lapTimes.length, lapsDone(n));
+    const progress = racing ? Math.min(1, Math.max(0, dists[n]!) / (data.laps * L)) : 0;
+    const startFuel = data.fuelCapacity * (data.kind === 'sprint' ? 0.55 : 0.95);
+    const fuel = Math.max(0.3, startFuel * (1 - progress) + 0.3 * progress);
+    return {
+      wear: done > 0 ? r.wear[done - 1]! : 0,
+      last: done > 0 ? r.lapTimes[done - 1]! : null,
+      best: done > 1 ? Math.min(...r.lapTimes.slice(1, done)) : null,
+      fuel,
+      pos: order.findIndex((o) => o.r.id === r.id) + 1,
+    };
+  };
+  const TYRE_LETTER: Record<string, string> = { soft: 'S', medium: 'M', hard: 'H', wet: 'W' };
+  const MODE_LABEL: Record<string, string> = {
+    conservative: 'Prudente',
+    normal: 'Normale',
+    attack: 'Attacco',
+  };
+  const lastDirection = [...events].find((e) =>
+    ['longLapPenalty', 'redFlag', 'yellowFlag', 'jumpStart', 'positionDrop', 'restart'].includes(e.kind),
+  );
+  const mineIdx = data.riders.map((r, i) => (r.mine ? i : -1)).filter((i) => i >= 0);
+
   return (
-    <div className="race-viewer">
-      <div className="rv-head">
-        <div>
-          <small className="muted">
-            {data.categoryName} · {data.circuit} · aria {data.weather.airTemp}° · asfalto{' '}
-            {data.weather.trackTemp}°
-          </small>
-          <b className="display">{phase}</b>
+    <div className="race-viewer rv2">
+      <aside className="rv-left">
+        <div className="rv-left-head">
+          <small>{data.categoryName}</small>
+          <b>{data.circuit}</b>
+          <span className="muted">
+            Aria {data.weather.airTemp}° · asfalto {data.weather.trackTemp}°
+            {data.weather.grip !== 'dry'
+              ? ` · pista ${data.weather.grip === 'wet' ? 'bagnata' : 'umida'}`
+              : ''}
+          </span>
         </div>
-        <div className="rv-speeds" role="group" aria-label="Velocità di riproduzione">
-          {SPEEDS.map((v) => (
-            <button key={v} className={speed === v ? 'on' : ''} onClick={() => setSpeed(v)}>
-              {v === 0 ? '❚❚' : `${v}×`}
-            </button>
-          ))}
-        </div>
-        <div className="rv-speeds" role="group" aria-label="Vista">
-          <button className={!mode3d ? 'on' : ''} onClick={() => setMode3d(false)}>
-            2D
-          </button>
-          <button className={mode3d ? 'on' : ''} onClick={() => setMode3d(true)}>
-            3D
-          </button>
-        </div>
-        <div className="rv-speeds" role="group" aria-label="Inquadratura">
-          {CAMS.map((c) => (
-            <button key={c.id} className={cam === c.id ? 'on' : ''} onClick={() => setCam(c.id)}>
-              {c.label}
-            </button>
-          ))}
-        </div>
-        <span className="muted rv-clock">{racing ? raceTime(t) : 'pre-gara'}</span>
-        {!racing && (
-          <button
-            className="btn"
-            onClick={() => {
-              tRef.current = 0;
-              setT(0);
-            }}
-          >
-            Vai al via
-          </button>
-        )}
-        <button className="btn primary" onClick={onDone}>
-          {finished ? 'Vedi i risultati' : 'Salta alla fine'}
-        </button>
-      </div>
-      <div className="rv-body">
+        <ol className="rv-board">
+          {order.map(({ r, d, i: n }, i) => {
+            const out = racing && d < 0;
+            const gap = i === 0 || out ? null : (leader.d - d) / avgSpeed;
+            const lv = live(n);
+            return (
+              <li key={r.id} className={`${r.mine ? 'mine' : ''} ${out ? 'out' : ''}`}>
+                <span className="p">{out ? '–' : i + 1}</span>
+                <span className="c" style={{ background: r.color }} />
+                <span className="num">{r.number}</span>
+                <span className="n">
+                  <Flag code={r.nationality} size={0.75} /> {r.name.split(' ').slice(-1)[0]}
+                  {pendingLL(r.id) > 0 && (
+                    <em className="llp" title="Long Lap Penalty da scontare">
+                      LLP{pendingLL(r.id) > 1 ? `×${pendingLL(r.id)}` : ''}
+                    </em>
+                  )}
+                  <small className="team">{r.team}</small>
+                </span>
+                <span className={`tyre-chip ${r.compound}`} title={`Gomma ${r.compound}`}>
+                  {TYRE_LETTER[r.compound] ?? '?'}
+                </span>
+                <span className="g">
+                  {!racing
+                    ? 'griglia'
+                    : out
+                      ? 'rit.'
+                      : i === 0
+                        ? 'leader'
+                        : leader.d - d > L
+                          ? `+${Math.floor((leader.d - d) / L)} g`
+                          : `+${gap!.toFixed(1)}`}
+                  <small>{lv.last ? lapTime(lv.last) : ''}</small>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </aside>
+
+      <div className="rv-center">
         <div className="rv-stage">
           {mode3d ? (
             <Suspense fallback={<div className="loading">Preparo la vista 3D…</div>}>
@@ -416,48 +451,196 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
           ) : (
             <canvas ref={fg} className="rv-canvas rv-top" aria-label="Circuito con le moto in pista" />
           )}
+          <div className="rv-phase">
+            <b className="display">{phase}</b>
+            {lastDirection && (
+              <span className={`rv-direction ${lastDirection.kind}`}>
+                Direzione gara: {evText(lastDirection)}
+              </span>
+            )}
+          </div>
         </div>
-        <ol className="rv-board">
-          {order.map(({ r, d }, i) => {
-            const out = racing && d < 0;
-            const gap = i === 0 || out ? null : (leader.d - d) / avgSpeed;
-            return (
-              <li key={r.id} className={`${r.mine ? 'mine' : ''} ${out ? 'out' : ''}`}>
-                <span className="p">{out ? '–' : i + 1}</span>
-                <span className="c" style={{ background: r.color }} />
-                <span className="n">
-                  <Flag code={r.nationality} size={0.75} /> {r.name}
-                  {pendingLL(r.id) > 0 && (
-                    <em className="llp" title="Long Lap Penalty da scontare">
-                      LLP{pendingLL(r.id) > 1 ? `×${pendingLL(r.id)}` : ''}
-                    </em>
-                  )}
-                </span>
-                <span className="g">
-                  {!racing
-                    ? 'griglia'
-                    : out
-                      ? 'ritirato'
-                      : i === 0
-                        ? 'leader'
-                        : leader.d - d > L
-                          ? `+${Math.floor((leader.d - d) / L)} giro`
-                          : `+${gap!.toFixed(1)}s`}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+        <div className="rv-bar">
+          <div className="rv-lap">
+            <small>Giro</small>
+            <b>
+              {racing ? Math.min(lap, data.laps) : 0}
+              <span>/{data.laps}</span>
+            </b>
+          </div>
+          <div className="rv-speeds" role="group" aria-label="Velocità di riproduzione">
+            {SPEEDS.map((v) => (
+              <button key={v} className={speed === v ? 'on' : ''} onClick={() => setSpeed(v)}>
+                {v === 0 ? '❚❚' : `${v}×`}
+              </button>
+            ))}
+          </div>
+          <div className="rv-speeds" role="group" aria-label="Vista">
+            <button className={!mode3d ? 'on' : ''} onClick={() => setMode3d(false)}>
+              2D
+            </button>
+            <button className={mode3d ? 'on' : ''} onClick={() => setMode3d(true)}>
+              3D
+            </button>
+          </div>
+          <div className="rv-speeds" role="group" aria-label="Inquadratura">
+            {CAMS.map((c) => (
+              <button key={c.id} className={cam === c.id ? 'on' : ''} onClick={() => setCam(c.id)}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <span className="muted rv-clock">{racing ? raceTime(t) : 'pre-gara'}</span>
+          <span className="spacer" />
+          {!racing && (
+            <button
+              className="btn"
+              onClick={() => {
+                tRef.current = 0;
+                setT(0);
+              }}
+            >
+              Vai al via
+            </button>
+          )}
+          <button className="btn primary" onClick={onDone}>
+            {finished ? 'Vedi i risultati' : 'Salta alla fine'}
+          </button>
+        </div>
+        <ul className="rv-feed" aria-live="polite">
+          {!racing && <li className="muted">I piloti escono dai box per il giro di ricognizione.</li>}
+          {racing && events.length === 0 && <li className="muted">Semaforo verde: si parte!</li>}
+          {events.slice(0, 3).map((e, i) => (
+            <li key={`${e.t}-${i}`} className={e.kind}>
+              <span className="muted">Giro {Math.max(1, e.lap)}</span> {evText(e)}
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className="rv-feed" aria-live="polite">
-        {!racing && <li className="muted">I piloti escono dai box per il giro di ricognizione.</li>}
-        {racing && events.length === 0 && <li className="muted">Semaforo verde: si parte!</li>}
-        {events.map((e, i) => (
-          <li key={`${e.t}-${i}`} className={e.kind}>
-            <span className="muted">Giro {Math.max(1, e.lap)}</span> {evText(e)}
-          </li>
-        ))}
-      </ul>
+
+      <aside className="rv-right">
+        {mineIdx.map((n) => {
+          const r = data.riders[n]!;
+          const lv = live(n);
+          const out = racing && dists[n]! < 0;
+          return (
+            <div key={r.id} className="rv-rider" style={{ ['--team' as string]: r.color }}>
+              <div className="rv-rider-head">
+                <Portrait
+                  portrait={r.portrait}
+                  name={r.name}
+                  size={3.6}
+                  round
+                  fallback={
+                    <Helmet team={r.team} colors={{ primary: r.color, secondary: r.color2 }} size={3.8} />
+                  }
+                />
+                <NumberPlate
+                  number={r.number}
+                  colors={{ primary: r.color, secondary: r.color2 }}
+                  size={2.6}
+                />
+                <div className="rv-rider-name">
+                  <small>
+                    <Flag code={r.nationality} size={0.75} /> {r.name.split(' ')[0]}
+                  </small>
+                  <b>{r.name.split(' ').slice(1).join(' ')}</b>
+                </div>
+                <div className="rv-rider-pos">
+                  <small>Pos.</small>
+                  <b>{out ? 'rit.' : racing ? lv.pos : '–'}</b>
+                </div>
+              </div>
+              <div className="rv-gauges">
+                <Gauge
+                  label="Gomma"
+                  value={100 - lv.wear}
+                  text={`${100 - lv.wear}%`}
+                  sub={`${TYRE_LETTER[r.compound]} · usura ${lv.wear}%`}
+                  tone={lv.wear >= 75 ? 'bad' : lv.wear >= 50 ? 'warn' : 'ok'}
+                />
+                <Gauge
+                  label="Carburante"
+                  value={(lv.fuel / data.fuelCapacity) * 100}
+                  text={`${lv.fuel.toFixed(1).replace('.', ',')} L`}
+                  sub={`su ${data.fuelCapacity} L`}
+                  tone="info"
+                />
+              </div>
+              <div className="rv-stat">
+                <span>Affidabilità moto</span>
+                <div className="bar">
+                  <span
+                    style={{
+                      width: `${r.reliability}%`,
+                      background: r.reliability >= 85 ? 'var(--ok)' : 'var(--warn)',
+                    }}
+                  />
+                </div>
+                <b>{r.reliability}%</b>
+              </div>
+              <div className="rv-stat">
+                <span>Ritmo</span>
+                <b className="rv-mode">{MODE_LABEL[r.mode] ?? r.mode}</b>
+              </div>
+              <div className="rv-stat">
+                <span>Ultimo giro</span>
+                <b>{lv.last ? lapTime(lv.last) : '—'}</b>
+              </div>
+              <div className="rv-stat">
+                <span>Miglior giro</span>
+                <b>{lv.best ? lapTime(lv.best) : '—'}</b>
+              </div>
+            </div>
+          );
+        })}
+        {mineIdx.length === 0 && <p className="muted">Nessun tuo pilota in questa gara.</p>}
+        <p className="muted rv-note">
+          Ritmo e mappa carburante modificabili durante la gara: prossima milestone (oggi si scelgono prima
+          del via).
+        </p>
+      </aside>
+    </div>
+  );
+}
+
+function Gauge({
+  label,
+  value,
+  text,
+  sub,
+  tone,
+}: {
+  label: string;
+  value: number;
+  text: string;
+  sub: string;
+  tone: 'ok' | 'warn' | 'bad' | 'info';
+}) {
+  const r = 26,
+    c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(100, value));
+  return (
+    <div className="gauge">
+      <svg viewBox="0 0 64 64" width="64" height="64" aria-hidden>
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--bg-3)" strokeWidth="7" />
+        <circle
+          cx="32"
+          cy="32"
+          r={r}
+          fill="none"
+          stroke={`var(--${tone})`}
+          strokeWidth="7"
+          strokeDasharray={`${(c * v) / 100} ${c}`}
+          strokeLinecap="round"
+          transform="rotate(-90 32 32)"
+        />
+      </svg>
+      <div>
+        <small>{label}</small>
+        <b>{text}</b>
+        <span>{sub}</span>
+      </div>
     </div>
   );
 }

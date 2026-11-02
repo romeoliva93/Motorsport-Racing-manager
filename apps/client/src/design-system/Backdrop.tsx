@@ -27,10 +27,10 @@ export function Backdrop({ color = '#3d7bfd', intensity = 1 }: { color?: string;
     ];
     const riders = [
       { track: 0, u: 0, lap: 21, hue: color, trail: [] as [number, number][] },
-      { track: 0, u: 0.02, lap: 21.6, hue: '#ffd21f', trail: [] as [number, number][] },
+      { track: 0, u: 0.02, lap: 21.6, hue: '#ff7a1a', trail: [] as [number, number][] },
       { track: 0, u: 0.05, lap: 22.1, hue: '#e9e7e2', trail: [] as [number, number][] },
       { track: 1, u: 0.4, lap: 16, hue: color, trail: [] as [number, number][] },
-      { track: 2, u: 0.7, lap: 13, hue: '#ffd21f', trail: [] as [number, number][] },
+      { track: 2, u: 0.7, lap: 13, hue: '#ff7a1a', trail: [] as [number, number][] },
     ];
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);

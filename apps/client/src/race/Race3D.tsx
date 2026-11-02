@@ -326,7 +326,7 @@ export default function Race3D(props: Race3DProps) {
       rider.position.set(-0.2, 1.3, 0);
       const helmet = new THREE.Mesh(
         new THREE.SphereGeometry(0.28, 12, 10),
-        mat(b.mine ? 0xffd21f : 0xf3f1ec),
+        mat(b.mine ? 0xff7a1a : 0xf3f1ec),
       );
       helmet.position.set(0.25, 1.55, 0);
       const wheelGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.18, 14);

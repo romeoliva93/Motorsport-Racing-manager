@@ -5,6 +5,8 @@
 import { GameCalendar, type IdFactory, type Rng } from '@lean-angle/core';
 import {
   PRIZE_PER_POINT,
+  portraitKey,
+  poolPortraitKey,
   RACE_FEE,
   TRAVEL_COST,
   rows,
@@ -392,7 +394,17 @@ export interface ReplayData {
     color: string;
     color2: string;
     mine: boolean;
+    /** Ritratto (chiave e volto di riserva). */
+    portrait: { key: string; pool: string };
+    /** Strategia e moto: gomma, ritmo, affidabilità (0–100), giri per giro tempi e usura gomma. */
+    compound: string;
+    mode: string;
+    reliability: number;
+    lapTimes: number[];
+    wear: number[];
   }[];
+  /** Carburante a inizio gara (litri) per categoria. */
+  fuelCapacity: number;
   frames: number[][];
   frameEvery: number;
   events: RaceOutcome['events'];
@@ -584,7 +596,7 @@ function raceSession(
           ? { sky: w.sky, grip: w.grip, airTemp: w.airTemp, trackTemp: w.trackTemp }
           : { sky: 'sun', grip: 'dry', airTemp: 22, trackTemp: 35 };
       })(),
-      riders: gridOrder.map((e) => {
+      riders: gridOrder.map((e, k) => {
         const t = s.tables.teams[e.teamId]!;
         return {
           id: e.rider.id,
@@ -596,8 +608,18 @@ function raceSession(
           color: t.colors.primary,
           color2: t.colors.secondary,
           mine: e.teamId === playerTeam,
+          portrait: (() => {
+            const key = portraitKey(e.rider);
+            return { key, pool: poolPortraitKey(key, cal.ageOn(e.rider.birthDay, s.meta.currentDay)) };
+          })(),
+          compound: grid[k]!.compound,
+          mode: grid[k]!.mode,
+          reliability: Math.round(grid[k]!.reliability * 100),
+          lapTimes: out.laps[k]!.times,
+          wear: out.laps[k]!.wear,
         };
       }),
+      fuelCapacity: { premier: 22, intermediate: 24, lightweight: 11, rookies: 11 }[cat.tier],
       frames: out.frames,
       frameEvery: out.frameEvery,
       events: out.events,

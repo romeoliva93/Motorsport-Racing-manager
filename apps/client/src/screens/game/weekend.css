@@ -148,7 +148,7 @@
 }
 .choice button.on {
   border-color: var(--signal);
-  background: rgba(255, 210, 31, 0.1);
+  background: rgba(255, 122, 26, 0.1);
   color: var(--text-1);
 }
 .tyre {
@@ -291,7 +291,7 @@
   border-radius: 6px;
 }
 .rv-board li.mine {
-  background: rgba(255, 210, 31, 0.12);
+  background: rgba(255, 122, 26, 0.12);
 }
 .rv-board li.out {
   opacity: 0.45;
@@ -494,4 +494,308 @@ table.std tbody tr.cut td {
 }
 .rv-3d canvas {
   display: block;
+}
+
+/* ---- Schermata gara v2: classifica | circuito | pannelli piloti ---- */
+.race-viewer.rv2 {
+  display: grid;
+  grid-template-columns: 22rem minmax(0, 1fr) 20rem;
+  gap: 0.8rem;
+  align-items: start;
+}
+.rv-left,
+.rv-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.rv-left-head {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.rv-left-head small {
+  color: var(--signal);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  font-size: 0.72rem;
+}
+.rv-left-head b {
+  font-size: 1.15rem;
+}
+.rv-left-head .muted {
+  font-size: 0.8rem;
+}
+.rv2 .rv-board {
+  max-height: calc(min(70vh, 46rem) + 5rem);
+}
+.rv2 .rv-board li {
+  grid-template-columns: 1.5rem 0.25rem 1.9rem minmax(0, 1fr) 1.5rem 4.6rem;
+  gap: 0.4rem;
+  padding: 0.28rem 0.35rem;
+}
+.rv2 .rv-board .num {
+  font-family: var(--font-display, inherit);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 1rem;
+  text-align: center;
+}
+.rv2 .rv-board .team {
+  display: block;
+  color: var(--text-3);
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rv2 .rv-board .g {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1, inherit);
+  font-weight: 700;
+}
+.rv2 .rv-board .g small {
+  display: block;
+  color: var(--text-3);
+  font-weight: 500;
+  font-size: 0.7rem;
+}
+.tyre-chip {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.68rem;
+  font-weight: 900;
+  background: #111;
+  border: 3px solid #888;
+  color: #fff;
+}
+.tyre-chip.soft {
+  border-color: #ff4d4d;
+}
+.tyre-chip.medium {
+  border-color: #ffc93d;
+}
+.tyre-chip.hard {
+  border-color: #e9edf2;
+}
+.tyre-chip.wet {
+  border-color: #3d9bff;
+}
+.rv-center {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.rv2 .rv-stage {
+  height: min(70vh, 46rem);
+}
+.rv-phase {
+  position: absolute;
+  left: 0.8rem;
+  top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+  pointer-events: none;
+}
+.rv-phase b {
+  background: rgba(8, 10, 14, 0.78);
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--r-1);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.rv-direction {
+  background: rgba(8, 10, 14, 0.85);
+  border-left: 4px solid var(--warn);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--r-1);
+  font-size: 0.85rem;
+}
+.rv-direction.redFlag {
+  border-color: var(--bad);
+}
+.rv-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.5rem 0.8rem;
+}
+.rv-bar .spacer {
+  flex: 1;
+}
+.rv-lap {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  padding-right: 0.6rem;
+  border-right: 1px solid var(--line);
+}
+.rv-lap small {
+  color: var(--text-3);
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+.rv-lap b {
+  font-size: 1.9rem;
+  font-weight: 900;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+}
+.rv-lap b span {
+  font-size: 1rem;
+  color: var(--text-3);
+}
+.rv-rider {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--team);
+  border-radius: var(--r-3);
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.rv-rider-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.rv-rider-name {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.1;
+}
+.rv-rider-name small {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+.rv-rider-name b {
+  display: block;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rv-rider-pos {
+  text-align: center;
+  line-height: 1;
+}
+.rv-rider-pos small {
+  color: var(--text-3);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+.rv-rider-pos b {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--signal);
+}
+.rv-gauges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+.gauge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.gauge svg {
+  width: 2.8rem;
+  height: 2.8rem;
+  flex: none;
+}
+.gauge div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.gauge small,
+.gauge span {
+  color: var(--text-3);
+  font-size: 0.68rem;
+}
+.gauge b {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.rv-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+.rv-stat > span {
+  color: var(--text-3);
+  flex: 1;
+}
+.rv-stat .bar {
+  flex: 1;
+  height: 0.35rem;
+  background: var(--bg-3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.rv-stat .bar span {
+  display: block;
+  height: 100%;
+}
+.rv-stat b {
+  font-variant-numeric: tabular-nums;
+}
+.rv-mode {
+  color: var(--info);
+}
+.rv-note {
+  font-size: 0.75rem;
+}
+@media (max-width: 1400px) {
+  .race-viewer.rv2 {
+    grid-template-columns: 19rem minmax(0, 1fr);
+  }
+  .rv-right {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .rv-right .rv-rider {
+    flex: 1 1 18rem;
+  }
+}
+@media (max-width: 900px) {
+  .race-viewer.rv2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rv-center {
+    order: -1;
+  }
+  .rv2 .rv-stage {
+    height: 55vh;
+  }
+  .rv2 .rv-board {
+    max-height: 20rem;
+  }
 }

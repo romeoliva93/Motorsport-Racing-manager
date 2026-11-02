@@ -32,13 +32,13 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
       <svg className="menu-track" viewBox="0 0 1000 620" aria-hidden>
         <defs>
           <linearGradient id="mg" x1="0" x2="1">
-            <stop offset="0" stopColor="#ffd21f" />
+            <stop offset="0" stopColor="#ff7a1a" />
             <stop offset="1" stopColor="#f3f1ec" />
           </linearGradient>
         </defs>
         <path id="trk" className="base" d={TRACK} />
         <path className="line" d={TRACK} />
-        <circle r="7" fill="#ffd21f">
+        <circle r="7" fill="#ff7a1a">
           <animateMotion dur="9s" repeatCount="indefinite">
             <mpath href="#trk" />
           </animateMotion>

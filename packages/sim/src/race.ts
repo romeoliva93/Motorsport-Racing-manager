@@ -128,6 +128,11 @@ export interface RaceOutcome {
   frames: number[][];
   frameEvery: number;
   duration: number;
+  /**
+   * Per ogni pilota (ordine di griglia): tempo di ogni giro concluso e usura della gomma a fine giro (0–100).
+   * Usura = perdita di tempo per degrado gomma / 2% del giro (100 = gomma finita).
+   */
+  laps: { times: number[]; wear: number[] }[];
 }
 
 /**
@@ -264,6 +269,8 @@ interface State {
   lastLapTL: boolean;
   /** Fermo fino a questo istante (partenza dai box, bandiera rossa). */
   holdUntil: number;
+  lapTimes: number[];
+  wear: number[];
   /** Giri della gomma montata (si azzera alla ripartenza dopo la bandiera rossa). */
   tyreFrom: number;
 }
@@ -323,6 +330,8 @@ export function runRace(setup: RaceSetup): RaceOutcome {
     lastLapTL: false,
     holdUntil: r.pitLaneStart ? 6 : 0,
     tyreFrom: 0,
+    lapTimes: [],
+    wear: [],
   }));
   const yellow: { at: number; until: number }[] = [];
   let lastCrash = -Infinity;
@@ -470,6 +479,14 @@ export function runRace(setup: RaceSetup): RaceOutcome {
           s.best = Math.min(s.best, lt);
           if (lt < fastest.time) fastest = { riderId: s.r.id, time: lt };
         }
+        {
+          // Usura gomma a fine giro (stesso modello del tempo sul giro).
+          const tm = tyreModel(s.r.compound, cond);
+          const age = lapNow - s.tyreFrom;
+          const loss = tm.deg * degScale(laps) * age * MODE[s.r.mode].deg * (1.3 - 0.6 * s.r.tyreManagement);
+          s.lapTimes.push(Math.round(lt * 1000) / 1000);
+          s.wear.push(Math.round(Math.min(100, (loss / 0.02) * 100)));
+        }
         s.lap = lapNow;
         s.lapStart = tc;
         // Limiti della pista nel giro appena concluso.
@@ -590,7 +607,15 @@ export function runRace(setup: RaceSetup): RaceOutcome {
         ...penaltyOf(s),
       })),
   ];
-  return { results, events, fastestLap: fastest, frames, frameEvery, duration: Math.round(t) };
+  return {
+    results,
+    events,
+    fastestLap: fastest,
+    frames,
+    frameEvery,
+    duration: Math.round(t),
+    laps: st.map((s) => ({ times: s.lapTimes, wear: s.wear })),
+  };
 }
 
 /** Converte un attributo 1–100 in 0–1. */
