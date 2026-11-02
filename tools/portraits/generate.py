@@ -96,12 +96,12 @@ def prompt_for(p):
     if p.get('organizer'):
         outfit = 'wearing the official junior cup team jacket, yellow and black, identical for every rider'
     elif p['kind'] == 'pool':
-        outfit = 'wearing a plain black motorcycle racing team polo shirt'
+        outfit = 'wearing a plain black polo shirt'
     elif p['kind'] == 'staff':
         extra = ', radio headset around the neck' if p['role'] in ('trackEngineer', 'crewChief') else ''
-        outfit = f'wearing {art(c1)} {c1} and {c2} racing team jacket{extra}'
+        outfit = f'wearing a plain {c1} zip jacket with {c2} collar{extra}'
     else:
-        outfit = f'wearing {art(c1)} {c1} and {c2} racing team polo shirt'
+        outfit = f'wearing a plain {c1} polo shirt with {c2} collar'
     job = {
         'rider': 'professional motorcycle racer',
         'staff': {'crewChief': 'motorcycle racing crew chief', 'trackEngineer': 'motorcycle racing track engineer',
