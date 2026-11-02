@@ -18,6 +18,7 @@ import {
   rows,
   teamBalance,
   PART_KEYS,
+  GARAGE_KEYS,
   validateCustomTeam,
   type ContractOffer,
   type GameState,
@@ -51,6 +52,7 @@ import {
 import { addNews } from './news.ts';
 import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
 import { dealWindowOpen, signDeal } from './sponsors.ts';
+import { canService, serviceCost, servicePart } from './garage.ts';
 import { seasonFinished, startNextSeason } from './season.ts';
 
 export interface NewCareerOptions {
@@ -128,7 +130,7 @@ export class GameEngine {
       if (this.nextRound()) out.push('ContinueToNextEvent');
     }
     if (marketOpen(s)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
-    out.push('BuyUpgrade');
+    out.push('BuyUpgrade', 'ServiceParts');
     if (dealWindowOpen(s)) out.push('SignSponsorDeal');
     return out;
   }
@@ -260,6 +262,19 @@ export class GameEngine {
         if (cost > teamBalance(s, teamId)) return err('Soldi insufficienti per questo upgrade');
         return ok(true);
       }
+      case 'ServiceParts': {
+        const b = s.tables.bikes[cmd.bikeId as keyof typeof s.tables.bikes];
+        if (!b || b.teamId !== s.meta.playerTeamId) return err('Moto non trovata');
+        if (cmd.parts.length === 0) return err('Nessun componente scelto');
+        for (const k of cmd.parts) {
+          if (!GARAGE_KEYS.includes(k)) return err('Componente sconosciuto');
+          if (!canService(s, b, k))
+            return err('Il motore MotoGP si cambia solo dalla dotazione del regolamento');
+        }
+        const total = cmd.parts.reduce((t, k) => t + serviceCost(s, b, k), 0);
+        if (total > teamBalance(s, b.teamId)) return err('Soldi insufficienti per la revisione');
+        return ok(true);
+      }
       case 'SignSponsorDeal':
         if (!['safe', 'balanced', 'ambitious'].includes(cmd.risk)) return err('Offerta non valida');
         return dealWindowOpen(s)
@@ -334,6 +349,12 @@ export class GameEngine {
           level: pendingOrder(s, s.meta.playerTeamId!, cmd.part)!.level,
         });
         return;
+      case 'ServiceParts': {
+        const b = s.tables.bikes[cmd.bikeId as keyof typeof s.tables.bikes]!;
+        const cost = [...new Set(cmd.parts)].reduce((t, k) => t + servicePart(s, this.ids, b, k), 0);
+        this.events.emit('PartsServiced', s.meta.currentDay, { bikeId: b.id, parts: cmd.parts, cost });
+        return;
+      }
       case 'SignSponsorDeal':
         signDeal(s, this.ids, cmd.risk);
         this.events.emit('SponsorSigned', s.meta.currentDay, { risk: cmd.risk });

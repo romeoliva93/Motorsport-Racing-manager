@@ -9,6 +9,9 @@ import {
   PRIZE_PER_POINT,
   MAX_PART_LEVEL,
   PARTS,
+  GARAGE_PARTS,
+  GARAGE_WEEKEND_KM,
+  type GarageKey,
   SPONSOR_DEAL_RISK,
   rows,
   teamBalance,
@@ -27,6 +30,7 @@ import { activeRiderContract, buyoutFor } from './market.ts';
 import { riderDetail, type RiderDetail } from './queries.ts';
 import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
 import { engineStatus, teamConcession, type ConcessionRank } from './regulations.ts';
+import { bikeReliabilityFactor, canService, partReliability, partWear, serviceCost } from './garage.ts';
 import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
@@ -39,6 +43,7 @@ import { compoundForecast, unit } from '@lean-angle/sim';
 import { conditionsFor, type SessionWeather } from './weather.ts';
 import {
   RACE_FORMAT,
+  bikeOf,
   TYRE_ALLOCATION,
   WEEKEND_FORMAT,
   nextSession,
@@ -605,6 +610,32 @@ export interface BikeView {
     /** Ordine in fabbrica: livello in arrivo, data e giorni mancanti. */
     inProduction: { level: number; ready: string; daysLeft: number } | null;
   }[];
+  /** Garage: moto di ogni pilota (A, e B solo dove il regolamento la concede) con i 14 componenti. */
+  garage: {
+    riderId: string;
+    rider: string;
+    number: number;
+    bikes: {
+      id: string;
+      slot: 'A' | 'B';
+      km: number;
+      /** Affidabilità della moto in gara (base × componenti), 0–100. */
+      reliability: number;
+      parts: {
+        key: GarageKey;
+        name: string;
+        group: string;
+        upgradeLevel: number;
+        km: number;
+        lifeKm: number;
+        wear: number;
+        reliability: number;
+        services: number;
+        cost: number;
+        serviceable: boolean;
+      }[];
+    }[];
+  }[];
 }
 
 export function bikeView(s: GameState): BikeView | null {
@@ -644,6 +675,43 @@ export function bikeView(s: GameState): BikeView | null {
               },
             ];
           }),
+    garage: entry.seats.flatMap((seat) => {
+      const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
+      if (!r) return [];
+      const base = bikeOf(s, entry.teamId, entry.manufacturerId).reliability;
+      const bikes = rows(s, 'bikes')
+        .filter((b) => b.riderId === r.id && b.teamId === entry.teamId)
+        .sort((a, b) => a.slot.localeCompare(b.slot));
+      return [
+        {
+          riderId: r.id,
+          rider: `${r.firstName} ${r.lastName}`,
+          number: seat.number,
+          bikes: bikes.map((b) => ({
+            id: b.id,
+            slot: b.slot,
+            km: Math.round(b.mileageKm ?? 0),
+            reliability: Math.round(base * bikeReliabilityFactor(b) * 1000) / 10,
+            parts: GARAGE_PARTS.map((p) => {
+              const w = partWear(b, p.key);
+              return {
+                key: p.key,
+                name: p.name,
+                group: p.group,
+                upgradeLevel: partLevel(s, entry.teamId, p.upgrade),
+                km: Math.round(b.parts?.[p.key]?.km ?? 0),
+                lifeKm: p.life * GARAGE_WEEKEND_KM,
+                wear: Math.round(w * 100),
+                reliability: Math.round(partReliability(w) * 100),
+                services: b.parts?.[p.key]?.services ?? 0,
+                cost: serviceCost(s, b, p.key),
+                serviceable: canService(s, b, p.key),
+              };
+            }),
+          })),
+        },
+      ];
+    }),
     rivalsAvg: Math.round(rivals.reduce((t, e) => t + rating(e.teamId), 0) / Math.max(1, rivals.length)),
     parts: PARTS.map((p) => {
       const cost = upgradeCost(s, entry.teamId, p.key);

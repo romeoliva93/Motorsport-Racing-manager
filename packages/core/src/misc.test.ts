@@ -39,7 +39,7 @@ describe('denaro', () => {
   it('formatta gli importi in milioni di euro', () => {
     expect(formatMoney(18_420_000)).toBe('€ 18,42 mln');
     expect(formatMoney(640_000)).toBe('€ 0,64 mln');
-    expect(formatMoney(38_000)).toBe('€ 0,038 mln');
+    expect(formatMoney(38_000)).toBe('€ 38.000');
     expect(formatMoney(-4_960_000)).toBe('−€ 4,96 mln');
     expect(formatMoney(0)).toBe('€ 0,00 mln');
     expect(formatMoney(2_500_000, 'en')).toBe('€2.50m');

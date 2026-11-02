@@ -1,4 +1,4 @@
-import type { PartKey, SponsorRisk } from '@lean-angle/data';
+import type { GarageKey, PartKey, SponsorRisk } from '@lean-angle/data';
 /**
  * Comandi: l'unico modo per modificare lo stato (ARCHITECTURE.md §3.2). Giocatore e IA usano gli stessi.
  * Ogni comando viene validato prima di essere applicato; un comando non valido non modifica nulla.
@@ -40,6 +40,7 @@ export type Command =
   | { type: 'StartNextSeason' }
   /** Compra il livello successivo di un componente della moto. */
   | { type: 'BuyUpgrade'; part: PartKey }
+  | { type: 'ServiceParts'; bikeId: string; parts: GarageKey[] }
   /** Firma l'offerta dello sponsor con obiettivo stagionale. */
   | { type: 'SignSponsorDeal'; risk: SponsorRisk };
 
@@ -64,5 +65,6 @@ export type GameEvents = {
   RaceDone: { roundId: string; summary: string };
   SeasonStarted: { year: number };
   UpgradeBought: { part: string; level: number };
+  PartsServiced: { bikeId: string; parts: string[]; cost: number };
   SponsorSigned: { risk: string };
 };

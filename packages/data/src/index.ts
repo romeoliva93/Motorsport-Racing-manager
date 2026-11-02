@@ -36,3 +36,4 @@ export {
   RIDER_NATIONALITY_WEIGHTS,
   isBlockedSurname,
 } from './content/index.ts';
+export * from './content/garage.ts';

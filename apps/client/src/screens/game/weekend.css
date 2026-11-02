@@ -799,3 +799,172 @@ table.std tbody tr.cut td {
     max-height: 20rem;
   }
 }
+
+/* ---- Garage ---- */
+.gar-top {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.gar-top .spacer {
+  flex: 1;
+}
+.gar-kpi {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.gar-kpi small {
+  color: var(--text-3);
+  font-size: 0.72rem;
+}
+.gar-kpi b {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+.gar-main {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr) 15rem;
+  gap: 0.8rem;
+  align-items: start;
+}
+.gar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.gar-tile {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.5rem;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  padding: 0.45rem 0.6rem;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.gar-tile:hover {
+  border-color: var(--info);
+}
+.gar-tile.on {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 1px var(--signal) inset;
+}
+.gar-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.gar-rel {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+.gar-bar {
+  grid-column: 1 / -1;
+  height: 0.3rem;
+  background: var(--bg-3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.gar-bar i {
+  display: block;
+  height: 100%;
+}
+.gar-bar i.ok {
+  background: var(--ok);
+}
+.gar-bar i.info {
+  background: var(--info);
+}
+.gar-bar i.warn {
+  background: var(--warn);
+}
+.gar-bar i.bad {
+  background: var(--bad);
+}
+.gar-tile small {
+  grid-column: 1 / -1;
+  color: var(--text-3);
+  font-size: 0.72rem;
+}
+.gar-rel.ok,
+b.ok {
+  color: var(--ok);
+}
+.gar-rel.info,
+b.info {
+  color: var(--info);
+}
+.gar-rel.warn,
+b.warn {
+  color: var(--warn);
+}
+.gar-rel.bad,
+b.bad {
+  color: var(--bad);
+}
+.gar-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+.gar-center svg {
+  max-width: 100%;
+  height: auto;
+}
+.gar-detail {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--signal);
+  border-radius: var(--r-2);
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1.4rem;
+}
+.gar-detail > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 9rem;
+}
+.gar-detail > div:first-child b {
+  font-size: 1.2rem;
+}
+.gar-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  flex: 1;
+}
+.gar-facts span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.gar-facts small {
+  color: var(--text-3);
+  font-size: 0.7rem;
+}
+@media (max-width: 1100px) {
+  .gar-main {
+    grid-template-columns: 1fr 1fr;
+  }
+  .gar-center {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+@media (max-width: 600px) {
+  .gar-main {
+    grid-template-columns: 1fr;
+  }
+}

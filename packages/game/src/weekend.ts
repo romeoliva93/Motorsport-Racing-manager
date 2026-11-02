@@ -2,6 +2,13 @@
  * Weekend di gara a sessioni (prove, qualifiche Q1/Q2, Sprint, gara) per tutte le categorie, punti, premi e notizie.
  * La simulazione vera e propria è nel pacchetto sim; qui si traducono piloti, moto e strutture in parametri.
  */
+import {
+  addSessionMileage,
+  aiMaintenance,
+  bikeReliabilityFactor,
+  fitNewEnginesIfDue,
+  mainBike,
+} from './garage.ts';
 import { GameCalendar, type IdFactory, type Rng } from '@lean-angle/core';
 import {
   PRIZE_PER_POINT,
@@ -85,7 +92,7 @@ function riderSkill(r: Rider): number {
   return unit(v);
 }
 
-function bikeOf(
+export function bikeOf(
   s: GameState,
   teamId: TeamId,
   manufacturerId: ManufacturerId,
@@ -171,7 +178,8 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy): RaceRider {
     aggression: unit(a.aggression),
     tyreManagement: Math.min(1, unit(a.tyreManagement) + upgradeBonus(s, e.teamId).tyreCare),
     bike,
-    reliability,
+    // affidabilità di base (costruttore + upgrade) × stato dei componenti della moto A (garage)
+    reliability: reliability * bikeReliabilityFactor(mainBike(s, e.rider.id)),
     compound: strat.compound,
     mode: strat.mode,
   };
@@ -664,11 +672,23 @@ export function runNextSession(
   const kind = nextSession(s, round);
   if (!kind) return null;
   let replay: ReplayData | null = null;
+  if (!round.stage) {
+    fitNewEnginesIfDue(s, round);
+    aiMaintenance(s, ids, round);
+  }
   if (kind === 'fp1' || kind === 'fp2' || kind === 'practice' || kind === 'warmup')
     timedSession(s, ids, round, kind, entrants(s, round), strategies);
   else if (kind === 'q1' || kind === 'q2' || kind === 'qualifying')
     qualifyingSessions(s, ids, round, kind, strategies);
   else replay = raceSession(s, ids, rng, round, kind, strategies);
+  const fmtLaps = RACE_FORMAT[tierOf(s, round)].laps;
+  addSessionMileage(
+    s,
+    round,
+    kind,
+    entrants(s, round).map((e) => e.rider.id),
+    kind === 'race' ? fmtLaps : kind === 'sprint' ? sprintLaps(fmtLaps) : undefined,
+  );
   round.stage = (round.stage ?? 0) + 1;
   return replay;
 }

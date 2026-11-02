@@ -47,6 +47,8 @@ export interface Bike {
   wear: number;
   readiness: number;
   availability: 'ready' | 'preparing' | 'damaged' | 'notAllowed';
+  /** Chilometri percorsi da ciascun componente del garage dall'ultima revisione (assente = nuovo). */
+  parts?: Partial<Record<string, { km: number; services: number }>>;
 }
 
 export const FACILITY_TYPES = [

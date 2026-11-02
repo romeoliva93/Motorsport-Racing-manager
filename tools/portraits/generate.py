@@ -99,9 +99,9 @@ def prompt_for(p):
         outfit = 'wearing a plain black motorcycle racing team polo shirt'
     elif p['kind'] == 'staff':
         extra = ', radio headset around the neck' if p['role'] in ('trackEngineer', 'crewChief') else ''
-        outfit = f'wearing {art(c1)} {c1} and {c2} motorcycle racing team softshell jacket with small sponsor logos{extra}'
+        outfit = f'wearing {art(c1)} {c1} and {c2} racing team jacket{extra}'
     else:
-        outfit = f'wearing {art(c1)} {c1} and {c2} motorcycle racing team polo shirt with small sponsor logos'
+        outfit = f'wearing {art(c1)} {c1} and {c2} racing team polo shirt'
     job = {
         'rider': 'professional motorcycle racer',
         'staff': {'crewChief': 'motorcycle racing crew chief', 'trackEngineer': 'motorcycle racing track engineer',
@@ -109,12 +109,11 @@ def prompt_for(p):
                   'sportingDirector': 'motorcycle racing team manager'}.get(p['role'], 'motorcycle racing engineer'),
         'pool': 'young motorcycle racer',
     }[p['kind']]
+    # Il modello legge al massimo 77 token: prima le parole che contano, niente dettagli superflui.
     return (
-        f"official paddock press photo, head and shoulders portrait of a {who_age}-year-old "
+        f"photorealistic paddock press photo, head and shoulders portrait, {who_age}-year-old "
         f"{NATIONALITY.get(p['nationality'], '')} {sex}, {job}, {hair} {style}, {eyes} eyes, {beard}"
-        f"{outfit}, looking at the camera, natural confident expression, motorsport team garage softly blurred "
-        f"in the background, soft natural light, 85mm lens, shallow depth of field, photorealistic, "
-        f"realistic skin texture, high detail, sharp focus"
+        f"{outfit}, looking at camera, blurred team garage background, soft light, realistic skin"
     )
 
 
@@ -150,15 +149,15 @@ def main():
     from diffusers import AutoPipelineForText2Image
 
     torch.set_num_threads(os.cpu_count() or 4)
-    # variante fp16: download dimezzato (~7 GB), poi i calcoli su CPU in float32
-    pipe = AutoPipelineForText2Image.from_pretrained(a.model, torch_dtype=torch.float32, variant='fp16')
+    # variante fp16 (download ~7 GB) e calcoli in bfloat16: in float32 il modello non sta in 16 GB di RAM
+    pipe = AutoPipelineForText2Image.from_pretrained(a.model, dtype=torch.bfloat16, variant='fp16')
     pipe.set_progress_bar_config(disable=True)
     t0 = time.time()
     for i, p in enumerate(todo, 1):
         g = torch.Generator('cpu').manual_seed(seed_of(p['key']))
         img = pipe(prompt=prompt_for(p), num_inference_steps=a.steps, guidance_scale=0.0,
                    width=512, height=512, generator=g).images[0]
-        img.resize((384, 384)).save(os.path.join(OUT, p['key'] + '.webp'), quality=82)
+        img.convert('RGB').resize((384, 384)).save(os.path.join(OUT, p['key'] + '.webp'), quality=82)
         el = time.time() - t0
         print(f'[{i}/{len(todo)}] {p["key"]}  ({el / i:.0f} s/ritratto)', flush=True)
 

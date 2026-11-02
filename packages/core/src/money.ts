@@ -37,6 +37,13 @@ export function splitCredits(total: Credits, weights: readonly number[]): Credit
  */
 export function formatMoney(value: Credits, locale: 'it' | 'en' = 'it'): string {
   const sign = value < 0 ? '−' : '';
+  // sotto i 100 mila: cifra intera, più leggibile di "€ 0,027 mln"
+  if (value !== 0 && Math.abs(value) < 100_000) {
+    const k = Math.round(Math.abs(value))
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, locale === 'it' ? '.' : ',');
+    return locale === 'it' ? `${sign}€ ${k}` : `${sign}€${k}`;
+  }
   const m = Math.abs(value) / 1_000_000;
   const digits = Math.abs(value) >= 100_000 || value === 0 ? 2 : 3;
   const n = m.toFixed(digits);

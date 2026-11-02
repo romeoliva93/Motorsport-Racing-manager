@@ -176,6 +176,16 @@ async function waitForServer(url, ms = 20000) {
     await shot('13-risultati');
     step('gara e risultati');
 
+    await page.locator('.nav button', { hasText: 'Moto e upgrade' }).click();
+    await page.locator('.gar-tile').first().waitFor();
+    if ((await page.locator('.gar-tile').count()) !== 14) throw new Error('Il garage non mostra 14 componenti');
+    await page.locator('.gar-tile', { hasText: 'Frizione' }).click();
+    await shot('18-garage');
+    const fix = page.getByRole('button', { name: /^Revisiona i \d+ pezzi/ });
+    const n = await fix.count();
+    if (n) await fix.click();
+    step('garage: 14 componenti' + (n ? ', revisione dei pezzi usurati' : ''));
+
     await page.locator('.nav button', { hasText: 'Classifiche' }).click();
     await page.getByText('Classifica piloti').waitFor();
     if ((await page.locator('table.std tbody tr').count()) < 10) throw new Error('Classifica vuota');

@@ -30,6 +30,7 @@ describe('GameEngine', () => {
       'AcceptCounter',
       'WithdrawNegotiation',
       'BuyUpgrade',
+      'ServiceParts',
       'SignSponsorDeal',
     ]);
   });

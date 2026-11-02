@@ -12,3 +12,4 @@ export * from './sponsors.ts';
 export * from './weather.ts';
 export * from './stats.ts';
 export * from './regulations.ts';
+export * from './garage.ts';
