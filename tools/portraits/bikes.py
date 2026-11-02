@@ -27,7 +27,7 @@ TIERS = {
     'premier': 'MotoGP prototype racing motorcycle with large aerodynamic winglets and carbon fiber parts',
     'intermediate': 'Moto2 racing motorcycle with a 765cc three-cylinder engine',
     'lightweight': 'Moto3 small 250cc racing motorcycle',
-    'rookies': 'small 250cc junior cup racing motorcycle, yellow and black, identical spec bike',
+    'rookies': 'small 250cc junior cup racing motorcycle, blue white and red paint, identical spec bike',
 }
 CATS = {
     'ardena': ['premier'], 'hoshiro': ['premier', 'lightweight'], 'takaido': ['premier', 'lightweight'],
@@ -39,8 +39,8 @@ CATS = {
 def prompt(maker, tier):
     col, style = MAKERS[maker]
     paint = '' if tier == 'rookies' else f'{col} paint, '
-    return (f'photorealistic studio photo, full side view of a {TIERS[tier]}, {paint}{style}, plain bodywork, '
-            f'slick racing tyres, dark grey studio background, soft reflections, sharp focus, high detail')
+    return (f'photorealistic photo, full side view of a {TIERS[tier]} on a paddock stand, {paint}{style}, '
+            f'race fairing without headlights or mirrors, slick tyres, dark garage background, studio light, sharp')
 
 
 def main():
