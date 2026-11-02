@@ -355,3 +355,104 @@
   flex-wrap: wrap;
   row-gap: 0.1rem;
 }
+
+/* Programma del weekend e meteo */
+.wk-program {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.wk-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.wk-sessions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.wk-sess {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem 0.45rem 0.5rem;
+  border-radius: var(--r-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+}
+.wk-sess:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+.wk-sess span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.wk-sess b {
+  font-size: 0.86rem;
+  color: var(--text-1);
+}
+.wk-sess small {
+  font-size: 0.74rem;
+  color: var(--text-3);
+}
+.wk-sess.done {
+  border-color: rgba(76, 195, 138, 0.45);
+}
+.wk-sess.now {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 1px var(--signal) inset;
+}
+.wx-box {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  border-radius: var(--r-2);
+  background: rgba(16, 17, 19, 0.55);
+  border: 1px solid var(--line);
+  min-width: 15rem;
+}
+.wx-box b {
+  display: block;
+  font-size: 1.15rem;
+}
+.wk-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.choice.four {
+  grid-template-columns: repeat(4, 1fr);
+}
+.choice button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.tyre.wet {
+  border-color: #4a9dff;
+}
+.tyre-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+table.std tbody tr.cut td {
+  border-bottom: 2px dashed var(--signal);
+}
+@media (max-width: 1000px) {
+  .choice.four {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .wx-box {
+    min-width: 0;
+    width: 100%;
+  }
+}

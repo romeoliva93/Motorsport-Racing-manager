@@ -13,6 +13,7 @@ import {
   rows,
   teamBalance,
   type PartKey,
+  type SessionKind,
   type GameState,
   type NewsItem,
   type Round,
@@ -21,7 +22,7 @@ import {
   type TransactionCategory,
 } from '@lean-angle/data';
 import { payrollMonthly, runningCostMonthly, sponsorMonthly } from './economy.ts';
-import { partLevel, upgradeBonus, upgradeCost } from './upgrades.ts';
+import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
   dealWindowOpen,
@@ -30,7 +31,21 @@ import {
   type SponsorOffer,
 } from './sponsors.ts';
 import { compoundForecast, unit } from '@lean-angle/sim';
-import { RACE_FORMAT, standings, trackFor, type StandingsView, type Strategy } from './weekend.ts';
+import { conditionsFor, type SessionWeather } from './weather.ts';
+import {
+  RACE_FORMAT,
+  TYRE_ALLOCATION,
+  WEEKEND_FORMAT,
+  nextSession,
+  sessionsOf,
+  sprintLaps,
+  tyresLeft,
+  weatherOf,
+  standings,
+  trackFor,
+  type StandingsView,
+  type Strategy,
+} from './weekend.ts';
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
 
@@ -61,6 +76,7 @@ export interface ResultRowView {
   points: number;
   status: 'finished' | 'dnf';
   reason?: 'crash' | 'mechanical';
+  compound?: 'soft' | 'medium' | 'hard' | 'wet';
 }
 
 function resultView(s: GameState, res: SessionResult | undefined): ResultRowView[] | null {
@@ -85,9 +101,21 @@ function resultView(s: GameState, res: SessionResult | undefined): ResultRowView
       points: r.points,
       status: r.status,
       ...(r.reason ? { reason: r.reason } : {}),
+      ...(r.compound ? { compound: r.compound } : {}),
     };
   });
 }
+
+export const SESSION_NAME: Record<SessionKind, { name: string; day: string }> = {
+  fp1: { name: 'Prove libere 1', day: 'Venerdì' },
+  practice: { name: 'Prove', day: 'Venerdì' },
+  fp2: { name: 'Prove libere 2', day: 'Sabato' },
+  q1: { name: 'Qualifiche 1', day: 'Sabato' },
+  q2: { name: 'Qualifiche 2', day: 'Sabato' },
+  qualifying: { name: 'Qualifiche', day: 'Sabato' },
+  sprint: { name: 'Sprint', day: 'Sabato' },
+  race: { name: 'Gara', day: 'Domenica' },
+};
 
 export interface WeekendView {
   /** today = si corre oggi; upcoming = prossimo GP; seasonOver = stagione conclusa; none = niente squadra. */
@@ -109,13 +137,35 @@ export interface WeekendView {
     status: 'pending' | 'qualified' | 'raced';
   } | null;
   track: [number, number][] | null;
+  categoryId: string;
+  /** Sessioni del weekend nell'ordine del formato della categoria. */
+  sessions: {
+    kind: SessionKind;
+    name: string;
+    day: string;
+    done: boolean;
+    results: ResultRowView[] | null;
+    /** Meteo della sessione; per quelle future la probabilità di pioggia è una previsione. */
+    weather: SessionWeather;
+  }[];
+  /** Prossima sessione da disputare (null = weekend concluso). */
+  next: SessionKind | null;
+  /** Giri della prossima Sprint/gara (per la previsione gomme). */
+  nextLaps: number;
   qualifying: ResultRowView[] | null;
+  sprint: ResultRowView[] | null;
   race: ResultRowView[] | null;
+  /** Dotazione di gomme del weekend per pilota. */
+  allocation: Record<Strategy['compound'], number>;
   myRiders: {
     id: string;
     name: string;
     number: number;
     grid: number | null;
+    /** Gomme nuove rimaste. */
+    tyresLeft: Record<Strategy['compound'], number>;
+    /** Partecipa alla prossima sessione (in Q1 e Q2 non corrono tutti). */
+    inNext: boolean;
     suggested: Strategy;
     why: string;
     /** Secondi persi da ogni mescola rispetto alla migliore, per ciascun ritmo (0 = la migliore). */
@@ -132,8 +182,14 @@ export function weekendView(s: GameState): WeekendView {
     seasonFinished: false,
     round: null,
     track: null,
+    categoryId: '',
+    sessions: [],
+    next: null,
+    nextLaps: 0,
     qualifying: null,
+    sprint: null,
     race: null,
+    allocation: { soft: 0, medium: 0, hard: 0, wet: 0 },
     myRiders: [],
     last: null,
   };
@@ -164,36 +220,79 @@ export function weekendView(s: GameState): WeekendView {
   const circuit = s.tables.circuits[current.circuitId]!;
   const quali = rows(s, 'sessionResults').find((x) => x.roundId === current.id && x.kind === 'qualifying');
   const race = rows(s, 'sessionResults').find((x) => x.roundId === current.id && x.kind === 'race');
+  const resOf = (k: SessionKind) =>
+    rows(s, 'sessionResults').find((x) => x.roundId === current.id && x.kind === k);
+  const fmtW = WEEKEND_FORMAT[cat.tier];
+  const kinds = sessionsOf(s, current);
+  const next = nextSession(s, current);
+  const fullLaps = RACE_FORMAT[cat.tier].laps;
+  const nextLaps = next === 'sprint' ? sprintLaps(fullLaps) : fullLaps;
+  const wx = weatherOf(s, current);
+  const raceKind = next === 'sprint' ? 'sprint' : 'race';
+  const nextCond = conditionsFor(
+    wx.find((w) => w.kind === (next && next !== 'sprint' && next !== 'race' ? next : raceKind)),
+  );
+  const direct = new Set((resOf('practice')?.rows ?? []).slice(0, fmtW.toQ2).map((x) => x.riderId));
+  const promoted = new Set((resOf('q1')?.rows ?? []).slice(0, fmtW.fromQ1).map((x) => x.riderId));
   const myRiders = entry.seats.flatMap((seat) => {
     const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
     if (!r) return [];
-    const laps = RACE_FORMAT[cat.tier].laps;
+    const laps = nextLaps;
+    const left = tyresLeft(s, current, r.id);
+    const inNext =
+      next === 'q1' ? !direct.has(r.id) : next === 'q2' ? direct.has(r.id) || promoted.has(r.id) : true;
     const refLap = circuit.lengthM / RACE_FORMAT[cat.tier].avgSpeed;
     const tmU = Math.min(1, unit(r.attributes.tyreManagement) + upgradeBonus(s, entry.teamId).tyreCare);
     const mode: Strategy['mode'] =
       r.attributes.aggression >= 75 ? 'normal' : r.attributes.consistency >= 72 ? 'attack' : 'normal';
     // Secondi persi da ogni mescola rispetto alla migliore, per ciascun ritmo.
     const forecast = {} as Record<Strategy['mode'], Record<Strategy['compound'], number>>;
+    const ALL = ['soft', 'medium', 'hard', 'wet'] as const;
     for (const m of ['conservative', 'normal', 'attack'] as const) {
-      const fc = compoundForecast(tmU, m, laps);
-      const bestC = (['soft', 'medium', 'hard'] as const).reduce((a, b) => (fc[a] <= fc[b] ? a : b));
+      const fc = compoundForecast(tmU, m, laps, nextCond);
+      const bestC = ALL.reduce((a, b) => (fc[a] <= fc[b] ? a : b));
       const sec = (c: Strategy['compound']) =>
         c === bestC ? 0 : Math.max(0.1, Math.round(((fc[c] - fc[bestC]) / 100) * refLap * 10) / 10);
-      forecast[m] = { soft: sec('soft'), medium: sec('medium'), hard: sec('hard') };
+      forecast[m] = { soft: sec('soft'), medium: sec('medium'), hard: sec('hard'), wet: sec('wet') };
     }
-    const compound = (['soft', 'medium', 'hard'] as const).find((c) => forecast[mode][c] === 0)!;
-    const NAME = { soft: 'morbida', medium: 'media', hard: 'dura' };
-    const others = (['soft', 'medium', 'hard'] as const)
+    const raceType = next === 'sprint' || next === 'race' || next === null;
+    const ORDER: Record<string, Strategy['compound'][]> = {
+      fp1: ['hard', 'medium', 'soft'],
+      fp2: ['medium', 'hard', 'soft'],
+      practice: ['soft', 'medium', 'hard'],
+      q1: ['soft', 'medium', 'hard'],
+      q2: ['soft', 'medium', 'hard'],
+      qualifying: ['soft', 'medium', 'hard'],
+    };
+    const byForecast = (['soft', 'medium', 'hard', 'wet'] as const)
+      .slice()
+      .sort((a, b) => forecast[mode][a] - forecast[mode][b]);
+    const order: Strategy['compound'][] = raceType
+      ? byForecast
+      : nextCond.grip !== 'dry'
+        ? ['wet', ...ORDER[next!]!]
+        : [...ORDER[next!]!, 'wet'];
+    const compound = order.find((c) => left[c] > 0) ?? order[0]!;
+    const NAME = { soft: 'morbida', medium: 'media', hard: 'dura', wet: 'da pioggia' };
+    const others = (['soft', 'medium', 'hard', 'wet'] as const)
       .filter((c) => c !== compound)
       .map((c) => `${NAME[c]} +${forecast[mode][c].toFixed(1).replace('.', ',')} s`)
       .join(', ');
     const care = r.attributes.tyreManagement;
-    const why = `Gestione gomme ${care}/99: ${
-      compound === 'soft'
-        ? 'le tratta bene, la morbida regge fino in fondo'
-        : compound === 'hard'
-          ? 'le consuma molto, la dura cala meno nel finale'
-          : 'la media è il miglior compromesso'
+    const why = `${
+      nextCond.grip === 'wet'
+        ? 'Pista bagnata: servono le gomme da pioggia.'
+        : nextCond.grip === 'damp'
+          ? 'Pista umida: le gomme da pioggia sono di poco più veloci, ma si consumano se asciuga.'
+          : `Asfalto a ${nextCond.trackTemp} °C${nextCond.trackTemp >= 45 ? ': caldo, le gomme si consumano di più' : nextCond.trackTemp <= 22 ? ': freddo, le gomme durano di più' : ''}.`
+    } Gestione gomme ${care}/99: ${
+      compound === 'wet'
+        ? 'rain obbligatorie con questo meteo'
+        : compound === 'soft'
+          ? 'le tratta bene, la morbida regge fino in fondo'
+          : compound === 'hard'
+            ? 'le consuma molto, la dura cala meno nel finale'
+            : 'la media è il miglior compromesso'
     }. Stima su ${laps} giri: ${others}.`;
     return [
       {
@@ -201,6 +300,8 @@ export function weekendView(s: GameState): WeekendView {
         name: `${r.firstName} ${r.lastName}`,
         number: seat.number,
         grid: quali?.rows.find((x) => x.riderId === r.id)?.position ?? null,
+        tyresLeft: left,
+        inNext,
         suggested: { compound, mode } as Strategy,
         why,
         forecast,
@@ -225,8 +326,21 @@ export function weekendView(s: GameState): WeekendView {
       status: current.status ?? 'pending',
     },
     track: trackFor(s, current).points,
+    categoryId: entry.categoryId,
+    sessions: kinds.map((k, i) => ({
+      kind: k,
+      name: SESSION_NAME[k].name,
+      day: SESSION_NAME[k].day,
+      done: i < (current.stage ?? 0),
+      results: resultView(s, resOf(k)),
+      weather: wx[i]!,
+    })),
+    next,
+    nextLaps,
     qualifying: resultView(s, quali),
+    sprint: resultView(s, resOf('sprint')),
     race: resultView(s, race),
+    allocation: TYRE_ALLOCATION[cat.tier],
     myRiders,
     last,
   };
@@ -471,6 +585,10 @@ export interface BikeView {
     max: number;
     nextCost: number | null;
     affordable: boolean;
+    /** Giorni di produzione del prossimo livello se lo ordini oggi. */
+    nextLeadDays: number | null;
+    /** Ordine in fabbrica: livello in arrivo, data e giorni mancanti. */
+    inProduction: { level: number; ready: string; daysLeft: number } | null;
   }[];
 }
 
@@ -507,6 +625,14 @@ export function bikeView(s: GameState): BikeView | null {
         max: MAX_PART_LEVEL,
         nextCost: cost,
         affordable: cost !== null && cost <= balance,
+        nextLeadDays:
+          cost !== null ? leadDays(s, entry.teamId, p.key, partLevel(s, entry.teamId, p.key) + 1) : null,
+        inProduction: (() => {
+          const o = pendingOrder(s, entry.teamId, p.key);
+          return o
+            ? { level: o.level, ready: cal(s).format(o.readyDay), daysLeft: o.readyDay - s.meta.currentDay }
+            : null;
+        })(),
       };
     }),
   };

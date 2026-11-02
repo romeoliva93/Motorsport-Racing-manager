@@ -39,9 +39,17 @@ import {
   marketOpen,
 } from './market.ts';
 import { monthlyFinance } from './economy.ts';
-import { playerRoundToday, runQualifyingDay, runRaceDay, type ReplayData } from './weekend.ts';
+import {
+  finishOtherRounds,
+  nextSession,
+  playerRoundToday,
+  runNextSession,
+  runRestOfWeekend,
+  tyresLeft,
+  type ReplayData,
+} from './weekend.ts';
 import { addNews } from './news.ts';
-import { aiUpgrades, buyUpgrade, upgradeCost } from './upgrades.ts';
+import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
 import { dealWindowOpen, signDeal } from './sponsors.ts';
 import { seasonFinished, startNextSeason } from './season.ts';
 
@@ -100,8 +108,7 @@ export class GameEngine {
     const out: CommandType[] = [];
     const today = playerRoundToday(s);
     if (today && today.status !== 'raced') {
-      if (!today.status) out.push('RunQualifying');
-      out.push('RunRace');
+      out.push('RunSession', 'RunRace');
     } else if (seasonFinished(s)) {
       out.push('StartNextSeason');
     } else {
@@ -216,18 +223,16 @@ export class GameEngine {
         return this.openNegotiation(cmd.riderId)
           ? ok(true)
           : err('Nessuna trattativa aperta con questo pilota');
-      case 'RunQualifying': {
-        const r = playerRoundToday(s);
-        if (!r) return err("Oggi non c'è un Gran Premio");
-        return r.status ? err('Qualifiche già disputate') : ok(true);
-      }
+      case 'RunSession':
       case 'RunRace': {
         const r = playerRoundToday(s);
         if (!r) return err("Oggi non c'è un Gran Premio");
-        if (r.status === 'raced') return err('Gara già disputata');
-        for (const st of Object.values(cmd.strategies)) {
-          if (!['soft', 'medium', 'hard'].includes(st.compound)) return err('Mescola non valida');
+        if (!nextSession(s, r)) return err('Weekend già concluso');
+        for (const [riderId, st] of Object.entries(cmd.strategies ?? {})) {
+          if (!['soft', 'medium', 'hard', 'wet'].includes(st.compound)) return err('Mescola non valida');
           if (!['conservative', 'normal', 'attack'].includes(st.mode)) return err('Ritmo non valido');
+          if (cmd.type === 'RunSession' && tyresLeft(s, r, riderId)[st.compound] <= 0)
+            return err('Non restano gomme nuove di questa mescola');
         }
         return ok(true);
       }
@@ -237,6 +242,7 @@ export class GameEngine {
         const teamId = s.meta.playerTeamId;
         if (!teamId) return err('Scegli prima una squadra');
         if (!PART_KEYS.includes(cmd.part)) return err('Componente sconosciuto');
+        if (pendingOrder(s, teamId, cmd.part)) return err('Questo componente è già in produzione');
         const cost = upgradeCost(s, teamId, cmd.part);
         if (cost === null) return err('Componente già al livello massimo');
         if (cost > teamBalance(s, teamId)) return err('Soldi insufficienti per questo upgrade');
@@ -285,13 +291,22 @@ export class GameEngine {
       case 'WithdrawNegotiation':
         this.openNegotiation(cmd.riderId)!.status = 'withdrawn';
         return;
-      case 'RunQualifying':
-        runQualifyingDay(s, this.ids);
-        this.events.emit('QualifyingDone', s.meta.currentDay, { roundId: playerRoundToday(s)!.id });
+      case 'RunSession': {
+        const round = playerRoundToday(s)!;
+        const session = nextSession(s, round)!;
+        const rng = this.streams.get('race-ai');
+        const rep = runNextSession(s, this.ids, rng, round, cmd.strategies ?? {});
+        if (rep) this.lastReplay = rep;
+        if (!nextSession(s, round)) finishOtherRounds(s, this.ids, rng);
+        this.events.emit('SessionDone', s.meta.currentDay, { roundId: round.id, session });
         return;
+      }
       case 'RunRace': {
         const round = playerRoundToday(s)!;
-        this.lastReplay = runRaceDay(s, this.ids, this.streams.get('race-ai'), cmd.strategies);
+        const rng = this.streams.get('race-ai');
+        const rep = runRestOfWeekend(s, this.ids, rng, round, cmd.strategies);
+        if (rep) this.lastReplay = rep;
+        finishOtherRounds(s, this.ids, rng);
         this.events.emit('RaceDone', s.meta.currentDay, { roundId: round.id, summary: '' });
         return;
       }
@@ -304,7 +319,7 @@ export class GameEngine {
         buyUpgrade(s, this.ids, s.meta.playerTeamId!, cmd.part);
         this.events.emit('UpgradeBought', s.meta.currentDay, {
           part: cmd.part,
-          level: s.upgrades[s.meta.playerTeamId!]![cmd.part]!,
+          level: pendingOrder(s, s.meta.playerTeamId!, cmd.part)!.level,
         });
         return;
       case 'SignSponsorDeal':
@@ -412,6 +427,7 @@ export class GameEngine {
     for (let day = from + 1; day <= target; day++) {
       s.meta.currentDay = day;
       monthlyFinance(s, this.ids);
+      deliverUpgrades(s, this.ids);
       if (new GameCalendar(s.meta.startYear).toDate(day).day === 1)
         aiUpgrades(s, this.ids, this.streams.get('ai-upgrades'));
       if (rounds.some((r) => r.startDay === day)) reached = day;

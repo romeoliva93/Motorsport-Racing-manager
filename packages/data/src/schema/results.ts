@@ -19,14 +19,21 @@ export interface ResultRow {
   bestLap: number;
   points: number;
   reason?: 'crash' | 'mechanical';
+  /** Gomma usata in questa sessione. */
+  compound?: 'soft' | 'medium' | 'hard' | 'wet';
 }
+
+export type SessionKind = 'fp1' | 'practice' | 'fp2' | 'q1' | 'q2' | 'qualifying' | 'sprint' | 'race';
 
 export interface SessionResult {
   id: SessionResultId;
   roundId: RoundId;
   seasonId: SeasonId;
   categoryId: CategoryId;
-  kind: 'qualifying' | 'race';
+  /**
+   * Sessione del weekend. 'qualifying' è la griglia ufficiale (Q1+Q2 combinate, o qualifica unica).
+   */
+  kind: SessionKind;
   day: GameDay;
   rows: ResultRow[];
   fastestLap?: { riderId: RiderId; time: number };

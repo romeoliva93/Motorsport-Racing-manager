@@ -9,3 +9,4 @@ export * from './news.ts';
 export * from './views.ts';
 export * from './upgrades.ts';
 export * from './sponsors.ts';
+export * from './weather.ts';

@@ -99,12 +99,30 @@ export function generateWorld(opts: WorldOptions): GameState {
       keys.map((k) => weights[k] as number),
     );
   }
+  /**
+   * Nazionalità e nome univoco. Se i nomi di un paese sono esauriti (elenchi piccoli, come la Danimarca),
+   * si estrae un'altra nazionalità invece di interrompere la generazione del mondo.
+   */
+  function person(
+    rng: Rng,
+    weights: Record<string, number>,
+    femaleChance: number,
+    avoidSurnames?: Set<string>,
+  ): [string, string, string] {
+    for (let attempt = 0; attempt < 12; attempt++) {
+      // Stesso ordine di estrazione di sempre (nazionalità, poi sesso): i mondi già generati non cambiano.
+      const nationality = pickNationality(rng, weights);
+      const name = uniqueName(rng, nationality, rng.chance(femaleChance), avoidSurnames);
+      if (name) return [nationality, name[0], name[1]];
+    }
+    throw new Error('Nomi esauriti per tutte le nazionalità estratte');
+  }
   function uniqueName(
     rng: Rng,
     nationality: string,
     female: boolean,
     avoidSurnames?: Set<string>,
-  ): [string, string] {
+  ): [string, string] | null {
     const pool = NAMES[nationality];
     if (!pool) throw new Error(`Nessun elenco di nomi per ${nationality}`);
     for (let i = 0; i < 200; i++) {
@@ -122,7 +140,7 @@ export function generateWorld(opts: WorldOptions): GameState {
         return [first, last];
       }
     }
-    throw new Error(`Nomi esauriti per ${nationality}`);
+    return null;
   }
   function reserveName(first: string, last: string) {
     const key = `${first} ${last}`;
@@ -340,10 +358,9 @@ export function generateWorld(opts: WorldOptions): GameState {
     );
     const [aMin, aMax] = ageOverride ?? c.riderAgeRange;
     const age = riderRng.int(aMin, aMax);
-    const nationality = pickNationality(riderRng, RIDER_NATIONALITY_WEIGHTS);
     let avoid = surnamesByTier.get(tier);
     if (!avoid) surnamesByTier.set(tier, (avoid = new Set()));
-    const [first, last] = uniqueName(riderRng, nationality, riderRng.chance(0.03), avoid);
+    const [nationality, first, last] = person(riderRng, RIDER_NATIONALITY_WEIGHTS, 0.03, avoid);
     // Margine di crescita: maggiore per i più giovani (un quattordicenne può migliorare di 15–30 punti).
     const growth = Math.max(0, 28 - age) * riderRng.range(0.8, 2.2);
     return makeRider({
@@ -406,8 +423,11 @@ export function generateWorld(opts: WorldOptions): GameState {
       ({ first, last, nationality } = o);
       birthDay = cal.fromDate({ year: o.birthYear, month: 1, day: 2 }) + staffRng.int(0, 360);
     } else {
-      nationality = pickNationality(staffRng, STAFF_NATIONALITY_WEIGHTS);
-      [first, last] = uniqueName(staffRng, nationality, staffRng.chance(role === 'mechanic' ? 0.08 : 0.22));
+      [nationality, first, last] = person(
+        staffRng,
+        STAFF_NATIONALITY_WEIGHTS,
+        role === 'mechanic' ? 0.08 : 0.22,
+      );
       const [aMin, aMax] =
         role === 'mechanic' ? [22, 55] : role === 'technicalDirector' ? [40, 64] : [26, 60];
       birthDay = birthDayForAge(staffRng, staffRng.int(aMin, aMax));

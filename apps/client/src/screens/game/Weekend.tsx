@@ -2,21 +2,36 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReplayData, ResultRowView, WeekendView } from '@lean-angle/game';
 import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
-import { Card, Explain, Help, Pos, lapTime, raceTime } from '../../design-system/components.tsx';
+import { Card, Explain, Help, Pos, Tabs, lapTime, raceTime } from '../../design-system/components.tsx';
+import { WeatherIcon, SKY_LABEL } from '../../design-system/WeatherIcon.tsx';
 import { country } from '../../i18n/it.ts';
 import { RaceViewer } from './RaceViewer.tsx';
 import './weekend.css';
 
-type Compound = 'soft' | 'medium' | 'hard';
+type Compound = 'soft' | 'medium' | 'hard' | 'wet';
 type Mode = 'conservative' | 'normal' | 'attack';
+type Session = WeekendView['sessions'][number];
+type Plan = Record<string, { compound: Compound; mode: Mode }>;
 
-const TYRES: { id: Compound; label: string; text: string }[] = [
-  { id: 'soft', label: 'Morbida', text: 'Più veloce nei primi giri, ma si consuma prima e cala nel finale.' },
-  { id: 'medium', label: 'Media', text: 'Il compromesso: buona velocità, consumo regolare.' },
+export const TYRES: { id: Compound; label: string; short: string; text: string }[] = [
+  {
+    id: 'soft',
+    label: 'Morbida',
+    short: 'M',
+    text: 'La più veloce sul giro secco; in gara cala prima nel finale.',
+  },
+  { id: 'medium', label: 'Media', short: 'MD', text: 'Il compromesso: buona velocità, consumo regolare.' },
   {
     id: 'hard',
     label: 'Dura',
-    text: "Più lenta all'inizio, ma resiste meglio fino alla bandiera a scacchi.",
+    short: 'D',
+    text: 'Più lenta all’inizio, ma resiste meglio fino alla bandiera a scacchi.',
+  },
+  {
+    id: 'wet',
+    label: 'Pioggia',
+    short: 'P',
+    text: 'Per l’asfalto bagnato o umido. Sull’asciutto è lenta e si distrugge.',
   },
 ];
 const MODES: { id: Mode; label: string; text: string }[] = [
@@ -28,6 +43,30 @@ const MODES: { id: Mode; label: string; text: string }[] = [
   { id: 'normal', label: 'Normale', text: 'Ritmo di gara equilibrato.' },
   { id: 'attack', label: 'Attacco', text: 'Più veloce e più sorpassi, ma il doppio del rischio di caduta.' },
 ];
+
+function explain(kind: Session['kind'], w: WeekendView): string {
+  const fmt = w.sessions.map((x) => x.kind);
+  const toQ2 = fmt.includes('fp2') ? 10 : 14;
+  const fromQ1 = fmt.includes('fp2') ? 2 : 4;
+  switch (kind) {
+    case 'fp1':
+      return 'Prime prove libere: i piloti prendono confidenza con la pista. Il tempo non conta: conviene usare dure o medie e risparmiare le morbide.';
+    case 'practice':
+      return `Sessione decisiva del venerdì: i primi ${toQ2} entrano direttamente in Qualifiche 2, gli altri dovranno passare dalla Q1. Qui di solito si monta la morbida.`;
+    case 'fp2':
+      return 'Prove libere del sabato mattina: servono a preparare la gara, il tempo non conta.';
+    case 'q1':
+      return `Qualifiche 1, per chi non è entrato in Q2 dalle Prove: i primi ${fromQ1} salgono in Q2, gli altri partono dalla ${toQ2 + fromQ1 + 1}ª posizione in giù.`;
+    case 'q2':
+      return `Qualifiche 2: i migliori ${toQ2 + fromQ1} si giocano la pole position e le prime file della griglia.`;
+    case 'qualifying':
+      return 'Qualifica unica: vale il giro migliore e decide l’ordine di partenza.';
+    case 'sprint':
+      return `Gara Sprint del sabato, a metà distanza (${w.nextLaps} giri): punti ai primi 9, 12 al vincitore.`;
+    case 'race':
+      return `La gara della domenica (${w.round?.laps} giri): punti ai primi 15, 25 al vincitore.`;
+  }
+}
 
 export function WeekendScreen({
   notify,
@@ -45,8 +84,8 @@ export function WeekendScreen({
   const [replay, setReplay] = useState<ReplayData | null>(null);
   const [watching, setWatching] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<string | null>(null);
 
-  // Se si torna su questa schermata dopo una gara, si possono comunque rivedere i dati in memoria.
   const roundId = q.status === 'ready' ? q.data.round?.id : undefined;
   useEffect(() => {
     if (!roundId) return;
@@ -69,6 +108,13 @@ export function WeekendScreen({
       setBusy(false);
     }
   }
+  async function afterRace(kind: string) {
+    const rep = await engine.replay();
+    if (rep && (rep.kind === kind || kind === 'all')) {
+      setReplay(rep);
+      setWatching(true);
+    }
+  }
 
   if (w.state === 'seasonOver' || (w.seasonFinished && showSeasonEnd && !watching))
     return <SeasonEnd notify={notify} goMarket={goMarket} />;
@@ -80,13 +126,21 @@ export function WeekendScreen({
         data={replay}
         onDone={() => {
           setWatching(false);
+          setTab(replay.kind);
           window.scrollTo(0, 0);
         }}
       />
     );
 
   const r = w.round;
-  const step = w.state === 'upcoming' ? 0 : r.status === 'pending' ? 1 : r.status === 'qualified' ? 2 : 4;
+  const done = w.sessions.filter((x) => x.done);
+  const nextS = w.sessions.find((x) => x.kind === w.next) ?? null;
+  const shownTab =
+    tab && (done.some((x) => x.kind === tab) || (tab === 'qualifying' && w.qualifying))
+      ? tab
+      : (done.at(-1)?.kind ?? null);
+  const shown = done.find((x) => x.kind === shownTab);
+  const heroWx = nextS?.weather ?? done.at(-1)?.weather ?? w.sessions[0]?.weather;
 
   return (
     <div className="weekend">
@@ -112,67 +166,81 @@ export function WeekendScreen({
             </span>
           </div>
         </div>
+        {heroWx && w.state === 'today' && (
+          <WeatherBox wx={heroWx} title={nextS ? nextS.name : 'Ultima sessione'} />
+        )}
         {w.track && <TrackMap points={w.track} />}
       </div>
 
-      <ol className="wk-steps" aria-label="Fasi del weekend">
-        {['Arrivo', 'Qualifiche', 'Strategia', 'Gara', 'Risultati'].map((s, i) => (
-          <li key={s} className={i < step ? 'done' : i === step || (step === 4 && i === 3) ? 'now' : ''}>
-            <span>{i + 1}</span>
-            {s}
-          </li>
-        ))}
-      </ol>
+      <div className="wk-program">
+        {(['Venerdì', 'Sabato', 'Domenica'] as const).map((day) => {
+          const list = w.sessions.filter((x) => x.day === day);
+          if (list.length === 0) return null;
+          return (
+            <div key={day} className="wk-day">
+              <small className="muted">{day}</small>
+              <div className="wk-sessions">
+                {list.map((x) => (
+                  <button
+                    key={x.kind}
+                    className={`wk-sess ${x.done ? 'done' : ''} ${x.kind === w.next && w.state === 'today' ? 'now' : ''}`}
+                    disabled={!x.done}
+                    onClick={() => setTab(x.kind)}
+                    title={x.done ? 'Vedi i risultati' : undefined}
+                  >
+                    <WeatherIcon sky={x.weather.sky} size={1.3} />
+                    <span>
+                      <b>{x.name}</b>
+                      <small>
+                        {x.done || x.kind === w.next
+                          ? `${x.weather.airTemp}° aria · ${x.weather.trackTemp}° asfalto`
+                          : `pioggia ${x.weather.rainChance}%`}
+                      </small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {w.state === 'upcoming' && (
         <Card title="Il prossimo Gran Premio">
           <Explain>
-            Un weekend di gara ha due momenti: le <b>qualifiche</b>, un giro veloce per decidere l’ordine di
-            partenza (chi è più avanti parte davanti), e la <b>gara</b>, dove si guadagnano i punti per il
-            campionato. Prima della gara scegli gomme e ritmo dei tuoi piloti.
+            Il weekend ha più sessioni: <b>prove libere</b> per prendere le misure, le <b>Prove</b> del
+            venerdì che decidono chi va direttamente in Qualifiche 2, le <b>qualifiche</b> per l’ordine di
+            partenza e, in MotoGP, la <b>Sprint</b> del sabato (mezza gara, metà punti) prima della{' '}
+            <b>gara</b> della domenica. Ogni pilota ha un numero limitato di gomme per tutto il weekend.
           </Explain>
           <p className="t2">Premi «Vai al Gran Premio» in alto per far scorrere i giorni fino al weekend.</p>
           {w.last && <LastRace last={w.last} />}
         </Card>
       )}
 
-      {w.state === 'today' && r.status === 'pending' && (
-        <Card title="Qualifiche">
-          <Explain>
-            Ogni pilota fa tre giri lanciati: conta il migliore. Il più veloce conquista la{' '}
-            <b>pole position</b> e parte primo. Partire davanti è un grande vantaggio: sorpassare costa tempo.
-          </Explain>
-          <div style={{ marginTop: '1rem' }}>
-            <button
-              className="btn primary big-cta"
-              disabled={busy}
-              onClick={() => run(() => engine.dispatch({ type: 'RunQualifying' }))}
-            >
-              Corri le qualifiche
-            </button>
-          </div>
-        </Card>
+      {w.state === 'today' && nextS && (
+        <SessionPanel
+          key={nextS.kind}
+          w={w}
+          session={nextS}
+          busy={busy}
+          onRun={(plan) =>
+            run(async () => {
+              await engine.dispatch({ type: 'RunSession', strategies: plan });
+              if (nextS.kind === 'sprint' || nextS.kind === 'race') await afterRace(nextS.kind);
+              else setTab(nextS.kind === 'q2' ? 'qualifying' : nextS.kind);
+            })
+          }
+          onSimulate={(plan) =>
+            run(async () => {
+              await engine.dispatch({ type: 'RunRace', strategies: plan });
+              setTab('race');
+            })
+          }
+        />
       )}
 
-      {w.state === 'today' && r.status === 'qualified' && (
-        <>
-          <Strategy
-            w={w}
-            busy={busy}
-            onStart={(strategies) =>
-              run(async () => {
-                await engine.dispatch({ type: 'RunRace', strategies });
-                const rep = await engine.replay();
-                setReplay(rep);
-                setWatching(!!rep);
-              })
-            }
-          />
-          {w.qualifying && <ResultTable title="Griglia di partenza" rows={w.qualifying} kind="quali" />}
-        </>
-      )}
-
-      {w.state === 'today' && r.status === 'raced' && w.race && (
+      {w.state === 'today' && !w.next && w.race && (
         <>
           <MyRaceSummary rows={w.race} />
           <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
@@ -187,37 +255,96 @@ export function WeekendScreen({
               </button>
             )}
           </div>
-          <ResultTable title="Ordine d’arrivo" rows={w.race} kind="race" />
-          {w.qualifying && <ResultTable title="Qualifiche" rows={w.qualifying} kind="quali" />}
         </>
+      )}
+
+      {done.length > 0 && (
+        <div className="wk-results">
+          <Tabs
+            value={shownTab ?? ''}
+            onChange={(v) => setTab(v)}
+            options={[
+              ...done.map((x) => ({ id: x.kind as string, label: x.name })),
+              ...(w.qualifying && done.some((x) => x.kind === 'q2')
+                ? [{ id: 'qualifying', label: 'Griglia' }]
+                : []),
+            ]}
+          />
+          {shownTab === 'qualifying' && w.qualifying ? (
+            <ResultTable title="Griglia di partenza" rows={w.qualifying} kind="quali" />
+          ) : shown && shown.results ? (
+            <ResultTable
+              title={shown.name}
+              rows={shown.results}
+              kind={shown.kind === 'race' || shown.kind === 'sprint' ? 'race' : 'quali'}
+              cut={
+                shown.kind === 'practice' ? (w.sessions.some((x) => x.kind === 'fp2') ? 10 : 14) : undefined
+              }
+            />
+          ) : null}
+          {replay && shown && replay.kind === shown.kind && (
+            <button className="btn" onClick={() => setWatching(true)}>
+              Rivedi {shown.kind === 'sprint' ? 'la Sprint' : 'la gara'}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------------------------
-function Strategy({
+function WeatherBox({ wx, title }: { wx: Session['weather']; title: string }) {
+  const grip =
+    wx.grip === 'wet' ? 'Asfalto bagnato' : wx.grip === 'damp' ? 'Asfalto umido' : 'Asfalto asciutto';
+  return (
+    <div className="wx-box" aria-label="Meteo">
+      <WeatherIcon sky={wx.sky} size={2.6} />
+      <div>
+        <small className="muted">Meteo · {title}</small>
+        <b>{SKY_LABEL[wx.sky]}</b>
+        <div className="t2">
+          Aria {wx.airTemp}° · asfalto {wx.trackTemp}°
+        </div>
+        <div className={wx.grip === 'dry' ? 'muted' : 'info'}>{grip}</div>
+      </div>
+    </div>
+  );
+}
+
+function SessionPanel({
   w,
+  session,
   busy,
-  onStart,
+  onRun,
+  onSimulate,
 }: {
   w: WeekendView;
+  session: Session;
   busy: boolean;
-  onStart: (s: Record<string, { compound: Compound; mode: Mode }>) => void;
+  onRun: (plan: Plan) => void;
+  onSimulate: (plan: Plan) => void;
 }) {
+  const raceType = session.kind === 'sprint' || session.kind === 'race';
   const initial = useMemo(
-    () => Object.fromEntries(w.myRiders.map((r) => [r.id, { ...r.suggested }])),
+    () => Object.fromEntries(w.myRiders.map((r) => [r.id, { ...r.suggested }])) as Plan,
     [w.myRiders],
-  ) as Record<string, { compound: Compound; mode: Mode }>;
-  const [plan, setPlan] = useState(initial);
+  );
+  const [plan, setPlan] = useState<Plan>(initial);
+  const riders = w.myRiders.filter((r) => r.inNext);
+  const sat = w.myRiders.filter((r) => !r.inNext);
+  const sendPlan = Object.fromEntries(Object.entries(plan).filter(([id]) => riders.some((r) => r.id === id)));
   return (
-    <Card title="Strategia di gara" aside="scegli per ogni pilota">
-      <Explain style={{ marginBottom: '1rem' }}>
-        Due decisioni per pilota: la <b>gomma</b> (più morbida = più veloce ma dura meno) e il <b>ritmo</b>{' '}
-        (più aggressivo = più veloce ma più rischi). Il tuo ingegnere ha già impostato un consiglio.
-      </Explain>
+    <Card title={`Prossima sessione: ${session.name}`} aside={session.day}>
+      <Explain style={{ marginBottom: '1rem' }}>{explain(session.kind, w)}</Explain>
+      {sat.length > 0 && (
+        <p className="t2">
+          {sat.map((x) => x.name).join(' e ')} {sat.length > 1 ? 'non corrono' : 'non corre'} questa sessione
+          {session.kind === 'q1' ? ' (già in Q2)' : session.kind === 'q2' ? ' (eliminato in Q1)' : ''}.
+        </p>
+      )}
       <div className="strat-grid">
-        {w.myRiders.map((r) => {
+        {riders.map((r) => {
           const p = plan[r.id]!;
           return (
             <div key={r.id} className="tile strat">
@@ -226,63 +353,97 @@ function Strategy({
                 <div>
                   <b>{r.name}</b>
                   <div className="muted">
-                    {r.grid ? `Parte ${r.grid}° in griglia` : 'Posizione in griglia non disponibile'}
+                    {r.grid ? `Parte ${r.grid}° in griglia` : 'Griglia non ancora decisa'}
                   </div>
                 </div>
               </div>
               <div className="strat-label">
                 Gomma
                 <Help>
-                  Le gomme si consumano giro dopo giro. Sotto ogni mescola: quanti secondi si stima di perdere
-                  sull’intera gara rispetto alla scelta migliore, con il ritmo selezionato.
+                  Ogni pilota ha un numero limitato di gomme nuove per tutto il weekend: ogni sessione ne usa
+                  un treno.{' '}
+                  {raceType
+                    ? 'Sotto ogni mescola: i secondi stimati persi sulla gara rispetto alla scelta migliore.'
+                    : ''}
                 </Help>
               </div>
-              <div className="choice">
-                {TYRES.map((t) => (
-                  <button
-                    key={t.id}
-                    className={p.compound === t.id ? 'on' : ''}
-                    onClick={() => setPlan({ ...plan, [r.id]: { ...p, compound: t.id } })}
-                  >
-                    <i className={`tyre ${t.id}`} />
-                    {t.label}
-                    <small className={r.forecast[p.mode][t.id] === 0 ? 'ok' : 'muted'}>
-                      {r.forecast[p.mode][t.id] === 0
-                        ? 'migliore'
-                        : `+${r.forecast[p.mode][t.id].toFixed(1).replace('.', ',')} s`}
-                    </small>
-                  </button>
-                ))}
+              <div className="choice four">
+                {TYRES.map((t) => {
+                  const left = r.tyresLeft[t.id];
+                  return (
+                    <button
+                      key={t.id}
+                      className={p.compound === t.id ? 'on' : ''}
+                      disabled={left <= 0}
+                      onClick={() => setPlan({ ...plan, [r.id]: { ...p, compound: t.id } })}
+                    >
+                      <i className={`tyre ${t.id}`} />
+                      {t.label}
+                      <small className="muted">
+                        {left} di {w.allocation[t.id]}
+                      </small>
+                      {raceType && left > 0 && (
+                        <small className={r.forecast[p.mode][t.id] === 0 ? 'ok' : 'muted'}>
+                          {r.forecast[p.mode][t.id] === 0
+                            ? 'migliore'
+                            : `+${r.forecast[p.mode][t.id].toFixed(1).replace('.', ',')} s`}
+                        </small>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               <div className="muted strat-text">{TYRES.find((t) => t.id === p.compound)!.text}</div>
-              <div className="strat-label">Ritmo</div>
-              <div className="choice">
-                {MODES.map((m) => (
-                  <button
-                    key={m.id}
-                    className={p.mode === m.id ? 'on' : ''}
-                    onClick={() => setPlan({ ...plan, [r.id]: { ...p, mode: m.id } })}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-              <div className="muted strat-text">{MODES.find((m) => m.id === p.mode)!.text}</div>
+              {raceType && (
+                <>
+                  <div className="strat-label">Ritmo</div>
+                  <div className="choice">
+                    {MODES.map((m) => (
+                      <button
+                        key={m.id}
+                        className={p.mode === m.id ? 'on' : ''}
+                        onClick={() => setPlan({ ...plan, [r.id]: { ...p, mode: m.id } })}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="muted strat-text">{MODES.find((m) => m.id === p.mode)!.text}</div>
+                </>
+              )}
               <div className="advice">
-                <b>Consiglio dell’ingegnere:</b> {TYRES.find((t) => t.id === r.suggested.compound)!.label},{' '}
-                {MODES.find((m) => m.id === r.suggested.mode)!.label.toLowerCase()}. {r.why}
+                <b>Consiglio dell’ingegnere:</b> {TYRES.find((t) => t.id === r.suggested.compound)!.label}
+                {raceType
+                  ? `, ${MODES.find((m) => m.id === r.suggested.mode)!.label.toLowerCase()}`
+                  : ''}.{' '}
+                {raceType ? r.why : session.weather.grip !== 'dry' ? 'Pista bagnata: gomme da pioggia.' : ''}
               </div>
             </div>
           );
         })}
       </div>
-      {w.myRiders.length === 0 && <p className="warn">Non hai piloti in griglia per questa gara.</p>}
-      <div style={{ marginTop: '1rem', display: 'flex', gap: '.6rem', flexWrap: 'wrap' }}>
-        <button className="btn primary big-cta" disabled={busy} onClick={() => onStart(plan)}>
-          {busy ? 'La gara è in corso…' : 'Via alla gara!'}
+      {w.myRiders.length === 0 && <p className="warn">Non hai piloti in griglia per questo weekend.</p>}
+      <div
+        style={{ marginTop: '1rem', display: 'flex', gap: '.6rem', flexWrap: 'wrap', alignItems: 'center' }}
+      >
+        <button className="btn primary big-cta" disabled={busy} onClick={() => onRun(sendPlan)}>
+          {busy
+            ? 'In pista…'
+            : raceType
+              ? `Via alla ${session.kind === 'sprint' ? 'Sprint' : 'gara'}!`
+              : `Corri ${session.name}`}
         </button>
         <button className="btn ghost" disabled={busy} onClick={() => setPlan(initial)}>
           Ripristina i consigli
+        </button>
+        <span className="spacer" />
+        <button
+          className="btn"
+          disabled={busy}
+          onClick={() => onSimulate(sendPlan)}
+          title="Corre in automatico tutte le sessioni rimaste, gara compresa"
+        >
+          Simula il resto del weekend
         </button>
       </div>
     </Card>
@@ -327,10 +488,13 @@ export function ResultTable({
   title,
   rows,
   kind,
+  cut,
 }: {
   title: string;
   rows: ResultRowView[];
   kind: 'quali' | 'race';
+  /** Disegna una linea dopo questa posizione (es. chi entra in Q2). */
+  cut?: number;
 }) {
   const [all, setAll] = useState(false);
   const shown = all ? rows : rows.filter((r, i) => i < 10 || r.mine);
@@ -339,10 +503,21 @@ export function ResultTable({
       title={title}
       aside={
         kind === 'race' ? (
-          <>
-            Punti ai primi 15
-            <Help>Il vincitore prende 25 punti, il secondo 20, il terzo 16… fino a 1 punto per il 15°.</Help>
-          </>
+          title === 'Sprint' ? (
+            <>
+              Punti ai primi 9
+              <Help>Nella Sprint il vincitore prende 12 punti, poi 9, 7, 6, 5, 4, 3, 2, 1.</Help>
+            </>
+          ) : (
+            <>
+              Punti ai primi 15
+              <Help>
+                Il vincitore prende 25 punti, il secondo 20, il terzo 16… fino a 1 punto per il 15°.
+              </Help>
+            </>
+          )
+        ) : cut ? (
+          `i primi ${cut} vanno in Q2`
         ) : (
           'il miglior giro di ciascuno'
         )
@@ -355,6 +530,7 @@ export function ResultTable({
               <th>Pos.</th>
               <th>Pilota</th>
               <th>Squadra</th>
+              <th>Gomma</th>
               <th className="r">{kind === 'race' ? 'Tempo / distacco' : 'Tempo'}</th>
               {kind === 'race' && <th className="r">Giro migliore</th>}
               {kind === 'race' && <th className="r">Punti</th>}
@@ -362,7 +538,10 @@ export function ResultTable({
           </thead>
           <tbody>
             {shown.map((r, i) => (
-              <tr key={r.riderId} className={r.mine ? 'mine' : ''}>
+              <tr
+                key={r.riderId}
+                className={`${r.mine ? 'mine' : ''} ${cut && r.position === cut ? 'cut' : ''}`}
+              >
                 <td>
                   <Pos value={r.position} />
                 </td>
@@ -371,6 +550,16 @@ export function ResultTable({
                   <b>{r.name}</b> <span className="muted">#{r.number}</span>
                 </td>
                 <td className="t2">{r.team}</td>
+                <td>
+                  {r.compound ? (
+                    <span className="tyre-tag">
+                      <i className={`tyre ${r.compound}`} />
+                      {TYRES.find((t) => t.id === r.compound)!.label}
+                    </span>
+                  ) : (
+                    '—'
+                  )}
+                </td>
                 <td className="r">
                   {r.status === 'dnf'
                     ? r.reason === 'mechanical'

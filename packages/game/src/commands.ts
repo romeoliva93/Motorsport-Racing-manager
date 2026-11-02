@@ -20,14 +20,20 @@ export type Command =
   | { type: 'AcceptCounter'; riderId: RiderId; replaceRiderId: RiderId | null }
   /** Chiude una trattativa aperta. */
   | { type: 'WithdrawNegotiation'; riderId: RiderId }
-  /** Qualifiche del weekend di oggi (tutte le categorie). */
-  | { type: 'RunQualifying' }
-  /** Gara del weekend di oggi con la strategia scelta per i propri piloti. */
+  /** Prossima sessione del weekend di oggi (prove, qualifiche, Sprint o gara); strategie per Sprint e gara. */
+  | {
+      type: 'RunSession';
+      strategies?: Record<
+        string,
+        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'conservative' | 'normal' | 'attack' }
+      >;
+    }
+  /** Simula tutto il resto del weekend di oggi con la strategia indicata. */
   | {
       type: 'RunRace';
       strategies: Record<
         string,
-        { compound: 'soft' | 'medium' | 'hard'; mode: 'conservative' | 'normal' | 'attack' }
+        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'conservative' | 'normal' | 'attack' }
       >;
     }
   /** Chiude la stagione conclusa e apre la successiva. */
@@ -54,7 +60,7 @@ export type GameEvents = {
   };
   RiderReleased: { riderId: RiderId; teamId: TeamId };
   AiRiderSigned: { riderId: RiderId; teamId: TeamId };
-  QualifyingDone: { roundId: string };
+  SessionDone: { roundId: string; session: string };
   RaceDone: { roundId: string; summary: string };
   SeasonStarted: { year: number };
   UpgradeBought: { part: string; level: number };

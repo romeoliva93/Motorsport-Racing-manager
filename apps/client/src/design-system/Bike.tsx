@@ -18,6 +18,7 @@ export function Bike({
   partColors = {},
   width = 22,
   highlight,
+  pending = [],
 }: {
   team: string;
   colors: { primary: string; secondary: string };
@@ -27,6 +28,8 @@ export function Bike({
   width?: number;
   /** Componente da evidenziare (es. al passaggio del mouse sulla sua scheda). */
   highlight?: BikePart | null;
+  /** Componenti in produzione in fabbrica: contorno tratteggiato. */
+  pending?: BikePart[];
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const id = (n: string) => `${n}-${uid}-${hash(team).toString(36)}`;
@@ -42,7 +45,11 @@ export function Bike({
   };
   const glow = (k: BikePart) => ((levels[k] ?? 0) > 0 || highlight === k ? `url(#${id('glow')})` : undefined);
   const ring = (k: BikePart) =>
-    highlight === k ? { stroke: '#fff', strokeWidth: 4 } : { stroke: '#000', strokeWidth: 3 };
+    highlight === k
+      ? { stroke: '#fff', strokeWidth: 4 }
+      : pending.includes(k)
+        ? { stroke: partColors[k] ?? '#fff', strokeWidth: 3, strokeDasharray: '8 6' }
+        : { stroke: '#000', strokeWidth: 3 };
   const plate = colors.primary;
   const plateInk = luminance(plate) > 0.6 ? '#16171a' : '#f3f1ec';
 

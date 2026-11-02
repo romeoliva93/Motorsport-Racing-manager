@@ -163,6 +163,7 @@ export const STAFF_SKILL: Record<string, string> = {
 
 export const COUNTRY: Record<string, string> = {
   ITA: 'Italia',
+  SMR: 'San Marino',
   ESP: 'Spagna',
   FRA: 'Francia',
   GER: 'Germania',

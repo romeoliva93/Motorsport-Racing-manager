@@ -36,3 +36,17 @@ export interface SponsorDeal {
   signedDay: GameDay;
   status: 'active' | 'met' | 'missed';
 }
+
+export type UpgradeOrderId = Id<'upo'>;
+
+/** Upgrade ordinato alla fabbrica: pagato all'ordine, montato alla consegna. */
+export interface UpgradeOrder {
+  id: UpgradeOrderId;
+  teamId: TeamId;
+  part: PartKey;
+  /** Livello che il componente avrà alla consegna. */
+  level: number;
+  orderedDay: GameDay;
+  readyDay: GameDay;
+  status: 'production' | 'delivered';
+}

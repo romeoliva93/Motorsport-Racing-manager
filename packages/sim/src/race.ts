@@ -18,7 +18,15 @@
 import { Rng, clamp } from '@lean-angle/core';
 import type { TrackShape } from './track.ts';
 
-export type Compound = 'soft' | 'medium' | 'hard';
+export type Compound = 'soft' | 'medium' | 'hard' | 'wet';
+/** Condizione dell'asfalto: asciutto, umido (pioggerella o pista che si asciuga), bagnato. */
+export type Grip = 'dry' | 'damp' | 'wet';
+export interface Conditions {
+  grip: Grip;
+  /** Temperatura dell'asfalto in °C. */
+  trackTemp: number;
+}
+export const DRY: Conditions = { grip: 'dry', trackTemp: 35 };
 export type PaceMode = 'conservative' | 'normal' | 'attack';
 
 export interface RaceRider {
@@ -49,6 +57,8 @@ export interface RaceSetup {
   grid: RaceRider[];
   /** Intervallo dei fotogrammi registrati per la vista 2D (s). */
   frameEvery?: number;
+  /** Meteo e asfalto (default: asciutto, 35 °C). */
+  conditions?: Conditions;
 }
 
 export interface RaceEvent {
@@ -90,7 +100,37 @@ const TYRE: Record<Compound, { base: number; deg: number }> = {
   soft: { base: -0.006, deg: 0.0017 },
   medium: { base: 0, deg: 0.00063 },
   hard: { base: 0.003, deg: 0.0002 },
+  wet: { base: 0, deg: 0.0006 },
 };
+
+/**
+ * Effetto della pioggia: secondi in più (frazione del giro) per gomme slick e da bagnato, moltiplicatore del
+ * consumo delle gomme da bagnato (sull'asciutto si distruggono) e del rischio di caduta.
+ *   asciutto: slick +0%,  rain +7% (consumo ×3)
+ *   umido:    slick +4%,  rain +3,5% (consumo ×1,6)   rischio caduta ×1,7
+ *   bagnato:  slick +16%, rain +7%                    rischio caduta ×2,2 (×2,5 in più con le slick)
+ */
+const GRIP: Record<Grip, { slick: number; wet: number; wetDeg: number; crash: number; slickCrash: number }> =
+  {
+    dry: { slick: 0, wet: 0.07, wetDeg: 3, crash: 1, slickCrash: 1 },
+    damp: { slick: 0.04, wet: 0.035, wetDeg: 1.6, crash: 1.7, slickCrash: 1.3 },
+    wet: { slick: 0.16, wet: 0.07, wetDeg: 1, crash: 2.2, slickCrash: 2.5 },
+  };
+
+/**
+ * Temperatura dell'asfalto: le slick si consumano di più sull'asfalto caldo (+1,2% per grado sopra 35 °C) e
+ * meno sul freddo, entro 0,75–1,4.
+ */
+export const heatFactor = (trackTemp: number) => Math.min(1.4, Math.max(0.75, 1 + (trackTemp - 35) * 0.012));
+
+/** Passo (frazione del giro) e consumo per giro di una mescola nelle condizioni date. */
+function tyreModel(c: Compound, cond: Conditions): { base: number; deg: number } {
+  const g = GRIP[cond.grip];
+  if (c === 'wet') return { base: g.wet, deg: TYRE.wet.deg * g.wetDeg };
+  return { base: TYRE[c].base + g.slick, deg: TYRE[c].deg * heatFactor(cond.trackTemp) };
+}
+export const crashFactor = (c: Compound, cond: Conditions) =>
+  GRIP[cond.grip].crash * (c !== 'wet' ? GRIP[cond.grip].slickCrash : 1);
 const MODE: Record<PaceMode, { pace: number; crash: number; deg: number }> = {
   conservative: { pace: 0.005, crash: 0.5, deg: 0.85 },
   normal: { pace: 0, crash: 1, deg: 1 },
@@ -115,12 +155,15 @@ export function compoundForecast(
   tyreManagement: number,
   mode: PaceMode,
   laps: number,
+  cond: Conditions = DRY,
 ): Record<Compound, number> {
   const f = wearFactor(tyreManagement, mode) * degScale(laps);
   const sumAge = (laps * (laps - 1)) / 2;
   const out = {} as Record<Compound, number>;
-  for (const c of ['soft', 'medium', 'hard'] as Compound[])
-    out[c] = 100 * (TYRE[c].base * laps + TYRE[c].deg * f * sumAge);
+  for (const c of ['soft', 'medium', 'hard', 'wet'] as Compound[]) {
+    const t = tyreModel(c, cond);
+    out[c] = 100 * (t.base * laps + t.deg * f * sumAge);
+  }
   return out;
 }
 
@@ -135,11 +178,16 @@ export interface QualifyingRow {
   position: number;
 }
 
-/** Qualifiche: tre giri lanciati per pilota con gomma morbida, vale il migliore. */
-export function runQualifying(seed: string, refLap: number, riders: RaceRider[]): QualifyingRow[] {
+/** Sessione a tempo: tre giri lanciati per pilota con la gomma scelta (`compound`), vale il migliore. */
+export function runQualifying(
+  seed: string,
+  refLap: number,
+  riders: RaceRider[],
+  cond: Conditions = DRY,
+): QualifyingRow[] {
   const rng = Rng.fromSeed(`${seed}::quali`);
   const times = riders.map((r) => {
-    const base = baseLap(refLap, r) * (1 + TYRE.soft.base + rng.normal(0, 0.0035));
+    const base = baseLap(refLap, r) * (1 + tyreModel(r.compound, cond).base + rng.normal(0, 0.0035));
     let best = Infinity;
     for (let i = 0; i < 3; i++) {
       const err = rng.chance(0.08 * (1.3 - r.consistency)) ? rng.range(0.004, 0.02) : 0;
@@ -170,6 +218,7 @@ interface State {
 export function runRace(setup: RaceSetup): RaceOutcome {
   const rng = Rng.fromSeed(`${setup.seed}::race`);
   const { track, lengthM: L, laps } = setup;
+  const cond = setup.conditions ?? DRY;
   const N = track.points.length;
   const dt = 0.25;
   const frameEvery = setup.frameEvery ?? 0.5;
@@ -191,7 +240,7 @@ export function runRace(setup: RaceSetup): RaceOutcome {
   const lapTimeFor = (s: State) => {
     const r = s.r;
     const tyreAge = s.lap;
-    const t = TYRE[r.compound];
+    const t = tyreModel(r.compound, cond);
     const m = MODE[r.mode];
     const tyre = t.base + t.deg * degScale(laps) * tyreAge * m.deg * (1.3 - 0.6 * r.tyreManagement);
     const fuel = 0.004 * (1 - s.lap / laps);
@@ -261,7 +310,12 @@ export function runRace(setup: RaceSetup): RaceOutcome {
           events.push({ t, lap: s.lap, kind: 'mechanical', riderId: s.r.id });
           continue;
         }
-        const crashP = 0.0025 * MODE[s.r.mode].crash * (1.3 - s.r.concentration) * (1 + s.r.aggression / 2);
+        const crashP =
+          0.0025 *
+          MODE[s.r.mode].crash *
+          crashFactor(s.r.compound, cond) *
+          (1.3 - s.r.concentration) *
+          (1 + s.r.aggression / 2);
         if (rng.chance(crashP)) {
           if (rng.chance(0.7)) {
             s.out = true;

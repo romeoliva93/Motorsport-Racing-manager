@@ -94,3 +94,17 @@ export const SPONSOR_DEAL_RISK = {
   balanced: { label: 'Equilibrata', monthly: 0.3, bonus: 2.5, slack: 0 },
   ambitious: { label: 'Ambiziosa', monthly: 0.55, bonus: 5.0, slack: -2 },
 } as const;
+
+/**
+ * Tempi di produzione in fabbrica (giorni) per livello 1, 2, 3. Si moltiplicano per il fattore della fabbrica:
+ * 1,3 − 0,1 × livello medio dei reparti tecnici (motore, telaio, aerodinamica, elettronica), fra 0,7 e 1,3.
+ */
+export const UPGRADE_LEAD_DAYS: Record<PartKey, [number, number, number]> = {
+  engine: [21, 28, 35],
+  brakes: [10, 14, 18],
+  suspension: [12, 16, 21],
+  chassis: [21, 28, 35],
+  aero: [14, 21, 28],
+  electronics: [10, 14, 18],
+  exhaust: [7, 10, 14],
+};

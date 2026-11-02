@@ -60,9 +60,9 @@ Ufficiali: *Ardena Corse*, *Hoshiro Racing Works*, *Takaido Factory Racing*, *Vo
 
 ### Calendario di esempio (20 round, tutti circuiti immaginari)
 Al-Rimal International (gara notturna) · Autódromo Cerro Azul · Shiranami Circuit ·
-Circuit de Serrablanca · Circuit des Hautes Landes · Autodromo del Monte Ferro · Brennholz-Ring ·
+Circuit de Serrablanca · Circuit des Hautes Landes · Autodromo del Mugnone · Brennholz-Ring ·
 Vltava Ring · Rijnvaart Circuit · Lakeside Park Raceway · Dunavár Circuit · Circuito do Atlântico ·
-Autodromo Valle del Savio · Anatolia Park · Phang-Rai International · Pulau Hijau Circuit ·
+Circuito Riviera di Coriano · Anatolia Park · Phang-Rai International · Pulau Hijau Circuit ·
 Coral Coast Raceway · Nusa Biru Circuit · Autódromo Sierra Dorada · Lone Pine Motorsports Park.
 
 Ogni circuito ha tracciato originale disegnato come polilinea, caratteristiche (velocità media,
@@ -310,3 +310,31 @@ della gara. Risultato: la morbida conviene a chi tratta bene le gomme o va prude
 attacca, la media al pilota medio; le differenze su una gara vanno da pochi decimi a qualche secondo.
 Prima della gara l'ingegnere mostra per ogni mescola i secondi stimati persi rispetto alla migliore; le squadre
 IA usano la stessa previsione con un margine d'errore.
+
+## 21. Weekend completo, gomme, meteo, piste, tempi di fabbrica
+
+**Formato** (un giorno di gioco, sessioni etichettate venerdì/sabato/domenica):
+- MotoGP: Prove libere 1 · Prove (i primi 10 in Q2) · Prove libere 2 · Q1 (i primi 2 salgono in Q2) · Q2
+  (griglia 1–12) · Sprint (metà giri; 12-9-7-6-5-4-3-2-1 punti) · Gara.
+- Moto2/Moto3: Prove libere 1 · Prove (primi 14 in Q2) · Q1 (primi 4) · Q2 · Gara. Rookies: PL1 · Qualifica · Gara.
+- Vittorie e podi in classifica contano solo la gara della domenica; la Sprint dà punti e premi.
+
+**Gomme.** Dotazione per pilota e weekend (MotoGP 4 morbide, 4 medie, 3 dure, 5 da pioggia; Moto2/Moto3 3-3-2-4;
+Rookies 2-2-1-3). Ogni sessione consuma un treno nuovo della mescola scelta, prove libere comprese; una mescola
+finita non si può più scegliere. Nelle sessioni a tempo la morbida è la più veloce sul giro secco.
+
+**Meteo.** Clima per paese (temperatura media, escursione stagionale, emisfero, probabilità di pioggia) e
+sequenza di condizioni per sessione con persistenza. Aria = media del mese ± variazione del weekend (max ±4 °C) +
+ora del giorno − nuvole; asfalto = aria + 18 (sereno) / 12 / 5 / 1 (pioggia). Asfalto bagnato con pioggia,
+umido con pioggerella o subito dopo la pioggia. Effetti: slick +4% (umido) / +16% (bagnato), gomme da pioggia
++3,5% / +7% ma sull'asciutto +7% e consumo ×3; rischio di caduta ×1,7 umido, ×2,2 bagnato (×2,5 in più con le
+slick); consumo delle slick +1,2% per grado di asfalto sopra 35 °C. Prima di ogni sessione si vede la probabilità
+di pioggia annunciata; circa il 15% delle sessioni non è asciutto.
+
+**Piste disegnate.** Autodromo del Mugnone (sul modello del Mugello) e Circuito Riviera di Coriano (Gran Premio
+di San Marino, sul modello di Misano) hanno un tracciato fisso; gli altri circuiti sono generati dal nome.
+
+**Upgrade in fabbrica.** L'upgrade si ordina e si paga subito; viene montato alla consegna dopo
+giorni = base (motore e telaio 21/28/35, aerodinamica 14/21/28, sospensioni 12/16/21, freni ed elettronica
+10/14/18, scarico 7/10/14) × (1,3 − 0,1 × livello medio dei reparti tecnici, fra 0,7 e 1,3).
+Un solo ordine alla volta per componente.

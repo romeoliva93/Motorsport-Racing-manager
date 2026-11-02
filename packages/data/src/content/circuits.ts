@@ -65,8 +65,9 @@ export const CIRCUITS: CircuitContent[] = [
     date: [5, 6],
   },
   {
-    key: 'monte-ferro',
-    name: 'Autodromo del Monte Ferro',
+    // Tracciato disegnato sul modello del Mugello (vedi sim/track.ts → LAYOUTS).
+    key: 'mugnone',
+    name: 'Autodromo del Mugnone',
     country: 'ITA',
     lengthM: 5245,
     turns: 15,
@@ -135,9 +136,10 @@ export const CIRCUITS: CircuitContent[] = [
     date: [9, 2],
   },
   {
-    key: 'valle-savio',
-    name: 'Autodromo Valle del Savio',
-    country: 'ITA',
+    // Gran Premio di San Marino, tracciato sul modello di Misano (vedi sim/track.ts → LAYOUTS).
+    key: 'riviera-coriano',
+    name: 'Circuito Riviera di Coriano',
+    country: 'SMR',
     lengthM: 4230,
     turns: 16,
     abrasiveness: 0.44,

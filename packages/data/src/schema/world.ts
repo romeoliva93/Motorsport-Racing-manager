@@ -81,6 +81,8 @@ export interface Round {
   startDay: GameDay;
   /** Avanzamento del weekend: assente = non ancora disputato. */
   status?: 'qualified' | 'raced';
+  /** Sessioni del weekend già disputate (indice nel formato della categoria). */
+  stage?: number;
 }
 
 export interface Circuit {

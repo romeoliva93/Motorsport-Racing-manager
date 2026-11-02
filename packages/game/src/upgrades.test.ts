@@ -11,19 +11,25 @@ function career(seed: string) {
 }
 
 describe('upgrade dei componenti', () => {
-  it('si pagano, salgono di livello e migliorano la moto', () => {
+  it("si pagano all'ordine e si montano solo alla consegna della fabbrica", () => {
     const e = career('up1');
     const team = e.state.meta.playerTeamId!;
     const before = teamBalance(e.state, team);
     const cost = bikeView(e.state)!.parts.find((p) => p.key === 'brakes')!.nextCost!;
     expect(e.dispatch({ type: 'BuyUpgrade', part: 'brakes' }).ok).toBe(true);
     expect(teamBalance(e.state, team)).toBe(before - cost);
-    expect(bikeView(e.state)!.parts.find((p) => p.key === 'brakes')!.level).toBe(1);
+    const part = () => bikeView(e.state)!.parts.find((p) => p.key === 'brakes')!;
+    expect(part().level).toBe(0);
+    expect(part().inProduction!.level).toBe(1);
+    expect(upgradeBonus(e.state, team).bike).toBe(0);
+    // Un solo ordine alla volta per componente.
+    expect(e.dispatch({ type: 'BuyUpgrade', part: 'brakes' }).ok).toBe(false);
+    const days = part().inProduction!.daysLeft;
+    expect(days).toBeGreaterThanOrEqual(7);
+    e.dispatch({ type: 'AdvanceDays', days });
+    expect(part().level).toBe(1);
+    expect(part().inProduction).toBeNull();
     expect(upgradeBonus(e.state, team).bike).toBeGreaterThan(0);
-    e.dispatch({ type: 'BuyUpgrade', part: 'brakes' });
-    e.dispatch({ type: 'BuyUpgrade', part: 'brakes' });
-    const r = e.dispatch({ type: 'BuyUpgrade', part: 'brakes' });
-    expect(r.ok).toBe(false);
     expect(validateGameState(e.state)).toEqual([]);
   });
 

@@ -13,8 +13,6 @@ function career(seed: string) {
 function playSeason(e: GameEngine) {
   let guard = 0;
   while (!e.availableCommands().includes('StartNextSeason') && guard++ < 200) {
-    const cmds = e.availableCommands();
-    if (cmds.includes('RunQualifying')) expect(e.dispatch({ type: 'RunQualifying' }).ok).toBe(true);
     if (e.availableCommands().includes('RunRace')) {
       const w = weekendView(e.state);
       const strategies = Object.fromEntries(w.myRiders.map((r) => [r.id, r.suggested]));
@@ -28,21 +26,61 @@ function playSeason(e: GameEngine) {
 }
 
 describe('stagione giocabile', () => {
-  it('il tempo si ferma al GP e non si può proseguire senza correrlo', () => {
+  it('weekend a sessioni come nel mondiale: prove, Q1/Q2, Sprint, gara', () => {
     const e = career('wk1');
     expect(e.dispatch({ type: 'ContinueToNextEvent' }).ok).toBe(true);
     const w = weekendView(e.state);
     expect(w.state).toBe('today');
-    expect(e.availableCommands()).toContain('RunQualifying');
+    expect(w.sessions.map((x) => x.kind)).toEqual(['fp1', 'practice', 'fp2', 'q1', 'q2', 'sprint', 'race']);
     expect(e.dispatch({ type: 'AdvanceDays', days: 1 }).ok).toBe(false);
-    expect(e.dispatch({ type: 'RunQualifying' }).ok).toBe(true);
-    expect(weekendView(e.state).qualifying!.length).toBeGreaterThan(10);
-    expect(e.dispatch({ type: 'RunRace', strategies: {} }).ok).toBe(true);
-    expect(e.lastReplay!.frames.length).toBeGreaterThan(100);
-    expect(e.lastReplay!.riders.some((r) => r.mine)).toBe(true);
+    const res = (k: string) =>
+      rows(e.state, 'sessionResults').find((x) => x.kind === k && x.categoryId === w.categoryId)!;
+    for (let i = 0; i < 5; i++) expect(e.dispatch({ type: 'RunSession' }).ok).toBe(true);
+    // Q2: i primi 10 delle Prove + i primi 2 della Q1.
+    const practice = res('practice')
+      .rows.slice(0, 10)
+      .map((r) => r.riderId);
+    const q1 = res('q1')
+      .rows.slice(0, 2)
+      .map((r) => r.riderId);
+    expect(
+      res('q2')
+        .rows.map((r) => r.riderId)
+        .sort(),
+    ).toEqual([...practice, ...q1].sort());
+    expect(res('q1').rows.length).toBe(res('practice').rows.length - 10);
+    const grid = res('qualifying').rows;
+    expect(
+      grid
+        .slice(0, 12)
+        .map((r) => r.riderId)
+        .sort(),
+    ).toEqual([...practice, ...q1].sort());
+    // Gomme: ogni sessione consuma un treno.
+    const me = w.myRiders[0]!;
+    const left = weekendView(e.state).myRiders[0]!.tyresLeft;
+    expect(left.soft + left.medium + left.hard).toBe(11 - ((q1 as string[]).includes(me.id) ? 5 : 4));
+    // Sprint con mezza distanza e punti ai primi 9.
+    expect(e.dispatch({ type: 'RunSession', strategies: {} }).ok).toBe(true);
+    expect(res('sprint').rows.filter((r) => r.points > 0).length).toBeLessThanOrEqual(9);
+    expect(e.lastReplay!.kind).toBe('sprint');
+    expect(e.dispatch({ type: 'RunSession', strategies: {} }).ok).toBe(true);
+    expect(e.lastReplay!.kind).toBe('race');
     // Tutte le categorie hanno corso lo stesso giorno.
     expect(rows(e.state, 'sessionResults').filter((x) => x.kind === 'race').length).toBe(3);
     expect(validateGameState(e.state)).toEqual([]);
+  });
+
+  it('non si possono usare gomme finite', () => {
+    const e = career('wk4');
+    e.dispatch({ type: 'ContinueToNextEvent' });
+    const id = weekendView(e.state).myRiders[0]!.id;
+    for (let i = 0; i < 3; i++)
+      expect(
+        e.dispatch({ type: 'RunSession', strategies: { [id]: { compound: 'hard', mode: 'normal' } } }).ok,
+      ).toBe(true);
+    const r = e.dispatch({ type: 'RunSession', strategies: { [id]: { compound: 'hard', mode: 'normal' } } });
+    expect(r.ok).toBe(false);
   });
 
   it('stagione completa: classifiche, economia, notizie, cambio stagione', () => {
@@ -54,9 +92,7 @@ describe('stagione giocabile', () => {
     expect(ch.racesDone).toBe(20);
     expect(ch.riders[0]!.points).toBeGreaterThan(200);
     const pts = ch.riders.reduce((a, r) => a + r.points, 0);
-    expect(pts).toBe(
-      20 * [25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1].reduce((a, b) => a + b, 0) - lostPoints(e),
-    );
+    expect(pts).toBe(expectedPoints(e));
     // Vittorie distribuite fra più piloti (nessun risultato predeterminato).
     expect(ch.riders.filter((r) => r.wins > 0).length).toBeGreaterThan(2);
     const f = financeView(e.state)!;
@@ -98,14 +134,15 @@ describe('stagione giocabile', () => {
   });
 });
 
-/** Punti non assegnati quando arrivano meno di 15 piloti al traguardo. */
-function lostPoints(e: GameEngine) {
-  const pts = [25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+/** Punti attesi: per ogni gara e Sprint, la somma della tabella punti fino all'ultimo pilota arrivato. */
+function expectedPoints(e: GameEngine) {
+  const race = [25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+  const sprint = [12, 9, 7, 6, 5, 4, 3, 2, 1];
   const cat = championship(e.state)!.categoryId;
   return rows(e.state, 'sessionResults')
-    .filter((x) => x.kind === 'race' && x.categoryId === cat)
+    .filter((x) => (x.kind === 'race' || x.kind === 'sprint') && x.categoryId === cat)
     .reduce((t, r) => {
       const fin = r.rows.filter((x) => x.position !== null).length;
-      return t + pts.slice(fin).reduce((a, b) => a + b, 0);
+      return t + (r.kind === 'race' ? race : sprint).slice(0, fin).reduce((a, b) => a + b, 0);
     }, 0);
 }

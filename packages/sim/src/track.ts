@@ -18,11 +18,85 @@ export interface TrackShape {
 
 const SAMPLES = 480;
 
+/**
+ * Tracciati disegnati a mano (punti di controllo in senso di marcia, partenza dal traguardo).
+ * Gli altri circuiti sono generati dal nome.
+ *   Autodromo del Mugnone: sul modello del Mugello — rettilineo lungo, San Donato in fondo, Luco–Poggio Secco,
+ *     Materassi–Borgo San Lorenzo, Casanova–Savelli, le Arrabbiate veloci, Scarperia–Palagio, Correntaio,
+ *     Biondetti e il curvone Bucine che lancia sul rettilineo.
+ *   Circuito Riviera di Coriano: sul modello di Misano — variante del Parco, Rio, Quercia, Tramonto,
+ *     il Curvone, Carro e la sequenza finale prima del traguardo.
+ */
+export const LAYOUTS: Record<string, [number, number][]> = {
+  'Autodromo del Mugnone': [
+    [0.35, -0.005],
+    [0.7, -0.005],
+    [1.02, 0],
+    [1.13, 0.04],
+    [1.15, 0.13],
+    [1.07, 0.18],
+    [0.93, 0.18],
+    [0.85, 0.25],
+    [0.89, 0.33],
+    [0.98, 0.4],
+    [0.96, 0.5],
+    [0.86, 0.53],
+    [0.73, 0.49],
+    [0.63, 0.55],
+    [0.58, 0.66],
+    [0.5, 0.78],
+    [0.38, 0.84],
+    [0.26, 0.8],
+    [0.2, 0.7],
+    [0.25, 0.6],
+    [0.18, 0.52],
+    [0.06, 0.5],
+    [0, 0.42],
+    [0.05, 0.33],
+    [0, 0.26],
+    [-0.06, 0.2],
+    [-0.13, 0.12],
+    [-0.11, 0.03],
+    [0, 0],
+  ],
+  'Circuito Riviera di Coriano': [
+    [0, 0],
+    [0.3, 0],
+    [0.6, 0],
+    [0.68, -0.03],
+    [0.74, 0.02],
+    [0.81, 0],
+    [0.92, 0.04],
+    [0.96, 0.14],
+    [0.88, 0.2],
+    [0.7, 0.22],
+    [0.55, 0.24],
+    [0.45, 0.28],
+    [0.44, 0.38],
+    [0.53, 0.41],
+    [0.66, 0.42],
+    [0.78, 0.48],
+    [0.82, 0.58],
+    [0.74, 0.64],
+    [0.55, 0.66],
+    [0.38, 0.66],
+    [0.24, 0.68],
+    [0.14, 0.62],
+    [0.16, 0.52],
+    [0.1, 0.42],
+    [0, 0.38],
+    [-0.06, 0.3],
+    [-0.08, 0.18],
+    [-0.06, 0.07],
+  ],
+};
+
 export function generateTrack(key: string, turns: number): TrackShape {
   const rng = Rng.fromSeed(`track::${key}`);
-  const n = clamp(Math.round(turns * 0.7) + 4, 8, 18);
-  const ctrl: [number, number][] = [];
-  for (let i = 0; i < n; i++) {
+  const layout = LAYOUTS[key];
+  const n = layout ? layout.length : clamp(Math.round(turns * 0.7) + 4, 8, 18);
+  const ctrl: [number, number][] = layout ? layout.map((p) => [p[0], p[1]] as [number, number]) : [];
+  for (let i = 0; !layout && i < n; i++) {
     const a = (i / n) * Math.PI * 2 + rng.range(-0.18, 0.18) * (Math.PI / n);
     const r = 1 + rng.range(-0.38, 0.32);
     ctrl.push([Math.cos(a) * r * 1.35, Math.sin(a) * r]);

@@ -144,7 +144,7 @@ export function Shell({
   const seasonOver = commands.includes('StartNextSeason');
   const next: { label: string; hint: string; action: () => void } | null = raceDay
     ? {
-        label: commands.includes('RunQualifying') ? 'Vai alle qualifiche' : 'Vai alla gara',
+        label: 'Vai al weekend',
         hint: 'Oggi si corre',
         action: () => go('weekend'),
       }
@@ -167,7 +167,7 @@ export function Shell({
     try {
       await engine.dispatch({ type: 'ContinueToNextEvent' });
       go('weekend');
-      notify('È arrivato il weekend di gara: prima le qualifiche, poi la gara.');
+      notify('È arrivato il weekend di gara: si comincia con le prove libere.');
     } catch (e) {
       notify((e as Error).message, true);
     } finally {

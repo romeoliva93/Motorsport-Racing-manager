@@ -19,7 +19,7 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
     setBusy(true);
     try {
       await engine.dispatch({ type: 'BuyUpgrade', part: key });
-      notify(`${name} potenziato al livello ${level + 1}: si vedrà già dalla prossima gara.`);
+      notify(`${name} livello ${level + 1} ordinato: la fabbrica lo consegnerà nei prossimi giorni.`);
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -38,6 +38,7 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
           partColors={partColors}
           width={44}
           highlight={hover}
+          pending={b.parts.filter((p) => p.inProduction).map((p) => p.key)}
         />
         <div className="bike-legend">
           {b.parts.map((p) => (
@@ -75,8 +76,9 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
           <b>{formatMoney(b.balance)}</b>
         </div>
         <Explain style={{ marginTop: '.8rem' }}>
-          La moto di serie è nera. Ogni componente che potenzi si colora sul disegno: più è acceso, più è
-          sviluppato. Anche le squadre avversarie investono durante la stagione.
+          La moto di serie è nera. Ogni upgrade si ordina alla fabbrica e si paga subito; viene montato solo
+          alla consegna (i giorni dipendono dal pezzo e dal livello dei tuoi reparti tecnici). Sul disegno i
+          pezzi in produzione sono tratteggiati, quelli montati si colorano. Anche le avversarie investono.
         </Explain>
       </Card>
       {b.parts.map((p) => (
@@ -87,7 +89,14 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
               <b>{p.name}</b>
               <span className="pips" aria-label={`Livello ${p.level} di ${p.max}`}>
                 {Array.from({ length: p.max }, (_, i) => (
-                  <span key={i} style={{ background: i < p.level ? p.color : 'var(--bg-3)' }} />
+                  <span
+                    key={i}
+                    className={p.inProduction && i === p.level ? 'building' : ''}
+                    style={{
+                      background: i < p.level ? p.color : 'var(--bg-3)',
+                      ['--c' as string]: p.color,
+                    }}
+                  />
                 ))}
               </span>
             </div>
@@ -95,7 +104,16 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
             <div className="muted" style={{ fontSize: '.85rem', marginBottom: '.7rem' }}>
               Migliora: {p.effect}
             </div>
-            {p.nextCost === null ? (
+            {p.inProduction ? (
+              <div className="building-note">
+                <span className="pill info">In produzione</span> Livello {p.inProduction.level} pronto il{' '}
+                {p.inProduction.ready}
+                <span className="muted">
+                  {' '}
+                  (tra {p.inProduction.daysLeft} {p.inProduction.daysLeft === 1 ? 'giorno' : 'giorni'})
+                </span>
+              </div>
+            ) : p.nextCost === null ? (
               <span className="pill ok">Livello massimo</span>
             ) : (
               <button
@@ -104,7 +122,7 @@ export function BikeScreen({ notify }: { notify: (t: string, err?: boolean) => v
                 onClick={() => buy(p.key, p.name, p.level)}
                 title={p.affordable ? undefined : 'Non hai abbastanza soldi in cassa'}
               >
-                Potenzia al livello {p.level + 1} · {formatMoney(p.nextCost)}
+                Ordina il livello {p.level + 1} · {formatMoney(p.nextCost)} · {p.nextLeadDays} giorni
               </button>
             )}
           </div>

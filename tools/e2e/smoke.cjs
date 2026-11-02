@@ -90,13 +90,13 @@ async function waitForServer(url, ms = 20000) {
 
     await page.locator('.nav').getByRole('button', { name: 'Moto e upgrade' }).click();
     await page
-      .getByRole('button', { name: /Potenzia al livello 1/ })
+      .getByRole('button', { name: /Ordina il livello 1/ })
       .first()
       .click();
-    await page.getByText(/potenziato al livello 1/).waitFor();
-    await page.getByText('liv. 1').first().waitFor();
+    await page.getByText(/ordinato/).waitFor();
+    await page.getByText('In produzione').first().waitFor();
     await shot('17-moto');
-    step('upgrade della moto');
+    step('upgrade ordinato alla fabbrica');
 
     await page.locator('.nav').getByRole('button', { name: 'Mercato piloti' }).click();
     await page.getByText('Contratto attuale').waitFor();
@@ -115,32 +115,37 @@ async function waitForServer(url, ms = 20000) {
       .locator('.topbar')
       .getByRole('button', { name: /Vai al Gran Premio/ })
       .click();
-    await page.getByRole('button', { name: 'Corri le qualifiche' }).waitFor();
+    await page.getByRole('button', { name: 'Corri Prove libere 1' }).waitFor();
     const dateAfter = await today();
     if (dateAfter === dateBefore) throw new Error('La data non è avanzata');
     step(`avanzamento al Gran Premio: ${dateBefore} → ${dateAfter}`);
-    await page.getByRole('button', { name: 'Corri le qualifiche' }).click();
+    await page.locator('.wx-box').waitFor();
+    await shot('11-weekend');
+    for (const name of ['Prove libere 1', 'Prove', 'Prove libere 2', 'Qualifiche 1', 'Qualifiche 2']) {
+      await page.getByRole('button', { name: `Corri ${name}`, exact: true }).click();
+      await page.locator('.wk-sess.done', { hasText: name }).first().waitFor();
+    }
     await page.getByText('Griglia di partenza').waitFor();
     await page.getByText('Consiglio dell’ingegnere').first().waitFor();
-    await page.locator('.choice button', { hasText: 'Dura' }).first().click();
     await shot('11-strategia');
-    step('qualifiche e strategia');
-    await page.getByRole('button', { name: 'Via alla gara!' }).click();
+    step('prove libere, Prove, Q1 e Q2 con gomme a scelta');
+    await page.getByRole('button', { name: 'Via alla Sprint!' }).click();
     await page.locator('.rv-canvas').waitFor();
     await page.getByRole('button', { name: '16×' }).click();
     await page.waitForFunction(
       () => /Giro [2-9]/.test(document.querySelector('.rv-head')?.textContent ?? ''),
       null,
-      {
-        timeout: 20000,
-      },
+      { timeout: 20000 },
     );
     await shot('12-gara');
-    step('gara in 2D: ' + (await page.locator('.rv-head b').innerText()));
+    step('Sprint in 2D: ' + (await page.locator('.rv-head b').innerText()));
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
-    await page.getByText('Ordine d’arrivo').waitFor();
+    await page.getByRole('button', { name: 'Via alla gara!' }).click();
+    await page.locator('.rv-canvas').waitFor();
+    await page.getByRole('button', { name: 'Salta alla fine' }).click();
+    await page.getByRole('button', { name: 'Rivedi la gara' }).first().waitFor();
     await shot('13-risultati');
-    step('risultati della gara');
+    step('gara e risultati');
 
     await page.locator('.nav button', { hasText: 'Classifiche' }).click();
     await page.getByText('Classifica piloti').waitFor();
