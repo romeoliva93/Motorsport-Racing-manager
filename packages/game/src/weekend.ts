@@ -5,6 +5,7 @@
 import {
   addSessionMileage,
   aiMaintenance,
+  crewChiefMaintenance,
   bikeReliabilityFactor,
   fitNewEnginesIfDue,
   mainBike,
@@ -677,6 +678,7 @@ export function runNextSession(
   let replay: ReplayData | null = null;
   if (!round.stage) {
     fitNewEnginesIfDue(s, round);
+    crewChiefMaintenance(s, ids, round);
     aiMaintenance(s, ids, round);
   }
   if (kind === 'fp1' || kind === 'fp2' || kind === 'practice' || kind === 'warmup')

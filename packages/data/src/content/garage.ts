@@ -47,3 +47,153 @@ export const SESSION_KM_LAPS: Record<string, number> = {
   q2: 6,
   qualifying: 8,
 };
+
+/**
+ * Gruppi tecnici visibili al giocatore, per categoria. I 14 componenti restano il modello fisico interno
+ * (usura, chilometri, revisioni); il garage mostra solo i gruppi. Ogni componente appartiene a un solo gruppo
+ * oppure è "di fornitura" (es. motore unico Moto2): lo gestisce il fornitore, senza intervento del manager.
+ * `zone` è la zona dell'illustrazione della moto; `upgrade` i reparti di sviluppo che lo migliorano.
+ */
+export interface TechGroup {
+  key: string;
+  name: string;
+  zone: 'engine' | 'chassis' | 'suspension' | 'brakes' | 'aero' | 'electronics';
+  parts: GarageKey[];
+  upgrade: PartKey[];
+  what: string;
+}
+export const TECH_GROUPS: Record<'premier' | 'intermediate' | 'lightweight' | 'rookies', TechGroup[]> = {
+  premier: [
+    {
+      key: 'powertrain',
+      name: 'Motore e trasmissione',
+      zone: 'engine',
+      parts: ['engine', 'gearbox', 'clutch', 'chain', 'cooling', 'exhaust'],
+      upgrade: ['engine', 'exhaust'],
+      what: 'Potenza, cambio, frizione, catena, raffreddamento e scarico.',
+    },
+    {
+      key: 'chassis',
+      name: 'Telaio e geometria',
+      zone: 'chassis',
+      parts: ['chassis', 'swingarm'],
+      upgrade: ['chassis'],
+      what: 'Telaio e forcellone: inserimento e stabilità in curva.',
+    },
+    {
+      key: 'suspension',
+      name: 'Sospensioni e avantreno',
+      zone: 'suspension',
+      parts: ['fork', 'shock'],
+      upgrade: ['suspension'],
+      what: 'Forcella e ammortizzatore: stabilità e consumo gomme.',
+    },
+    {
+      key: 'brakes',
+      name: 'Freni',
+      zone: 'brakes',
+      parts: ['frontBrake', 'rearBrake'],
+      upgrade: ['brakes'],
+      what: 'Dischi e pinze: staccate più profonde.',
+    },
+    {
+      key: 'aero',
+      name: 'Aerodinamica e alette',
+      zone: 'aero',
+      parts: ['fairing'],
+      upgrade: ['aero'],
+      what: 'Carena, cupolino e alette: velocità e anti-impennata.',
+    },
+    {
+      key: 'electronics',
+      name: 'Elettronica',
+      zone: 'electronics',
+      parts: ['ecu'],
+      upgrade: ['electronics'],
+      what: 'Centralina e controlli: trazione e affidabilità.',
+    },
+  ],
+  intermediate: [
+    {
+      key: 'chassis',
+      name: 'Telaio',
+      zone: 'chassis',
+      parts: ['chassis', 'swingarm', 'fairing'],
+      upgrade: ['chassis', 'aero'],
+      what: 'Telaio, forcellone e carena: il cuore del progetto Moto2.',
+    },
+    {
+      key: 'suspension',
+      name: 'Sospensioni',
+      zone: 'suspension',
+      parts: ['fork', 'shock'],
+      upgrade: ['suspension'],
+      what: 'Forcella e ammortizzatore.',
+    },
+    {
+      key: 'brakes',
+      name: 'Freni',
+      zone: 'brakes',
+      parts: ['frontBrake', 'rearBrake'],
+      upgrade: ['brakes'],
+      what: 'Dischi e pinze.',
+    },
+    {
+      key: 'electronics',
+      name: 'Regolazioni elettroniche consentite',
+      zone: 'electronics',
+      parts: ['ecu'],
+      upgrade: ['electronics'],
+      what: 'Centralina unica: solo le mappe permesse dal regolamento.',
+    },
+  ],
+  lightweight: [
+    {
+      key: 'chassis',
+      name: 'Geometria',
+      zone: 'chassis',
+      parts: ['chassis', 'swingarm', 'fairing'],
+      upgrade: ['chassis', 'aero'],
+      what: 'Telaio, forcellone e carena.',
+    },
+    {
+      key: 'suspension',
+      name: 'Sospensioni',
+      zone: 'suspension',
+      parts: ['fork', 'shock', 'frontBrake', 'rearBrake'],
+      upgrade: ['suspension', 'brakes'],
+      what: 'Forcella, ammortizzatore e freni.',
+    },
+    {
+      key: 'powertrain',
+      name: 'Motore e trasmissione',
+      zone: 'engine',
+      parts: ['engine', 'gearbox', 'clutch', 'chain', 'cooling', 'exhaust', 'ecu'],
+      upgrade: ['engine', 'exhaust', 'electronics'],
+      what: 'Motore 250 cc nei limiti del regolamento.',
+    },
+  ],
+  rookies: [
+    {
+      key: 'suspension',
+      name: 'Sospensioni',
+      zone: 'suspension',
+      parts: ['fork', 'shock'],
+      upgrade: [],
+      what: 'Forcella e ammortizzatore della moto monomarca.',
+    },
+    {
+      key: 'balance',
+      name: 'Bilanciamento e assetto consentito',
+      zone: 'chassis',
+      parts: ['chassis', 'swingarm', 'fairing', 'frontBrake', 'rearBrake'],
+      upgrade: [],
+      what: 'Regolazioni permesse sulla Lysander R250.',
+    },
+  ],
+};
+
+/** Componenti che il capotecnico non sostituisce da solo: costano molto, decide il manager. */
+export const MAJOR_PARTS: GarageKey[] = ['chassis', 'swingarm'];
+/** Usura oltre la quale il capotecnico revisiona da solo un componente ordinario (prima del weekend). */
+export const AUTO_SERVICE_AT = 0.7;

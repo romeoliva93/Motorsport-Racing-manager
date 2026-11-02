@@ -903,13 +903,17 @@ table.std tbody tr.mine td:first-child {
   border-radius: 50%;
 }
 
-.bike-photo {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: var(--r-2);
-  margin-bottom: 0.8rem;
-  border: 1px solid var(--line);
+/* Moto illustrata: zone dei gruppi tecnici */
+.bike-art .bz {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.bike-art .bz.click {
+  cursor: pointer;
+}
+.bike-art .bz.click:hover {
+  opacity: 0.55;
+}
+.bike-art .bz.on {
+  opacity: 1;
 }

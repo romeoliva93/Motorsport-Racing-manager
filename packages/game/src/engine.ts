@@ -130,7 +130,7 @@ export class GameEngine {
       if (this.nextRound()) out.push('ContinueToNextEvent');
     }
     if (marketOpen(s)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
-    out.push('BuyUpgrade', 'ServiceParts');
+    out.push('BuyUpgrade', 'ServiceParts', 'SetGarageAuto');
     if (dealWindowOpen(s)) out.push('SignSponsorDeal');
     return out;
   }
@@ -275,6 +275,8 @@ export class GameEngine {
         if (total > teamBalance(s, b.teamId)) return err('Soldi insufficienti per la revisione');
         return ok(true);
       }
+      case 'SetGarageAuto':
+        return s.meta.playerTeamId ? ok(true) : err('Scegli prima una squadra');
       case 'SignSponsorDeal':
         if (!['safe', 'balanced', 'ambitious'].includes(cmd.risk)) return err('Offerta non valida');
         return dealWindowOpen(s)
@@ -355,6 +357,10 @@ export class GameEngine {
         this.events.emit('PartsServiced', s.meta.currentDay, { bikeId: b.id, parts: cmd.parts, cost });
         return;
       }
+      case 'SetGarageAuto':
+        s.garageAuto = { ...(s.garageAuto ?? {}), [s.meta.playerTeamId!]: cmd.auto };
+        this.events.emit('GarageAutoSet', s.meta.currentDay, { auto: cmd.auto });
+        return;
       case 'SignSponsorDeal':
         signDeal(s, this.ids, cmd.risk);
         this.events.emit('SponsorSigned', s.meta.currentDay, { risk: cmd.risk });

@@ -30,7 +30,17 @@ import { activeRiderContract, buyoutFor } from './market.ts';
 import { riderDetail, type RiderDetail } from './queries.ts';
 import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
 import { engineStatus, teamConcession, type ConcessionRank } from './regulations.ts';
-import { bikeReliabilityFactor, canService, partReliability, partWear, serviceCost } from './garage.ts';
+import {
+  bikeReliabilityFactor,
+  canService,
+  groupStatus,
+  groupsFor,
+  isSupplierPart,
+  partReliability,
+  partWear,
+  pendingDecisions,
+  serviceCost,
+} from './garage.ts';
 import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
@@ -613,6 +623,18 @@ export interface BikeView {
     inProduction: { level: number; ready: string; daysLeft: number } | null;
   }[];
   /** Garage: moto di ogni pilota (A, e B solo dove il regolamento la concede) con i 14 componenti. */
+  /** Manutenzione delegata al capotecnico. */
+  garageAuto: boolean;
+  /** Sostituzioni importanti che aspettano la decisione del manager. */
+  decisions: {
+    bikeId: string;
+    rider: string;
+    slot: 'A' | 'B';
+    part: string;
+    name: string;
+    wear: number;
+    cost: number;
+  }[];
   garage: {
     riderId: string;
     rider: string;
@@ -623,6 +645,25 @@ export interface BikeView {
       km: number;
       /** Affidabilità della moto in gara (base × componenti), 0–100. */
       reliability: number;
+      /** Gruppi tecnici della categoria (quello che il giocatore vede). */
+      groups: {
+        key: string;
+        name: string;
+        zone: 'engine' | 'chassis' | 'suspension' | 'brakes' | 'aero' | 'electronics';
+        what: string;
+        /** Livello di sviluppo (media dei reparti che lo migliorano, 0–3). */
+        level: number;
+        condition: number;
+        wear: number;
+        reliability: number;
+        lifeLeftKm: number;
+        lifeLeftWeekends: number;
+        parts: GarageKey[];
+        serviceable: GarageKey[];
+        serviceCost: number;
+      }[];
+      /** Componenti di fornitura (gestiti dal fornitore, es. motore unico Moto2). */
+      supplier: string[];
       parts: {
         key: GarageKey;
         name: string;
@@ -678,6 +719,11 @@ export function bikeView(s: GameState): BikeView | null {
               },
             ];
           }),
+    garageAuto: s.garageAuto?.[entry.teamId] !== false,
+    decisions: pendingDecisions(s, entry.teamId).map((d) => {
+      const r = s.tables.riders[d.riderId as keyof typeof s.tables.riders];
+      return { ...d, rider: r ? `${r.firstName} ${r.lastName}` : '' };
+    }),
     garage: entry.seats.flatMap((seat) => {
       const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
       if (!r) return [];
@@ -695,6 +741,27 @@ export function bikeView(s: GameState): BikeView | null {
             slot: b.slot,
             km: Math.round(b.mileageKm ?? 0),
             reliability: Math.round(base * bikeReliabilityFactor(b) * 1000) / 10,
+            groups: groupsFor(s, b).map((g) => {
+              const st = groupStatus(b, g);
+              const serviceable = g.parts.filter((k) => canService(s, b, k) && (b.parts?.[k]?.km ?? 0) > 0);
+              return {
+                key: g.key,
+                name: g.name,
+                zone: g.zone,
+                what: g.what,
+                level: g.upgrade.length
+                  ? Math.round(
+                      (g.upgrade.reduce((t, u) => t + partLevel(s, entry.teamId, u), 0) / g.upgrade.length) *
+                        10,
+                    ) / 10
+                  : 0,
+                ...st,
+                parts: g.parts,
+                serviceable,
+                serviceCost: serviceable.reduce((t, k) => t + serviceCost(s, b, k), 0),
+              };
+            }),
+            supplier: GARAGE_PARTS.filter((p) => isSupplierPart(s, b, p.key)).map((p) => p.name),
             parts: GARAGE_PARTS.map((p) => {
               const w = partWear(b, p.key);
               return {

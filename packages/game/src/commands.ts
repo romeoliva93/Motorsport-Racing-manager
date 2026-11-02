@@ -41,6 +41,7 @@ export type Command =
   /** Compra il livello successivo di un componente della moto. */
   | { type: 'BuyUpgrade'; part: PartKey }
   | { type: 'ServiceParts'; bikeId: string; parts: GarageKey[] }
+  | { type: 'SetGarageAuto'; auto: boolean }
   /** Firma l'offerta dello sponsor con obiettivo stagionale. */
   | { type: 'SignSponsorDeal'; risk: SponsorRisk };
 
@@ -66,5 +67,6 @@ export type GameEvents = {
   SeasonStarted: { year: number };
   UpgradeBought: { part: string; level: number };
   PartsServiced: { bikeId: string; parts: string[]; cost: number };
+  GarageAutoSet: { auto: boolean };
   SponsorSigned: { risk: string };
 };

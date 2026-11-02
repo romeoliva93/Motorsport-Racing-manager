@@ -121,6 +121,7 @@ async function waitForServer(url, ms = 20000) {
     step('sponsor con obiettivo firmato');
 
     await page.locator('.nav').getByRole('button', { name: 'Moto e upgrade' }).click();
+    await page.getByRole('tab', { name: 'Sviluppo' }).click();
     await page
       .getByRole('button', { name: /Ordina il livello 1/ })
       .first()
@@ -233,15 +234,23 @@ async function waitForServer(url, ms = 20000) {
     step('gara e risultati');
 
     await page.locator('.nav button', { hasText: 'Moto e upgrade' }).click();
-    await page.locator('.gar-tile').first().waitFor();
-    if ((await page.locator('.gar-tile').count()) !== 14)
-      throw new Error('Il garage non mostra 14 componenti');
-    await page.locator('.gar-tile', { hasText: 'Frizione' }).click();
+    await page.locator('.gar-groups button').first().waitFor();
+    const nGroups = await page.locator('.gar-groups button').count();
+    if (nGroups !== 6) throw new Error(`Il garage MotoGP deve mostrare 6 gruppi tecnici, ne mostra ${nGroups}`);
+    if ((await page.locator('.bike-photo').count()) !== 0) throw new Error('Foto esterna della moto ancora presente');
+    await page.locator('.gar-groups button', { hasText: 'Freni' }).click();
+    await page.locator('.gar-group-name', { hasText: 'Freni' }).waitFor();
+    await page.waitForTimeout(400); // fine della dissolvenza fra le zone della moto
     await shot('18-garage');
-    const fix = page.getByRole('button', { name: /^Revisiona i \d+ pezzi/ });
-    const n = await fix.count();
-    if (n) await fix.click();
-    step('garage: 14 componenti' + (n ? ', revisione dei pezzi usurati' : ''));
+    await page.getByRole('tab', { name: 'Stato tecnico' }).click();
+    await page.getByText('Vita residua').first().waitFor();
+    await shot('18-garage-stato');
+    await page.getByRole('tab', { name: 'Manutenzione' }).click();
+    await page.getByRole('button', { name: 'Manuale' }).click();
+    await page.getByText(/Manutenzione manuale/).waitFor();
+    await page.getByRole('button', { name: 'Al capotecnico' }).click();
+    await page.getByText(/affidata al capotecnico/).waitFor();
+    step('garage: 6 gruppi tecnici, stato tecnico, manutenzione delegata');
 
     await page.locator('.nav button', { hasText: 'Classifiche' }).click();
     await page.getByText('Classifica piloti').waitFor();

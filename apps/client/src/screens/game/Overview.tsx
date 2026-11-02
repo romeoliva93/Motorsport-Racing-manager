@@ -6,7 +6,7 @@ import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Pos, ratingTone } from '../../design-system/components.tsx';
 
 import type { Section } from '../../shell/Shell.tsx';
-import { Bike } from '../../design-system/Bike.tsx';
+import { BikeArt, type BikeTier } from '../../design-system/BikeArt.tsx';
 
 type Next = { label: string; hint: string; action: () => void } | null;
 
@@ -119,12 +119,10 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
       >
         {bike ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.4rem' }}>
-            <Bike
-              team={bike.team}
+            <BikeArt
+              tier={bike.tier as BikeTier}
               colors={bike.colors}
               number={bike.numbers[0] ?? null}
-              levels={Object.fromEntries(bike.parts.map((p) => [p.key, p.level]))}
-              partColors={Object.fromEntries(bike.parts.map((p) => [p.key, p.color]))}
               width={19}
             />
             <span className="muted">

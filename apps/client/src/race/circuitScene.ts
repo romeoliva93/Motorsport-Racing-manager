@@ -1248,30 +1248,75 @@ export function drawDynamic(
     ctx.arc(L * 0.14, 0, W * 0.26, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
-    // Numero di gara accanto a ogni moto (piccola tabella nel colore della squadra).
-    if (L >= 9) {
-      const nt = String(b.number);
-      ctx.font = 'italic 800 9px Archivo, system-ui, sans-serif';
-      const nw = ctx.measureText(nt).width + 5;
+  }
+  // Etichette senza sovrapposizioni. Priorità: pilota selezionato, i miei, i primi tre (nome + posizione),
+  // poi il numero degli altri solo se c'è spazio. Le moto non vengono spostate: si spostano o si omettono le
+  // etichette; se un'etichetta è lontana dalla moto, una linea sottile la collega.
+  const placed: [number, number, number, number][] = [];
+  const free = (x: number, y: number, w: number, h: number) =>
+    !placed.some(([a, b2, c, d]) => x < a + c + 2 && x + w + 2 > a && y < b2 + d + 2 && y + h + 2 > b2);
+  // Le moto stesse occupano spazio: le etichette non le coprono.
+  for (const b of bikes) {
+    const p = P(b.pos);
+    placed.push([p[0] - W * 0.6, p[1] - W * 0.6, W * 1.2, W * 1.2]);
+  }
+  const rank = (b: BikeDraw) => (b.selected ? 0 : b.mine ? 1 : b.label ? 2 : 3);
+  const order = [...bikes].sort((a, b) => rank(a) - rank(b));
+  for (const b of order) {
+    const p = P(b.pos);
+    const strong = rank(b) < 3;
+    const text = strong && b.label ? `${b.number}  ${b.label}` : String(b.number);
+    if (!strong && L < 9) continue; // vista molto lontana: solo le icone
+    ctx.font = strong
+      ? '700 10px Archivo, system-ui, sans-serif'
+      : 'italic 800 9px Archivo, system-ui, sans-serif';
+    const w = ctx.measureText(text).width + (strong ? 10 : 6);
+    const h = strong ? 14 : 11;
+    const tries: [number, number][] = strong
+      ? [
+          [8, -h - 4],
+          [8, 6],
+          [-w - 8, -h - 4],
+          [-w - 8, 6],
+          [8, -h - 20],
+          [-w - 8, -h - 20],
+          [8, 22],
+          [-w - 8, 22],
+        ]
+      : [
+          [-w / 2, W * 0.9],
+          [W * 0.8, -h / 2],
+          [-w - W * 0.8, -h / 2],
+        ];
+    const spot = tries.find(([dx, dy]) => free(p[0] + dx, p[1] + dy, w, h));
+    if (!spot) continue;
+    const [x, y] = [p[0] + spot[0], p[1] + spot[1]];
+    placed.push([x, y, w, h]);
+    if (strong && Math.abs(spot[1]) > 16) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(p[0], p[1]);
+      ctx.lineTo(x + (spot[0] < 0 ? w : 0), y + h / 2);
+      ctx.stroke();
+    }
+    if (strong) {
+      ctx.fillStyle = b.mine ? '#ff7a1a' : b.selected ? '#ffffff' : 'rgba(16,17,19,0.88)';
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = b.mine || b.selected ? '#17150c' : '#f3f1ec';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x + 5, y + h / 2 + 0.5);
+    } else {
       ctx.fillStyle = b.color;
-      ctx.fillRect(p[0] - nw / 2, p[1] + W * 0.9, nw, 11);
+      ctx.fillRect(x, y, w, h);
       ctx.strokeStyle = 'rgba(0,0,0,0.5)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(p[0] - nw / 2, p[1] + W * 0.9, nw, 11);
+      ctx.strokeRect(x, y, w, h);
       ctx.fillStyle = contrastInk(b.color);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(nt, p[0], p[1] + W * 0.9 + 5.8);
-    }
-    if (b.label) {
-      ctx.font = '700 10px Archivo, system-ui, sans-serif';
-      const tw = ctx.measureText(b.label).width;
-      ctx.fillStyle = b.mine ? '#ff7a1a' : b.selected ? '#ffffff' : 'rgba(16,17,19,0.85)';
-      ctx.fillRect(p[0] + 8, p[1] - 17, tw + 8, 14);
-      ctx.fillStyle = b.mine || b.selected ? '#17150c' : '#f3f1ec';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(b.label, p[0] + 12, p[1] - 6);
+      ctx.fillText(text, x + w / 2, y + h / 2 + 0.5);
     }
   }
   // Bandiera a scacchi agitata al traguardo.

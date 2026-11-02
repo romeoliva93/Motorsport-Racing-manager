@@ -13,6 +13,10 @@
  */
 import type { IdFactory } from '@lean-angle/core';
 import {
+  AUTO_SERVICE_AT,
+  MAJOR_PARTS,
+  TECH_GROUPS,
+  type TechGroup,
   GARAGE_PARTS,
   GARAGE_WEEKEND_KM,
   SESSION_KM_LAPS,
@@ -25,6 +29,7 @@ import {
   type Round,
 } from '@lean-angle/data';
 import { ENGINE_LIFE } from './regulations.ts';
+import { addNews } from './news.ts';
 
 export const partDef = (key: GarageKey) => GARAGE_PARTS.find((p) => p.key === key)!;
 
@@ -44,7 +49,51 @@ export function bikeReliabilityFactor(b: Bike | undefined): number {
   return GARAGE_PARTS.reduce((t, p) => t * Math.pow(partReliability(partWear(b, p.key)), 0.2), 1);
 }
 
+export const groupsFor = (s: GameState, b: Bike): TechGroup[] => TECH_GROUPS[tierOfBike(s, b)];
+
+/** Componente "di fornitura" (non in un gruppo della categoria, es. motore unico Moto2): lo cura il fornitore. */
+export const isSupplierPart = (s: GameState, b: Bike, key: GarageKey) =>
+  !groupsFor(s, b).some((g) => g.parts.includes(key));
+
+/**
+ * Stato di un gruppo tecnico, con definizioni distinte (mostrate al giocatore):
+ * - condizione   100 − usura del componente più consumato del gruppo
+ * - usura        media dei componenti
+ * - affidabilità probabilità relativa di arrivare in fondo senza guasti (scende solo oltre metà vita)
+ * - vita residua chilometri prima che il componente più consumato arrivi a fine vita
+ */
+export function groupStatus(b: Bike, g: TechGroup) {
+  const wears = g.parts.map((k) => partWear(b, k));
+  const rel = g.parts.reduce((t, k) => t * partReliability(partWear(b, k)), 1);
+  const left = Math.min(...g.parts.map((k) => partDef(k).life * GARAGE_WEEKEND_KM - (b.parts?.[k]?.km ?? 0)));
+  return {
+    condition: Math.max(0, Math.round(100 - Math.max(...wears) * 100)),
+    wear: Math.round((wears.reduce((t, w) => t + w, 0) / wears.length) * 100),
+    reliability: Math.round(rel * 1000) / 10,
+    lifeLeftKm: Math.round(left),
+    lifeLeftWeekends: Math.round((left / GARAGE_WEEKEND_KM) * 10) / 10,
+  };
+}
+
+/** Sostituzioni importanti in attesa del sì del manager (telaio, forcellone oltre l'80%). */
+export function pendingDecisions(s: GameState, teamId: string) {
+  return rows(s, 'bikes')
+    .filter((b) => b.teamId === teamId && b.riderId)
+    .flatMap((b) =>
+      MAJOR_PARTS.filter((k) => !isSupplierPart(s, b, k) && partWear(b, k) >= 0.8).map((k) => ({
+        bikeId: b.id,
+        riderId: b.riderId!,
+        slot: b.slot,
+        part: k,
+        name: partDef(k).name,
+        wear: Math.round(partWear(b, k) * 100),
+        cost: serviceCost(s, b, k),
+      })),
+    );
+}
+
 export function serviceCost(s: GameState, b: Bike, key: GarageKey): number {
+  if (isSupplierPart(s, b, key)) return 0;
   const base = UPGRADE_BASE_COST[tierOfBike(s, b)];
   return Math.round((base * partDef(key).cost) / 1000) * 1000;
 }
@@ -128,6 +177,49 @@ export function servicePart(s: GameState, ids: IdFactory, b: Bike, key: GarageKe
     };
   }
   return cost;
+}
+
+/**
+ * Capotecnico della squadra del giocatore (manutenzione delegata, attiva salvo scelta diversa): prima del weekend
+ * revisiona i componenti ordinari oltre il 70% e quelli di fornitura; telaio e forcellone restano una decisione del
+ * manager. Lascia una notizia con il riepilogo.
+ */
+export function crewChiefMaintenance(s: GameState, ids: IdFactory, round: Round) {
+  const teamId = s.meta.playerTeamId;
+  if (!teamId || s.garageAuto?.[teamId] === false) return;
+  const cat = s.tables.seasons[round.seasonId]!.categoryId;
+  let n = 0,
+    spent = 0,
+    skipped = 0;
+  for (const b of rows(s, 'bikes')) {
+    if (b.teamId !== teamId || b.categoryId !== cat || !b.riderId) continue;
+    for (const p of GARAGE_PARTS) {
+      if (!canService(s, b, p.key) || MAJOR_PARTS.includes(p.key) || partWear(b, p.key) < AUTO_SERVICE_AT)
+        continue;
+      const cost = serviceCost(s, b, p.key);
+      if (cost > 0 && teamBalance(s, teamId) < cost) {
+        skipped++;
+        continue;
+      }
+      spent += servicePart(s, ids, b, p.key);
+      n++;
+    }
+  }
+  const major = pendingDecisions(s, teamId);
+  if (n === 0 && skipped === 0 && major.length === 0) return;
+  const money = (v: number) => `€ ${Math.round(v).toLocaleString('it-IT')}`;
+  addNews(s, ids, {
+    day: s.meta.currentDay,
+    tag: 'squadra',
+    mine: true,
+    title: n ? `Capotecnico: ${n} revisioni prima del weekend` : 'Capotecnico: serve una tua decisione',
+    body:
+      (n ? `Revisionati ${n} componenti ordinari consumati oltre il 70% (spesa ${money(spent)}). ` : '') +
+      (skipped ? `${skipped} revisioni rimandate: non ci sono abbastanza soldi in cassa. ` : '') +
+      (major.length
+        ? `Da decidere nel garage: ${major.map((m) => `${m.name.toLowerCase()} moto ${m.slot} (${m.wear}%)`).join(', ')}.`
+        : ''),
+  });
 }
 
 /** Squadre IA: revisionano i pezzi oltre il 90% prima del weekend, se hanno i soldi. */

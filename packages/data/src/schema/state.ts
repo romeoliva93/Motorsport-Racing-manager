@@ -61,6 +61,8 @@ export interface GameState {
   accounts: FinanceAccount[];
   /** Livello degli upgrade montati sulle moto di ogni squadra. */
   upgrades: Record<string, Partial<Record<PartKey, number>>>;
+  /** Manutenzione delegata al capotecnico, per squadra (assente = sì). */
+  garageAuto?: Record<string, boolean>;
 }
 
 export type TableName = keyof GameState['tables'];

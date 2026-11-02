@@ -91,7 +91,13 @@ def prompt_for(p):
     eyes = EYES.get(reg, ['brown', 'dark brown', 'hazel'])[(h >> 8) % len(EYES.get(reg, ['brown', 'dark brown', 'hazel']))]
     if who_age >= 45 and (h >> 12) % 3 == 0:
         hair = 'greying ' + hair
-    beard = '' if p['female'] or who_age < 19 else BEARD[(h >> 16) % len(BEARD)] + ', '
+    athlete = p['kind'] == 'rider' and p['role'] in ('race', 'reserve', 'academy')
+    beard_pool = ['clean-shaven', 'clean-shaven', 'light stubble'] if athlete else BEARD
+    beard = '' if p['female'] or who_age < 19 else beard_pool[(h >> 16) % len(beard_pool)] + ', '
+    # Il modello tende a invecchiare i volti: per i piloti titolari si chiede un'età apparente più giovane
+    # (un trentacinquenne in attività ha l'aspetto di un atleta, non di un cinquantenne).
+    if athlete and who_age > 22:
+        who_age = round(22 + (who_age - 22) * 0.5)
     c1, c2 = color_name(p['primary']), color_name(p['secondary'])
     if p.get('organizer'):
         outfit = 'wearing the official junior cup team jacket, yellow and black, identical for every rider'
@@ -113,7 +119,7 @@ def prompt_for(p):
     return (
         f"photorealistic paddock press photo, head and shoulders portrait, {who_age}-year-old "
         f"{NATIONALITY.get(p['nationality'], '')} {sex}, {job}, {hair} {style}, {eyes} eyes, {beard}"
-        f"{outfit}, looking at camera, blurred team garage background, soft light, realistic skin"
+        f"{outfit}{', athletic build, youthful fit face' if athlete else ''}, looking at camera, blurred team garage background, soft light, realistic skin"
     )
 
 
@@ -122,6 +128,7 @@ def main():
     ap.add_argument('--kind', choices=['rider', 'staff', 'pool'])
     ap.add_argument('--limit', type=int, default=0)
     ap.add_argument('--only', help='genera solo questa chiave')
+    ap.add_argument('--keys', help='file con un elenco di chiavi (una per riga) da generare')
     ap.add_argument('--model', default='stabilityai/sdxl-turbo')
     ap.add_argument('--steps', type=int, default=4)
     ap.add_argument('--force', action='store_true', help='rigenera anche i ritratti esistenti')
@@ -131,7 +138,9 @@ def main():
     roster = json.load(open(os.path.join(ROOT, 'tools', 'portraits', 'roster.json')))
     order = {'rider': 0, 'staff': 1, 'pool': 2}
     roles = {'race': 0, 'technicalDirector': 1, 'crewChief': 2, 'trackEngineer': 3, 'test': 4, 'reserve': 5, 'academy': 6}
-    todo = [p for p in roster if (not a.kind or p['kind'] == a.kind) and (not a.only or p['key'] == a.only)]
+    keys = set(open(a.keys).read().split()) if a.keys else None
+    todo = [p for p in roster if (not a.kind or p['kind'] == a.kind) and (not a.only or p['key'] == a.only)
+            and (keys is None or p['key'] in keys)]
     todo.sort(key=lambda p: (order[p['kind']], p.get('organizer', False), roles.get(p['role'], 9), p['key']))
     os.makedirs(OUT, exist_ok=True)
     todo = [p for p in todo if a.force or not os.path.exists(os.path.join(OUT, p['key'] + '.webp'))]
