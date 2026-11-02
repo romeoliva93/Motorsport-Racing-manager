@@ -1,19 +1,21 @@
 import type { ReactNode } from 'react';
 
 /**
- * Ritratto fotografico del personaggio (`src/assets/portraits/<chiave>.webp`).
+ * Ritratto fotografico del personaggio (originali in `src/assets/portraits/`, raccolti in `src/assets/atlas/`).
  * Ordine: foto propria → volto di riserva (personaggi nati durante la carriera) → `fallback` (es. il casco).
  * L'elenco dei file esistenti è noto alla compilazione: il browser non chiede mai foto che non ci sono.
  */
-const FILES = import.meta.glob('../assets/portraits/*.webp', {
+import ATLAS from '../assets/atlas/index.json';
+const SHEETS = import.meta.glob('../assets/atlas/sheet-*.webp', {
   eager: true,
   query: '?url',
   import: 'default',
 });
-const URLS = new Map(
-  Object.entries(FILES).map(([path, url]) => [path.split('/').pop()!.replace('.webp', ''), url as string]),
+const SHEET_URL = new Map(
+  Object.entries(SHEETS).map(([path, url]) => [Number(/sheet-(\d+)/.exec(path)![1]), url as string]),
 );
-export const portraitCount = URLS.size;
+const MAP = ATLAS.map as unknown as Record<string, [number, number, number]>;
+export const portraitCount = Object.keys(MAP).length;
 export function Portrait({
   portrait,
   name,
@@ -27,18 +29,24 @@ export function Portrait({
   round?: boolean;
   fallback: ReactNode;
 }) {
-  const src = URLS.get(portrait.key) ?? URLS.get(portrait.pool) ?? null;
-  if (!src) return <>{fallback}</>;
+  const cell = MAP[portrait.key] ?? MAP[portrait.pool];
+  if (!cell) return <>{fallback}</>;
+  const [sheet, col, row] = cell;
+  const rows = (ATLAS.rows as Record<string, number>)[String(sheet)]!;
+  const cols = ATLAS.cols;
+  // I ritratti sono raccolti in pochi fogli (atlanti): qui si inquadra la casella giusta.
   return (
-    <img
+    <span
+      role="img"
+      aria-label={`Ritratto di ${name}`}
       className={`portrait ${round ? 'round' : ''}`}
-      src={src}
-      alt={`Ritratto di ${name}`}
-      width={Math.round(size * 16)}
-      height={Math.round(size * 16)}
-      style={{ width: `${size}rem`, height: `${size}rem` }}
-      loading="lazy"
-      decoding="async"
+      style={{
+        width: `${size}rem`,
+        height: `${size}rem`,
+        backgroundImage: `url(${SHEET_URL.get(sheet)})`,
+        backgroundSize: `${cols * 100}% ${rows * 100}%`,
+        backgroundPosition: `${cols > 1 ? (col / (cols - 1)) * 100 : 0}% ${rows > 1 ? (row / (rows - 1)) * 100 : 0}%`,
+      }}
     />
   );
 }

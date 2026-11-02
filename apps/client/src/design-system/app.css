@@ -894,7 +894,8 @@ table.std tbody tr.mine td:first-child {
   display: block;
   object-fit: cover;
   border-radius: var(--r-2);
-  background: var(--bg-3);
+  background-color: var(--bg-3);
+  background-repeat: no-repeat;
   box-shadow: 0 0 0 1px var(--line-strong);
   flex: none;
 }
