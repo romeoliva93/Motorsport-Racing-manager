@@ -264,7 +264,12 @@ export function Shell({
         ) : section === 'team' ? (
           <TeamScreen teamId={team.id} />
         ) : section === 'riders' ? (
-          <RidersScreen teamId={team.id} teamName={team.name} colors={team.colors} />
+          <RidersScreen
+            teamId={team.id}
+            teamName={team.name}
+            colors={team.colors}
+            twoBikes={s!.category!.bikesPerRider === 2}
+          />
         ) : section === 'staff' ? (
           <StaffScreen teamId={team.id} colors={team.colors} />
         ) : section === 'market' ? (

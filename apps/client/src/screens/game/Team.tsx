@@ -1,6 +1,7 @@
+import { FlagName } from '../../design-system/Flag.tsx';
 import { useQuery } from '../../engine/hooks.ts';
 import { Bar, Card, Money, Row, TeamBadge } from '../../design-system/components.tsx';
-import { FACILITY, STAFF_ROLE, TEAM_TYPE, country } from '../../i18n/it.ts';
+import { FACILITY, STAFF_ROLE, TEAM_TYPE } from '../../i18n/it.ts';
 
 export function TeamScreen({ teamId }: { teamId: string }) {
   const q = useQuery('teamOverview', teamId as `tem_${string}`);
@@ -19,8 +20,8 @@ export function TeamScreen({ teamId }: { teamId: string }) {
               {t.name}
             </div>
             <div className="t2" style={{ marginTop: '.3rem' }}>
-              {TEAM_TYPE[t.type]} · {t.manufacturer} · {country(t.nationality)}, {t.baseCity} · fondata nel{' '}
-              {t.founded}
+              {TEAM_TYPE[t.type]} · {t.manufacturer} · <FlagName code={t.nationality} size={0.9} />,{' '}
+              {t.baseCity} · fondata nel {t.founded}
             </div>
           </div>
           <div className="spacer" />

@@ -4,7 +4,8 @@ import { useId } from 'react';
  * Casco da gara di profilo, nella livrea della scuderia.
  *
  * Ogni scuderia ha un suo disegno ricavato dal nome (motivo grafico, colore della visiera, finitura), così
- * i due piloti della stessa squadra hanno lo stesso casco con numeri diversi, come nei paddock veri.
+ * i due piloti della stessa squadra hanno lo stesso casco. Il numero non è sul casco: lo mostra la
+ * placca (NumberPlate) accanto al ritratto.
  * Illustrazione vettoriale con luci e ombre (lucido della vernice, visiera a specchio, bordo in gomma),
  * pensata per sostituire i monogrammi finché non ci saranno fotografie.
  */
@@ -136,24 +137,6 @@ export function Helmet({
         fill="none"
         strokeLinecap="round"
       />
-      {number !== null && number !== undefined && (
-        <text
-          x="42"
-          y="70"
-          textAnchor="middle"
-          fontFamily="Archivo, system-ui, sans-serif"
-          fontWeight="900"
-          fontSize="17"
-          fill={pattern === 4 ? (luminance(s) > 0.6 ? '#16171a' : '#f3f1ec') : accent}
-          stroke="#000"
-          strokeOpacity="0.45"
-          strokeWidth="2.4"
-          paintOrder="stroke"
-          style={{ fontStretch: '115%' }}
-        >
-          {number}
-        </text>
-      )}
     </svg>
   );
 }

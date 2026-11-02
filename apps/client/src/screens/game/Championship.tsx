@@ -1,7 +1,7 @@
+import { Flag } from '../../design-system/Flag.tsx';
 import { useState } from 'react';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Pos, Tabs } from '../../design-system/components.tsx';
-import { country } from '../../i18n/it.ts';
 
 type View = 'riders' | 'teams' | 'constructors' | 'races';
 
@@ -38,9 +38,10 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
         <>
           <Explain>
             {c.category} {c.year}: {c.racesDone} gare disputate su {c.racesTotal}. A ogni gara i primi 15
-            prendono punti (25 al vincitore). Chi ha più punti a fine anno è campione. La classifica squadre
-            somma i punti dei due piloti; quella costruttori conta solo il miglior pilota di ogni marca in
-            ogni gara.
+            prendono punti (25 al vincitore); in MotoGP anche la Sprint del sabato dà punti ai primi 9 (12 al
+            vincitore). Vittorie e podi contano solo la gara della domenica. Chi ha più punti a fine anno è
+            campione. La classifica squadre somma i punti dei due piloti; quella costruttori conta solo il
+            miglior pilota di ogni marca in ogni gara.
           </Explain>
           {view === 'riders' && (
             <Card title="Classifica piloti">
@@ -52,7 +53,13 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
                     <th>Squadra</th>
                     <th className="r">Vittorie</th>
                     <th className="r">
-                      Podi<Help>Arrivi nei primi tre.</Help>
+                      Podi<Help>Arrivi nei primi tre nella gara della domenica.</Help>
+                    </th>
+                    <th className="r">
+                      Pole<Help>Primo posto nella griglia di partenza.</Help>
+                    </th>
+                    <th className="r">
+                      Giri veloci<Help>Miglior giro della gara. È una statistica: non assegna punti.</Help>
                     </th>
                     <th className="r">Punti</th>
                   </tr>
@@ -65,11 +72,13 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
                       </td>
                       <td>
                         <span className="swatch" style={{ background: r.color }} />
-                        <b>{r.name}</b> <span className="muted">{country(r.nationality)}</span>
+                        <Flag code={r.nationality} size={0.85} /> <b>{r.name}</b>
                       </td>
                       <td className="t2">{r.team}</td>
                       <td className="r">{r.wins || '—'}</td>
                       <td className="r">{r.podiums || '—'}</td>
+                      <td className="r">{r.poles || '—'}</td>
+                      <td className="r">{r.fastestLaps || '—'}</td>
                       <td className="r">
                         <b>{r.points}</b>
                       </td>

@@ -10,3 +10,4 @@ export * from './views.ts';
 export * from './upgrades.ts';
 export * from './sponsors.ts';
 export * from './weather.ts';
+export * from './stats.ts';

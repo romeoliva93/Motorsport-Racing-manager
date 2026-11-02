@@ -1,3 +1,4 @@
+import { Flag } from '../../design-system/Flag.tsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReplayData } from '@lean-angle/game';
 import { raceTime } from '../../design-system/components.tsx';
@@ -193,7 +194,9 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
               <li key={r.id} className={`${r.mine ? 'mine' : ''} ${d < 0 ? 'out' : ''}`}>
                 <span className="p">{d < 0 ? '–' : i + 1}</span>
                 <span className="c" style={{ background: r.color }} />
-                <span className="n">{r.name}</span>
+                <span className="n">
+                  <Flag code={r.nationality} size={0.75} /> {r.name}
+                </span>
                 <span className="g">
                   {d < 0
                     ? 'ritirato'

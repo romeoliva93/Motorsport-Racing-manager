@@ -81,6 +81,33 @@ async function waitForServer(url, ms = 20000) {
       step(`schermata ${label}`);
     }
 
+    // Scheda piloti: switch fra i titolari e schede.
+    await page.locator('.nav').getByRole('button', { name: 'Piloti', exact: true }).click();
+    const cards = page.locator('.rs-card');
+    await page.locator('.rh-id h1').waitFor();
+    if ((await cards.count()) < 2) throw new Error('Mancano i due titolari nel selettore');
+    const first = await page.locator('.rh-id h1').innerText();
+    await cards.nth(1).click();
+    await page.waitForFunction(
+      (f) => document.querySelector('.rh-id h1')?.textContent !== f.replace('\n', ''),
+      first,
+    );
+    const second = await page.locator('.rh-id h1').innerText();
+    if (first === second) throw new Error('Lo switch non cambia pilota');
+    if ((await page.locator('.rider-hero img.flag').count()) < 1) throw new Error('Bandiera mancante');
+    for (const t of [
+      'Attributi',
+      'Risultati',
+      'Contratto',
+      'Relazioni',
+      'Preferenze tecniche',
+      'Storico',
+      'Panoramica',
+    ])
+      await page.getByRole('tab', { name: t, exact: true }).click();
+    await shot('05-piloti');
+    step(`switch piloti: ${first.replace('\n', ' ')} → ${second.replace('\n', ' ')}`);
+
     await page.locator('.nav').getByRole('button', { name: 'Sponsor' }).click();
     await page.locator('.offers .btn.primary').waitFor();
     await shot('16-sponsor');

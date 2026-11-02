@@ -1,6 +1,6 @@
+import { FlagName } from '../../design-system/Flag.tsx';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card } from '../../design-system/components.tsx';
-import { country } from '../../i18n/it.ts';
 
 export function CalendarScreen({ categoryId }: { categoryId: string }) {
   const q = useQuery('calendar', categoryId);
@@ -32,7 +32,9 @@ export function CalendarScreen({ categoryId }: { categoryId: string }) {
               <td>
                 <b>{r.circuit}</b>
               </td>
-              <td>{country(r.country)}</td>
+              <td>
+                <FlagName code={r.country} />
+              </td>
               <td>{r.date}</td>
               <td className="r">{(r.lengthM / 1000).toFixed(2).replace('.', ',')} km</td>
               <td className="r">{r.turns}</td>

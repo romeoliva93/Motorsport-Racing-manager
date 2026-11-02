@@ -89,3 +89,7 @@ Vitest + Playwright. Dettagli e alternative in [ADR-0001](docs/adr/0001-tech-sta
 Nessun pulsante finto, nessun risultato prestabilito, nessun dato statico nelle schermate
 operative, sistemi indipendenti e testati, formule documentate, PR per ogni milestone e
 nessun merge su `main` senza approvazione.
+
+## Crediti
+
+- Bandiere: [flag-icons](https://github.com/lipis/flag-icons) di Panayiotis Lipiridis, licenza MIT.

@@ -1,3 +1,4 @@
+import { Flag, FlagName } from '../../design-system/Flag.tsx';
 import { Helmet } from '../../design-system/Helmet.tsx';
 import { useEffect, useState } from 'react';
 import { formatMoney } from '@lean-angle/core';
@@ -6,7 +7,7 @@ import type { RiderId } from '@lean-angle/data';
 import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Money, Row, ratingTone } from '../../design-system/components.tsx';
-import { RIDER_ROLE, country } from '../../i18n/it.ts';
+import { RIDER_ROLE } from '../../i18n/it.ts';
 import './market.css';
 
 const FILTERS: { id: MarketFilter; label: string }[] = [
@@ -79,7 +80,7 @@ export function MarketScreen({ notify }: { notify: (text: string, err?: boolean)
                   <td>
                     <b>{r.name}</b>
                     <div className="muted" style={{ fontSize: '.72rem' }}>
-                      {r.nationality} · {r.category ?? '—'} · {RIDER_ROLE[r.role]}
+                      <Flag code={r.nationality} size={0.8} /> · {r.category ?? '—'} · {RIDER_ROLE[r.role]}
                     </div>
                   </td>
                   <td>{r.team ?? <span className="ok">Libero</span>}</td>
@@ -213,7 +214,7 @@ function NegotiationForm({
           <div>
             <div className="nm">{r.name}</div>
             <div className="muted" style={{ fontSize: '.8rem', marginTop: '.3rem' }}>
-              {country(r.nationality)} · {r.age} anni · {r.team ?? 'senza contratto'}
+              <FlagName code={r.nationality} size={0.9} /> · {r.age} anni · {r.team ?? 'senza contratto'}
               {r.category ? ` · ${r.category}` : ''}
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { FlagName } from '../design-system/Flag.tsx';
 import { Helmet } from '../design-system/Helmet.tsx';
 import { useEffect, useMemo, useState } from 'react';
 import type { CategoryTab, CreateTeamOptionsView, TeamCard } from '@lean-angle/game';
@@ -256,7 +257,7 @@ function SelectedTeam({
               {team.name}
             </div>
             <div className="muted" style={{ fontSize: '.8rem' }}>
-              {country(team.nationality)} · {team.baseCity} · dal {team.founded}
+              <FlagName code={team.nationality} size={0.85} /> · {team.baseCity} · dal {team.founded}
             </div>
           </div>
         </div>
@@ -279,7 +280,7 @@ function SelectedTeam({
               </b>
               <br />
               <span className="muted">
-                {country(r.nationality)} · {r.age} anni
+                <FlagName code={r.nationality} size={0.85} /> · {r.age} anni
               </span>
             </span>
             <b className={ratingTone(r.rating)}>{r.rating}</b>
@@ -451,7 +452,9 @@ function CreateTeam({
                 onClick={() => setMfr(m.id)}
               >
                 <b>{m.name}</b>
-                <span className="muted">{country(m.country)}</span>
+                <span className="muted">
+                  <FlagName code={m.country} size={0.85} />
+                </span>
                 <span>
                   Livello tecnico <b>{m.strength}</b>
                 </span>
@@ -469,7 +472,7 @@ function CreateTeam({
                 {teamName.trim() || 'Nome della squadra'}
               </div>
               <div className="muted" style={{ fontSize: '.8rem' }}>
-                {country(nationality)}
+                <FlagName code={nationality} />
                 {city ? ` · ${city}` : ''}
               </div>
             </div>

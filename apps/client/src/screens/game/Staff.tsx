@@ -1,9 +1,10 @@
+import { Flag, FlagName } from '../../design-system/Flag.tsx';
 import { useMemo, useState } from 'react';
 import { formatMoney } from '@lean-angle/core';
 import type { StaffRole } from '@lean-angle/data';
 import { useQuery } from '../../engine/hooks.ts';
 import { Bar, Card, Monogram, Row, ratingTone } from '../../design-system/components.tsx';
-import { ROLE_ORDER, STAFF_ROLE, STAFF_SKILL, country } from '../../i18n/it.ts';
+import { ROLE_ORDER, STAFF_ROLE, STAFF_SKILL } from '../../i18n/it.ts';
 
 const GROUPS: { label: string; roles: StaffRole[] | null }[] = [
   { label: 'Tutti', roles: null },
@@ -63,7 +64,9 @@ export function StaffScreen({ teamId, colors }: { teamId: string; colors: { prim
                 </td>
                 <td>{STAFF_ROLE[m.role]}</td>
                 <td className="t2">{m.assignedTo ?? '—'}</td>
-                <td>{m.nationality}</td>
+                <td>
+                  <Flag code={m.nationality} />
+                </td>
                 <td className="r">{m.age}</td>
                 <td className={`r ${ratingTone(m.rating) ?? ''}`}>
                   <b>{m.rating}</b>
@@ -93,7 +96,7 @@ function StaffDetailPanel({ staffId, color }: { staffId: string; color: string }
           <div>
             <div className="nm">{m.name}</div>
             <div className="muted" style={{ fontSize: '.8rem', marginTop: '.3rem' }}>
-              {STAFF_ROLE[m.role]} · {country(m.nationality)} · {m.age} anni
+              {STAFF_ROLE[m.role]} · <FlagName code={m.nationality} size={0.9} /> · {m.age} anni
             </div>
           </div>
         </div>

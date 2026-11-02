@@ -13,6 +13,7 @@ import {
   rows,
   teamBalance,
   type PartKey,
+  type Rider,
   type SessionKind,
   type GameState,
   type NewsItem,
@@ -22,6 +23,9 @@ import {
   type TransactionCategory,
 } from '@lean-angle/data';
 import { payrollMonthly, runningCostMonthly, sponsorMonthly } from './economy.ts';
+import { activeRiderContract, buyoutFor } from './market.ts';
+import { riderDetail, type RiderDetail } from './queries.ts';
+import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
 import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
@@ -66,6 +70,7 @@ export interface ResultRowView {
   position: number | null;
   riderId: string;
   name: string;
+  nationality: string;
   number: number;
   team: string;
   color: string;
@@ -91,6 +96,7 @@ function resultView(s: GameState, res: SessionResult | undefined): ResultRowView
       position: r.position,
       riderId: r.riderId,
       name: `${rider.firstName} ${rider.lastName}`,
+      nationality: rider.nationality,
       number: numbers.get(r.riderId) ?? 0,
       team: team.name,
       color: team.colors.primary,
@@ -680,5 +686,58 @@ export function sponsorView(s: GameState): SponsorView | null {
           currentPosition: st.racesDone > 0 && idx >= 0 ? idx + 1 : null,
         }
       : null,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+export interface RiderProfile {
+  detail: RiderDetail;
+  teamColors: { primary: string; secondary: string } | null;
+  category: string | null;
+  personality: { key: string; value: number }[];
+  contract: {
+    start: string;
+    end: string;
+    salary: number;
+    role: string;
+    buyout: number;
+    bonuses: { condition: string; amount: number }[];
+    expiresThisYear: boolean;
+  } | null;
+  current: SeasonStats | null;
+  history: SeasonStats[];
+  career: ReturnType<typeof careerTotals>;
+  preferences: ReturnType<typeof technicalPreferences>;
+}
+
+export function riderProfile(s: GameState, riderId: string): RiderProfile | null {
+  const detail = riderDetail(s, riderId);
+  const r = s.tables.riders[riderId as never] as Rider | undefined;
+  if (!detail || !r) return null;
+  const c = cal(s);
+  const k = activeRiderContract(s, r.id);
+  const team = k ? s.tables.teams[k.employerId as TeamId] : undefined;
+  const history = riderHistory(s, r.id);
+  const year = c.toDate(s.meta.currentDay).year;
+  return {
+    detail,
+    teamColors: team ? { primary: team.colors.primary, secondary: team.colors.secondary } : null,
+    category: r.categoryId ? s.tables.categories[r.categoryId]!.name : null,
+    personality: Object.entries(r.personality).map(([key, value]) => ({ key, value })),
+    contract: k
+      ? {
+          start: c.format(k.startDay),
+          end: c.format(k.endDay),
+          salary: k.salary,
+          role: k.role ?? 'race',
+          buyout: buyoutFor(s, k),
+          bonuses: k.bonuses,
+          expiresThisYear: c.toDate(k.endDay).year <= year,
+        }
+      : null,
+    current: history.find((h) => h.year === year) ?? null,
+    history,
+    career: careerTotals(history),
+    preferences: technicalPreferences(r),
   };
 }

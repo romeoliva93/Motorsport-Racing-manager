@@ -374,6 +374,7 @@ export interface ReplayData {
   riders: {
     id: string;
     name: string;
+    nationality: string;
     short: string;
     number: number;
     team: string;
@@ -534,6 +535,7 @@ function raceSession(
         return {
           id: e.rider.id,
           name: `${e.rider.firstName} ${e.rider.lastName}`,
+          nationality: e.rider.nationality,
           short: e.rider.lastName.slice(0, 3).toUpperCase(),
           number: e.number,
           team: t.name,
@@ -626,6 +628,8 @@ export interface StandingsView {
     points: number;
     wins: number;
     podiums: number;
+    poles: number;
+    fastestLaps: number;
   }[];
   teams: { teamId: string; team: string; color: string; points: number; wins: number }[];
   constructors: { manufacturerId: string; name: string; points: number; wins: number }[];
@@ -654,6 +658,8 @@ export function standings(s: GameState, seasonId: string): StandingsView {
         points: 0,
         wins: 0,
         podiums: 0,
+        poles: 0,
+        fastestLaps: 0,
       };
       re.points += row.points;
       re.teamId = row.teamId;
@@ -683,6 +689,18 @@ export function standings(s: GameState, seasonId: string): StandingsView {
       if (race.kind === 'race' && race.rows[0]?.manufacturerId === mid && race.rows[0]?.position === 1)
         me.wins++;
       mmap.set(mid, me);
+    }
+  }
+  // Pole (griglia ufficiale) e giri veloci (gara) per i piloti già in classifica.
+  for (const res of rows(s, 'sessionResults').filter((x) => x.seasonId === seasonId)) {
+    if (res.kind === 'qualifying') {
+      const p = res.rows.find((x) => x.position === 1);
+      const re = p && rmap.get(p.riderId);
+      if (re) re.poles++;
+    }
+    if (res.kind === 'race' && res.fastestLap) {
+      const re = rmap.get(res.fastestLap.riderId);
+      if (re) re.fastestLaps++;
     }
   }
   const sort = <T extends { points: number; wins: number }>(xs: T[]) =>

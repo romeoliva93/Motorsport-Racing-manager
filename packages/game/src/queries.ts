@@ -28,6 +28,7 @@ import {
   financeView,
   newsFeed,
   seasonReview,
+  riderProfile,
   sponsorView,
   weekendView,
 } from './views.ts';
@@ -721,6 +722,7 @@ export const QUERIES = {
   seasonReview,
   bikeView,
   sponsorView,
+  riderProfile,
 } as const;
 export type QueryName = keyof typeof QUERIES;
 export type QueryArgs<N extends QueryName> = (typeof QUERIES)[N] extends (

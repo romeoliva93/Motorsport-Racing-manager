@@ -1,10 +1,11 @@
+import { Flag, FlagName } from '../../design-system/Flag.tsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReplayData, ResultRowView, WeekendView } from '@lean-angle/game';
 import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Pos, Tabs, lapTime, raceTime } from '../../design-system/components.tsx';
 import { WeatherIcon, SKY_LABEL } from '../../design-system/WeatherIcon.tsx';
-import { country } from '../../i18n/it.ts';
+
 import { RaceViewer } from './RaceViewer.tsx';
 import './weekend.css';
 
@@ -151,7 +152,7 @@ export function WeekendScreen({
           </small>
           <h1>{r.circuit}</h1>
           <div className="t2">
-            {country(r.country)} · {r.date}
+            <FlagName code={r.country} /> · {r.date}
             {w.state === 'upcoming' && ` · tra ${r.inDays} giorni`}
           </div>
           <div className="wk-facts">
@@ -547,7 +548,8 @@ export function ResultTable({
                 </td>
                 <td>
                   <span className="swatch" style={{ background: r.color }} />
-                  <b>{r.name}</b> <span className="muted">#{r.number}</span>
+                  <Flag code={r.nationality} size={0.85} /> <b>{r.name}</b>{' '}
+                  <span className="muted">#{r.number}</span>
                 </td>
                 <td className="t2">{r.team}</td>
                 <td>

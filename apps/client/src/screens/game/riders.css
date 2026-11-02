@@ -1,0 +1,178 @@
+.riders {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.rider-switch {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.rs-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+  border-radius: var(--r-3);
+  border: 1px solid var(--line);
+  background: var(--glass);
+  color: var(--text-1);
+  cursor: pointer;
+  text-align: left;
+  min-width: 15rem;
+}
+.rs-card:hover {
+  border-color: var(--line-strong);
+}
+.rs-card.on {
+  border-color: var(--team);
+  box-shadow: 0 0 0 1px var(--team) inset;
+  background:
+    linear-gradient(100deg, color-mix(in srgb, var(--team) 22%, transparent), transparent 70%), var(--glass);
+}
+.rs-num {
+  font: 900 1.9rem/1 var(--font-display);
+  font-stretch: 125%;
+  font-style: italic;
+  min-width: 2.4rem;
+}
+.rs-who {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.rs-who small {
+  color: var(--text-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.rs-rating {
+  font: 800 1.3rem var(--font-display);
+}
+
+.rider-hero {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.4rem;
+  padding: 1.2rem 1.4rem;
+}
+.rh-portrait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.rh-portrait small {
+  font-size: 0.72rem;
+}
+.rh-id h1 {
+  margin: 0.25rem 0;
+  font-size: 2.3rem;
+  font-weight: 900;
+  font-stretch: 118%;
+  line-height: 1;
+}
+.rh-id h1 span {
+  font-weight: 500;
+  font-stretch: 100%;
+  color: var(--text-2);
+}
+.rh-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(6.5rem, auto));
+  gap: 0.8rem 1.4rem;
+}
+.rh-kpi small {
+  display: block;
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+.rh-kpi b {
+  font: 800 1.5rem var(--font-display);
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  gap: 0.8rem;
+}
+.stat {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  padding: 0.7rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+}
+.stat b {
+  font: 800 1.6rem/1.1 var(--font-display);
+}
+.stat small {
+  color: var(--text-3);
+}
+.form-strip {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+.form-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.rel {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line);
+}
+.rel:first-of-type {
+  border-top: 0;
+}
+.rel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.3rem;
+  flex-wrap: wrap;
+}
+.prefs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.8rem;
+}
+.prefs .tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.prefs .tile b {
+  font-size: 1.15rem;
+}
+
+@media (max-width: 1000px) {
+  .rider-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .rh-portrait {
+    display: none;
+  }
+  .rh-kpis {
+    grid-column: span 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .rh-id h1 {
+    font-size: 1.7rem;
+  }
+  .rider-switch {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+    scroll-snap-type: x mandatory;
+  }
+  .rs-card {
+    min-width: 15rem;
+    flex: none;
+    scroll-snap-align: start;
+  }
+}

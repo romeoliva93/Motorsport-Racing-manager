@@ -1,8 +1,9 @@
+import { FlagName } from '../../design-system/Flag.tsx';
 import { Helmet } from '../../design-system/Helmet.tsx';
 import { formatMoney } from '@lean-angle/core';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Pos, ratingTone } from '../../design-system/components.tsx';
-import { country } from '../../i18n/it.ts';
+
 import type { Section } from '../../shell/Shell.tsx';
 import { Bike } from '../../design-system/Bike.tsx';
 
@@ -46,7 +47,7 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
           </b>
           {w?.round && w.state === 'upcoming' && (
             <span className="t2">
-              {country(w.round.country)} · {w.round.date} · tra {w.round.inDays} giorni
+              <FlagName code={w.round.country} size={0.9} /> · {w.round.date} · tra {w.round.inDays} giorni
             </span>
           )}
         </div>
@@ -275,7 +276,7 @@ function RiderCards({
                   {r.name}
                 </div>
                 <div className="muted" style={{ fontSize: '.85rem' }}>
-                  {country(r.nationality)} · {r.age} anni
+                  <FlagName code={r.nationality} size={0.85} /> · {r.age} anni
                 </div>
               </div>
             </div>
