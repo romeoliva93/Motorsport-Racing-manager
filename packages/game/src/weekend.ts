@@ -82,6 +82,35 @@ export function playerRoundToday(s: GameState): Round | undefined {
   return roundsToday(s).find((r) => entry && r.seasonId === entry.seasonId);
 }
 
+/**
+ * Dopo ogni gara: forma (−10…+10) e morale (0–100) dei piloti in base al risultato rispetto alla posizione di
+ * partenza. La forma vale in pista (±1% di ritmo a ±10); il morale si vede nelle schede e torna lentamente
+ * verso 60 se non succede nulla.
+ */
+export function updateFormAndMorale(s: GameState, grid: Rider[], rowsOut: ResultRow[]) {
+  grid.forEach((r, start) => {
+    const row = rowsOut.find((x) => x.riderId === r.id);
+    if (!row) return;
+    const rider = s.tables.riders[r.id]!;
+    const gained = row.position !== null ? start + 1 - row.position : -6;
+    const delta = Math.max(-5, Math.min(5, gained / 2));
+    rider.form = Math.round(Math.max(-10, Math.min(10, (rider.form ?? 0) * 0.6 + delta)));
+    const m =
+      row.position === null
+        ? row.reason === 'mechanical'
+          ? -2
+          : -4
+        : row.position === 1
+          ? 8
+          : row.position <= 3
+            ? 5
+            : row.points > 0
+              ? 1 + Math.sign(gained)
+              : -1 + Math.sign(gained);
+    rider.morale = Math.round(Math.max(0, Math.min(100, rider.morale + m + (60 - rider.morale) * 0.05)));
+  });
+}
+
 function riderSkill(r: Rider): number {
   const a = r.attributes;
   const v =
@@ -91,7 +120,8 @@ function riderSkill(r: Rider): number {
     0.15 * a.cornerEntry +
     0.1 * a.acceleration +
     0.1 * a.consistency;
-  return unit(v);
+  // Forma recente: ±1% di ritmo agli estremi (−10…+10).
+  return unit(v) * (1 + (r.form ?? 0) * 0.001);
 }
 
 export function bikeOf(
@@ -525,7 +555,14 @@ function raceSession(
         }
       : {},
   );
-  if (kind === 'race') round.status = 'raced';
+  if (kind === 'race') {
+    round.status = 'raced';
+    updateFormAndMorale(
+      s,
+      gridOrder.map((e) => e.rider),
+      rowsOut,
+    );
+  }
 
   // Soldi: premi per punti (Sprint e gara); diritti commerciali e trasferta una volta per weekend (gara).
   const teamsHere = [...new Set(gridOrder.map((e) => e.teamId))];

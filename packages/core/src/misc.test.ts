@@ -89,3 +89,14 @@ describe('math e result', () => {
     expect(() => unwrap(err('no'))).toThrow();
   });
 });
+
+import { Rng as Rng2 } from './rng.ts';
+describe('Rng: fotografia completa', () => {
+  it('ripristinata continua la stessa sequenza, anche a metà di una coppia gaussiana', () => {
+    const a = Rng2.fromSeed('snap');
+    a.normal();
+    const snap = JSON.parse(JSON.stringify(a.snapshot()));
+    const b = Rng2.restore(snap);
+    for (let i = 0; i < 50; i++) expect(b.normal()).toBe(a.normal());
+  });
+});

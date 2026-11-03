@@ -100,7 +100,7 @@ export interface ResultRowView {
   bestLap: number;
   points: number;
   status: 'finished' | 'dnf';
-  reason?: 'crash' | 'mechanical';
+  reason?: 'crash' | 'mechanical' | 'fuel';
   compound?: 'soft' | 'medium' | 'hard' | 'wet';
   penalty?: { longLaps: number; served: number; timeAdded: number; positionDrop: boolean };
 }

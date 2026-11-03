@@ -25,7 +25,7 @@ export type Command =
       type: 'RunSession';
       strategies?: Record<
         string,
-        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'conservative' | 'normal' | 'attack' }
+        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack' }
       >;
     }
   /** Simula tutto il resto del weekend di oggi con la strategia indicata. */
@@ -33,7 +33,7 @@ export type Command =
       type: 'RunRace';
       strategies: Record<
         string,
-        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'conservative' | 'normal' | 'attack' }
+        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack' }
       >;
     }
   /** Chiude la stagione conclusa e apre la successiva. */

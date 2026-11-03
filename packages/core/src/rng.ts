@@ -62,6 +62,20 @@ export class Rng {
     return [this.a, this.b, this.c, this.d];
   }
 
+  /**
+   * Stato completo, incluso il valore gaussiano in sospeso: ripristinandolo con `restore` la sequenza continua
+   * identica (serve per salvare e riprendere una gara a metà).
+   */
+  snapshot(): { state: RngState; spare: number | null } {
+    return { state: [this.a >>> 0, this.b >>> 0, this.c >>> 0, this.d >>> 0], spare: this.spareNormal };
+  }
+
+  static restore(snap: { state: RngState; spare: number | null }): Rng {
+    const rng = new Rng(snap.state);
+    rng.spareNormal = snap.spare;
+    return rng;
+  }
+
   /** Intero senza segno a 32 bit. */
   nextUint32(): number {
     this.a >>>= 0;

@@ -18,7 +18,7 @@ export interface ResultRow {
   gap: number | null;
   bestLap: number;
   points: number;
-  reason?: 'crash' | 'mechanical';
+  reason?: 'crash' | 'mechanical' | 'fuel';
   /** Gomma usata in questa sessione. */
   compound?: 'soft' | 'medium' | 'hard' | 'wet';
   /** Penalità della direzione gara (Long Lap, secondi aggiunti, posizione persa). */

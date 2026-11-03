@@ -781,10 +781,16 @@ export function drawStatic(ctx: CanvasRenderingContext2D, sc: Scene, v: View, w:
   // Pista: bordo bianco, asfalto con grana.
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
+  // Ombra morbida sotto il nastro d'asfalto (profondità; disegnata una volta nello strato statico).
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = Math.max(4, S(0.012));
+  ctx.shadowOffsetY = Math.max(1, S(0.003));
   poly(sc.pts.map(P));
   ctx.strokeStyle = '#f2f2f2';
   ctx.lineWidth = S(sc.width) + 3;
   ctx.stroke();
+  ctx.restore();
   poly(sc.pts.map(P));
   ctx.strokeStyle = '#3b3d42';
   ctx.lineWidth = S(sc.width);

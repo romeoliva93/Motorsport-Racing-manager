@@ -35,3 +35,25 @@ describe('Home (dashboard)', () => {
     expect(d.preparation).toBeNull();
   });
 });
+
+describe('forma e morale dopo la gara', () => {
+  it('cambiano con il risultato e restano nei limiti', () => {
+    const e = career('fm1');
+    const before = Object.fromEntries(rows(e.state, 'riders').map((r) => [r.id, [r.form, r.morale]]));
+    e.dispatch({ type: 'ContinueToNextEvent' });
+    e.dispatch({ type: 'RunRace', strategies: {} });
+    const race = rows(e.state, 'sessionResults').find((r) => r.kind === 'race')!;
+    let changed = 0;
+    for (const row of race.rows) {
+      const r = e.state.tables.riders[row.riderId]!;
+      expect(r.form).toBeGreaterThanOrEqual(-10);
+      expect(r.form).toBeLessThanOrEqual(10);
+      expect(r.morale).toBeGreaterThanOrEqual(0);
+      expect(r.morale).toBeLessThanOrEqual(100);
+      if (r.form !== before[r.id]![0] || r.morale !== before[r.id]![1]) changed++;
+    }
+    expect(changed).toBeGreaterThan(race.rows.length / 2);
+    const winner = race.rows.find((x) => x.position === 1)!;
+    expect(e.state.tables.riders[winner.riderId]!.morale).toBeGreaterThan(before[winner.riderId]![1]!);
+  });
+});

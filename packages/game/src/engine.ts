@@ -254,7 +254,7 @@ export class GameEngine {
         if (!nextSession(s, r)) return err('Weekend già concluso');
         for (const [riderId, st] of Object.entries(cmd.strategies ?? {})) {
           if (!['soft', 'medium', 'hard', 'wet'].includes(st.compound)) return err('Mescola non valida');
-          if (!['conservative', 'normal', 'attack'].includes(st.mode)) return err('Ritmo non valido');
+          if (!['veryConservative', 'conservative', 'normal', 'attack', 'maxAttack'].includes(st.mode)) return err('Ritmo non valido');
           if (cmd.type === 'RunSession' && tyresLeft(s, r, riderId)[st.compound] <= 0)
             return err('Non restano gomme nuove di questa mescola');
         }
