@@ -377,10 +377,10 @@
     "secondary": "#073b4c"
   },
   {
-    "key": "beatrice-galimberti-n6998",
+    "key": "elia-rinaldini-n6998",
     "kind": "rider",
-    "name": "Beatrice Galimberti",
-    "female": true,
+    "name": "Elia Rinaldini",
+    "female": false,
     "age": 19,
     "nationality": "ITA",
     "role": "race",
@@ -585,10 +585,10 @@
     "secondary": "#e9c46a"
   },
   {
-    "key": "paula-urquiza-n10035",
+    "key": "gonzalo-llorente-n10035",
     "kind": "rider",
-    "name": "Paula Urquiza",
-    "female": true,
+    "name": "Gonzalo Llorente",
+    "female": false,
     "age": 27,
     "nationality": "ESP",
     "role": "race",

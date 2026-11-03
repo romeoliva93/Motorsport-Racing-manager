@@ -99,7 +99,7 @@ for (const [band, n] of Object.entries(PORTRAIT_POOL_SIZE)) {
     });
   }
 }
-writeFileSync(new URL('./roster.json', import.meta.url), JSON.stringify(out, null, 1));
+writeFileSync(new URL('./roster.json', import.meta.url), JSON.stringify(out, null, 2) + '\n');
 const count = (k: string) => out.filter((x) => x.kind === k).length;
 console.log(
   `roster.json: ${count('rider')} piloti, ${count('staff')} staff, ${count('pool')} volti di riserva`,

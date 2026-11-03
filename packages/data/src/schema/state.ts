@@ -10,7 +10,7 @@ import type { Negotiation } from './market.ts';
 import type { NewsItem, SessionResult } from './results.ts';
 
 /** Versione dello schema dei salvataggi: va incrementata a ogni modifica incompatibile (con migrazione). */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export type Table<T extends { id: string }> = Record<T['id'], T>;
 
@@ -76,6 +76,11 @@ export interface GameState {
    * Struttura definita nei pacchetti game/sim (RacePrep, RaceSnapshot).
    */
   liveSession?: { prep: unknown; snapshot: unknown; viewerT: number };
+  /**
+   * Prove del weekend in corso (giocatore): giri, confidenza col circuito e con la moto, tempo usato per le
+   * modifiche d'assetto fra una sessione e l'altra, cronologia di uscite e modifiche. Si azzera a ogni weekend.
+   */
+  practice?: PracticeState;
 }
 
 export type TableName = keyof GameState['tables'];
@@ -116,4 +121,31 @@ export function createEmptyGameState(meta: GameMeta): GameState {
     accounts: [],
     upgrades: {},
   };
+}
+
+export type PracticeProgram = 'track' | 'setup' | 'longRun';
+export interface PracticeLogEntry {
+  /** Sessione dopo cui (o in cui) è avvenuto. */
+  session: string;
+  kind: 'run' | 'change';
+  text: string;
+  laps?: number;
+  best?: number;
+  /** Intesa con l'assetto in quel momento (0–100). */
+  match?: number;
+  minutes?: number;
+}
+export interface PracticeRider {
+  laps: number;
+  /** Confidenza col circuito e con la moto, 0–100. */
+  trackConf: number;
+  bikeConf: number;
+  /** Minuti di lavoro già usati nella pausa corrente. */
+  minutesUsed: number;
+  longRun: boolean;
+  log: PracticeLogEntry[];
+}
+export interface PracticeState {
+  roundId: string;
+  riders: Record<string, PracticeRider>;
 }

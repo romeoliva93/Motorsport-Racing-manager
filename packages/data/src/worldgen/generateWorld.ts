@@ -108,14 +108,51 @@ export function generateWorld(opts: WorldOptions): GameState {
     weights: Record<string, number>,
     femaleChance: number,
     avoidSurnames?: Set<string>,
+    maleOnly = false,
   ): [string, string, string] {
     for (let attempt = 0; attempt < 12; attempt++) {
       // Stesso ordine di estrazione di sempre (nazionalità, poi sesso): i mondi già generati non cambiano.
       const nationality = pickNationality(rng, weights);
-      const name = uniqueName(rng, nationality, rng.chance(femaleChance), avoidSurnames);
+      const female = rng.chance(femaleChance);
+      const name = uniqueName(rng, nationality, female, avoidSurnames);
+      if (name && female && maleOnly) {
+        // Piloti solo maschili, ma senza cambiare la sequenza dei numeri casuali: il resto del mondo
+        // (gli altri piloti, squadre, contratti) resta identico. Il nome sostitutivo è scelto in modo
+        // deterministico senza estrazioni.
+        const male = maleName(nationality, name, avoidSurnames);
+        if (male) return [nationality, male[0], male[1]];
+        continue; // nessun nome maschile libero per questo paese: si estrae un'altra nazionalità
+      }
       if (name) return [nationality, name[0], name[1]];
     }
     throw new Error('Nomi esauriti per tutte le nazionalità estratte');
+  }
+  function maleName(
+    nationality: string,
+    drawn: [string, string],
+    avoidSurnames?: Set<string>,
+  ): [string, string] | null {
+    const pool = NAMES[nationality]!;
+    let h = 0;
+    for (const ch of `${drawn[0]} ${drawn[1]}`) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    for (let i = 0; i < pool.male.length * pool.last.length; i++) {
+      const first = pool.male[(h + i) % pool.male.length]!;
+      const last = pool.last[(h + i * 7 + 3) % pool.last.length]!;
+      const key = `${first} ${last}`;
+      if (
+        usedNames.has(key) ||
+        isBlockedSurname(last) ||
+        presetSurnames.has(last) ||
+        avoidSurnames?.has(last) ||
+        [...usedNames].some((k) => k.endsWith(` ${last}`))
+      )
+        continue;
+      usedNames.delete(`${drawn[0]} ${drawn[1]}`);
+      usedNames.add(key);
+      avoidSurnames?.add(last);
+      return [first, last];
+    }
+    return null;
   }
   function uniqueName(
     rng: Rng,
@@ -360,7 +397,7 @@ export function generateWorld(opts: WorldOptions): GameState {
     const age = riderRng.int(aMin, aMax);
     let avoid = surnamesByTier.get(tier);
     if (!avoid) surnamesByTier.set(tier, (avoid = new Set()));
-    const [nationality, first, last] = person(riderRng, RIDER_NATIONALITY_WEIGHTS, 0.03, avoid);
+    const [nationality, first, last] = person(riderRng, RIDER_NATIONALITY_WEIGHTS, 0.03, avoid, true);
     // Margine di crescita: maggiore per i più giovani (un quattordicenne può migliorare di 15–30 punti).
     const growth = Math.max(0, 28 - age) * riderRng.range(0.8, 2.2);
     return makeRider({
