@@ -222,6 +222,44 @@ async function waitForServer(url, ms = 20000) {
     );
     if ((await page.locator('.rv-rider').count()) !== 2) throw new Error('Pannelli piloti mancanti');
     step('Sprint in 2D: giro ' + (await page.locator('.rv-lap b').innerText()) + ', 2 pannelli piloti');
+
+    // --- Strategia in diretta: il cambio arriva al motore e vale per il resto della gara ---
+    const panel = page.locator('.rv-rider').first();
+    await panel.getByRole('button', { name: 'Attacco massimo' }).click();
+    await panel.getByRole('button', { name: 'Prestazione' }).first().click();
+    await page.getByRole('button', { name: '4×' }).click();
+    await page.waitForTimeout(2500);
+    if (
+      !(await panel
+        .getByRole('button', { name: 'Attacco massimo' })
+        .evaluate((b) => b.classList.contains('on')))
+    )
+      throw new Error('La strategia scelta non è attiva');
+    await panel.getByText(/Carburante per/).waitFor();
+    await page.getByRole('button', { name: '❚❚' }).click();
+    await shot('12-gara-strategia');
+    const lapBefore = parseInt(await page.locator('.rv-lap b').innerText(), 10);
+    // --- Salvataggio a metà gara, ritorno al menu, caricamento: la gara riprende da lì ---
+    await page.getByRole('button', { name: 'Salva' }).click();
+    await page.getByText(/Partita salvata/).waitFor();
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await page.getByRole('button', { name: /Continua carriera/ }).click();
+    await page.locator('.nav button', { hasText: 'Weekend di gara' }).click();
+    await page.locator('.rv-lap b').waitFor({ timeout: 20000 });
+    const lapAfter = parseInt(await page.locator('.rv-lap b').innerText(), 10);
+    if (Math.abs(lapAfter - lapBefore) > 1)
+      throw new Error(`Ripresa a un giro diverso: ${lapBefore} → ${lapAfter}`);
+    if (
+      !(await page
+        .locator('.rv-rider')
+        .first()
+        .getByRole('button', { name: 'Attacco massimo' })
+        .evaluate((b) => b.classList.contains('on')))
+    )
+      throw new Error('Dopo il caricamento la strategia non è quella salvata');
+    step(
+      `gara in diretta: strategia cambiata, salvata a metà (giro ${lapBefore}) e ripresa (giro ${lapAfter})`,
+    );
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
     await page.getByRole('button', { name: 'Corri Warm Up', exact: true }).click();
     await page.getByRole('button', { name: 'Via alla gara!' }).click();

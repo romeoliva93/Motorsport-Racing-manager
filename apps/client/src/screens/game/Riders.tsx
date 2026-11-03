@@ -236,7 +236,9 @@ function Overview({ p }: { p: RiderProfile }) {
         <Row label="Squadra">{r.team ?? '—'}</Row>
         <Row label="Reputazione">{r.reputation}</Row>
         <Row label="Forma">
-          <span className={r.form > 0 ? 'ok' : r.form < 0 ? 'bad' : ''}>{r.form > 0 ? `+${r.form}` : r.form}</span>
+          <span className={r.form > 0 ? 'ok' : r.form < 0 ? 'bad' : ''}>
+            {r.form > 0 ? `+${r.form}` : r.form}
+          </span>
         </Row>
         <Row label="Morale">
           <span className={r.morale >= 65 ? 'ok' : r.morale >= 45 ? '' : 'warn'}>{r.morale}</span>

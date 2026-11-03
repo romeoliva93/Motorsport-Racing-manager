@@ -86,6 +86,8 @@ export function WeekendScreen({
   const q = useQuery('weekendView');
   const [replay, setReplay] = useState<ReplayData | null>(null);
   const [watching, setWatching] = useState(false);
+  /** Gara in diretta (simulazione incrementale) e istante da cui riprendere la visione. */
+  const [liveFrom, setLiveFrom] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<string | null>(null);
 
@@ -95,6 +97,19 @@ export function WeekendScreen({
     engine.replay().then(
       (r) => setReplay(r && r.roundId === roundId ? r : null),
       () => setReplay(null),
+    );
+    // Gara rimasta in corso (es. salvataggio a metà gara): si riprende la visione da dove era.
+    engine.liveStatus().then(
+      (ls) => {
+        if (ls && ls.roundId === roundId)
+          engine.replay().then((r) => {
+            if (!r) return;
+            setReplay(r);
+            setLiveFrom(ls.viewerT);
+            setWatching(true);
+          });
+      },
+      () => {},
     );
   }, [roundId]);
 
@@ -115,6 +130,7 @@ export function WeekendScreen({
     const rep = await engine.replay();
     if (rep && (rep.kind === kind || kind === 'all')) {
       setReplay(rep);
+      setLiveFrom(rep.results.length === 0 ? -45 : null);
       setWatching(true);
     }
   }
@@ -127,7 +143,11 @@ export function WeekendScreen({
     return (
       <RaceViewer
         data={replay}
-        onDone={() => {
+        live={liveFrom !== null}
+        startT={liveFrom ?? undefined}
+        onDone={(final) => {
+          if (final) setReplay(final);
+          setLiveFrom(null);
           setWatching(false);
           setTab(replay.kind);
           window.scrollTo(0, 0);
@@ -229,8 +249,14 @@ export function WeekendScreen({
           busy={busy}
           onRun={(plan) =>
             run(async () => {
-              await engine.dispatch({ type: 'RunSession', strategies: plan });
-              if (nextS.kind === 'sprint' || nextS.kind === 'race') await afterRace(nextS.kind);
+              const raceKind = nextS.kind === 'sprint' || nextS.kind === 'race';
+              // Sprint e gara in diretta: strategie modificabili mentre si corre.
+              await engine.dispatch({
+                type: 'RunSession',
+                strategies: plan,
+                ...(raceKind ? { live: true } : {}),
+              });
+              if (raceKind) await afterRace(nextS.kind);
               else setTab(nextS.kind === 'q2' ? 'qualifying' : nextS.kind);
             })
           }

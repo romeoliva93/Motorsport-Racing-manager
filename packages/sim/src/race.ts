@@ -373,6 +373,8 @@ export interface LiveRider {
   tyreTemp: number;
   fatigue: number;
   lap: number;
+  lastLap: number | null;
+  bestLap: number | null;
   out: boolean;
   finished: boolean;
 }
@@ -590,6 +592,8 @@ export class RaceSim {
         tyreTemp: Math.round(s.tyreTemp),
         fatigue: Math.round(s.fatigue),
         lap: s.lap,
+        lastLap: s.lapTimes.length > 1 ? s.lapTimes.at(-1)! : null,
+        bestLap: Number.isFinite(s.best) && s.best < INF && s.lap > 1 ? Math.round(s.best * 1000) / 1000 : null,
         out: s.out,
         finished: s.finished,
       };

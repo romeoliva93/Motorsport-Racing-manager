@@ -1,5 +1,7 @@
 import { Component, Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { ReplayData } from '@lean-angle/game';
+import type { FuelMap, LiveRider, PaceMode, TyreMode } from '@lean-angle/sim';
+import { engine } from '../../engine/engine.ts';
 import { Flag } from '../../design-system/Flag.tsx';
 import { lapTime, raceTime } from '../../design-system/components.tsx';
 import { Portrait } from '../../design-system/Portrait.tsx';
@@ -48,7 +50,53 @@ class Fallback3D extends Component<{ onFail: () => void; children: ReactNode }, 
  * Prima del via le moto escono dai box, percorrono la corsia box e il giro di ricognizione e si fermano nella
  * casella di griglia calcolata dalla simulazione.
  */
-export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => void }) {
+/** Livelli delle tre leve di strategia in gara (stessi nomi del motore). */
+const PACE: { id: PaceMode; label: string; full: string }[] = [
+  { id: 'veryConservative', label: '−−', full: 'Molto conservativo' },
+  { id: 'conservative', label: '−', full: 'Conservativo' },
+  { id: 'normal', label: 'Norm.', full: 'Normale' },
+  { id: 'attack', label: '+', full: 'Aggressivo' },
+  { id: 'maxAttack', label: '++', full: 'Attacco massimo' },
+];
+const FUEL: { id: FuelMap; label: string }[] = [
+  { id: 'save', label: 'Risparmio' },
+  { id: 'standard', label: 'Standard' },
+  { id: 'performance', label: 'Prestazione' },
+];
+const TYRE: { id: TyreMode; label: string }[] = [
+  { id: 'conservative', label: 'Conserv.' },
+  { id: 'balanced', label: 'Bilanciata' },
+  { id: 'performance', label: 'Prestaz.' },
+];
+
+/**
+ * Vista di gara. Due modi:
+ *  - rivedere una gara già simulata (`data` completo);
+ *  - gara in diretta (`live`): la simulazione avanza nel motore a pezzi, pochi secondi davanti a quello che si vede,
+ *    e le strategie dei propri piloti (ritmo, carburante, gomme) si cambiano in corsa con effetto reale.
+ */
+export function RaceViewer({
+  data: initial,
+  onDone,
+  live = false,
+  startT,
+}: {
+  data: ReplayData;
+  onDone: (final?: ReplayData | null) => void;
+  live?: boolean;
+  startT?: number;
+}) {
+  const [data, setData] = useState(initial);
+  // Gara in diretta: fotogrammi ed eventi che arrivano dal motore, dati live dei piloti.
+  const liveRef = useRef({
+    frames: [...initial.frames],
+    events: [...initial.events],
+    riders: null as LiveRider[] | null,
+    done: !live,
+    pending: false,
+  });
+  const lv0 = liveRef.current;
+  const vd: ReplayData = live && !lv0.done ? { ...data, frames: lv0.frames, events: lv0.events } : data;
   const fg = useRef<HTMLCanvasElement>(null);
   const prefs = usePrefs();
   const [cam, setCam] = useState<Cam>('mine');
@@ -64,10 +112,11 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
   const [manual, setManual] = useState<{ x: number; y: number; z: number } | null>(null);
   const viewRef = useRef<View | null>(null);
   const [speed, setSpeed] = useState<number>(8);
-  const [t, setT] = useState(-INTRO);
+  const [t, setT] = useState(startT ?? -INTRO);
   const [, setTick] = useState(0);
-  const tRef = useRef(-INTRO);
-  const dur = duration(data);
+  const tRef = useRef(startT ?? -INTRO);
+  // In diretta la riproduzione non supera i fotogrammi già calcolati.
+  const dur = live && !lv0.done ? Math.max(0, (lv0.frames.length - 1) * data.frameEvery - 0.5) : duration(vd);
   const L = data.lengthM;
 
   const teams = useMemo(() => teamsOf(data), [data]);
@@ -83,7 +132,33 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
       ),
     [data, teams],
   );
-  const lastDist = useMemo(() => lastDistances(data), [data]);
+  const lastDist = useMemo(() => lastDistances(vd), [data, Math.floor(vd.frames.length / 20)]);
+
+  /** Chiede al motore i prossimi secondi di gara (pochi secondi davanti a quello che si vede). */
+  const pull = (ahead: number) => {
+    const L0 = liveRef.current;
+    if (!live || L0.done || L0.pending) return;
+    L0.pending = true;
+    engine
+      .liveAdvance(Math.max(0, tRef.current) + ahead, L0.frames.length, L0.events.length, tRef.current)
+      .then(
+        (c) => {
+          L0.pending = false;
+          if (!c) return;
+          L0.frames.push(...c.frames);
+          L0.events.push(...c.events);
+          L0.riders = c.live;
+          if (c.done) {
+            L0.done = true;
+            if (c.replay) setData(c.replay);
+          }
+          setTick((x) => (x + 1) % 1000);
+        },
+        () => {
+          L0.pending = false;
+        },
+      );
+  };
 
   // Ciclo di riproduzione (pubblico e bandiere si muovono anche in pausa). È lo stesso per 2D e 3D: cambiare
   // vista non lo ferma e non lo riavvia.
@@ -93,8 +168,16 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
     const step = (now: number) => {
       const dt = Math.max(0, (now - last) / 1000);
       last = now;
-      if (speed > 0 && tRef.current < dur) {
-        tRef.current = Math.min(dur, tRef.current + dt * speed);
+      if (live && !liveRef.current.done) {
+        const avail = (liveRef.current.frames.length - 1) * data.frameEvery;
+        if (avail - Math.max(0, tRef.current) < Math.max(4, speed * 1.5)) pull(Math.max(6, speed * 3));
+      }
+      const end =
+        live && !liveRef.current.done
+          ? Math.max(0, (liveRef.current.frames.length - 1) * data.frameEvery - 0.5)
+          : dur;
+      if (speed > 0 && tRef.current < end) {
+        tRef.current = Math.min(end, tRef.current + dt * speed);
         setT(tRef.current);
       } else setTick((x) => (x + 1) % 1000);
       raf = requestAnimationFrame(step);
@@ -103,8 +186,32 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
     return () => cancelAnimationFrame(raf);
   }, [speed, dur]);
 
+  // Gara in diretta: ogni secondo il motore riceve il punto che si sta guardando (per salvare e riprendere da lì).
+  useEffect(() => {
+    if (!live) return;
+    const id = setInterval(() => {
+      const L0 = liveRef.current;
+      if (L0.done || L0.pending) return;
+      L0.pending = true;
+      engine.liveAdvance(Math.max(0, tRef.current), L0.frames.length, L0.events.length, tRef.current).then(
+        (c) => {
+          L0.pending = false;
+          if (c && !c.done) {
+            L0.frames.push(...c.frames);
+            L0.events.push(...c.events);
+            L0.riders = c.live;
+          }
+        },
+        () => {
+          L0.pending = false;
+        },
+      );
+    }, 1000);
+    return () => clearInterval(id);
+  }, [live]);
+
   // Stato della gara in questo istante: una sola funzione per entrambe le viste.
-  const f = raceFrame(data, scene, teams, lastDist, t, selectedId);
+  const f = raceFrame(vd, scene, teams, lastDist, t, selectedId);
   const { racing, dists, order, lap, avgSpeed, finished, phase, bikes, crashes, rain } = f;
   const leader = order[0]!;
 
@@ -249,13 +356,13 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
   const pendingLL = (id: string) =>
     !racing
       ? 0
-      : data.events
+      : vd.events
           .filter((e) => e.riderId === id && e.t <= t)
           .reduce(
             (n, e) => n + (e.kind === 'longLapPenalty' ? (e.count ?? 1) : e.kind === 'longLap' ? -1 : 0),
             0,
           );
-  const events = data.events
+  const events = vd.events
     .filter((e) => racing && e.t <= t && e.kind !== 'fastestLap')
     .filter((e) => {
       const a = data.riders.find((r) => r.id === e.riderId);
@@ -308,26 +415,42 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
 
   // Dati live di un pilota in questo istante (tutti derivati dalla simulazione).
   const lapsDone = (n: number) => (racing ? Math.max(0, Math.floor(Math.max(0, dists[n]!) / L)) : 0);
-  const live = (n: number) => {
+  const liveOf = (id: string) => liveRef.current.riders?.find((x) => x.id === id) ?? null;
+  const liveData = (n: number) => {
     const r = data.riders[n]!;
+    const sim = liveOf(r.id);
     const done = Math.min(r.lapTimes.length, lapsDone(n));
     const progress = racing ? Math.min(1, Math.max(0, dists[n]!) / (data.laps * L)) : 0;
     const startFuel = data.fuelCapacity * (data.kind === 'sprint' ? 0.55 : 0.95);
-    const fuel = Math.max(0.3, startFuel * (1 - progress) + 0.3 * progress);
     return {
-      wear: done > 0 ? r.wear[done - 1]! : 0,
-      last: done > 0 ? r.lapTimes[done - 1]! : null,
-      best: done > 1 ? Math.min(...r.lapTimes.slice(1, done)) : null,
-      fuel,
+      // In diretta: valori della simulazione; rivedendo una gara: dai giri registrati (carburante stimato).
+      wear: sim ? sim.tyreWear : done > 0 ? r.wear[done - 1]! : 0,
+      last: sim ? sim.lastLap : done > 0 ? r.lapTimes[done - 1]! : null,
+      best: sim ? sim.bestLap : done > 1 ? Math.min(...r.lapTimes.slice(1, done)) : null,
+      fuel: sim ? sim.fuel : Math.max(0.3, startFuel * (1 - progress) + 0.3 * progress),
+      fuelLaps: sim ? sim.fuelLapsLeft : null,
+      tyreTemp: sim ? sim.tyreTemp : null,
+      fatigue: sim ? sim.fatigue : null,
+      strategy: sim ? { mode: sim.mode, fuelMap: sim.fuelMap, tyreMode: sim.tyreMode } : null,
       pos: order.findIndex((o) => o.r.id === r.id) + 1,
     };
   };
-  const TYRE_LETTER: Record<string, string> = { soft: 'S', medium: 'M', hard: 'H', wet: 'W' };
-  const MODE_LABEL: Record<string, string> = {
-    conservative: 'Prudente',
-    normal: 'Normale',
-    attack: 'Attacco',
+  const setStrategy = async (
+    riderId: string,
+    change: { mode?: PaceMode; fuelMap?: FuelMap; tyreMode?: TyreMode },
+  ) => {
+    const L0 = liveRef.current;
+    const cur = L0.riders?.find((x) => x.id === riderId);
+    if (cur) Object.assign(cur, change); // subito visibile; il motore conferma col prossimo pezzo di gara
+    setTick((x) => (x + 1) % 1000);
+    try {
+      await engine.dispatch({ type: 'SetRaceStrategy', riderId, ...change });
+    } catch {
+      /* gara finita nel frattempo */
+    }
   };
+  const lapsLeft = Math.max(0, data.laps - lap + 1);
+  const TYRE_LETTER: Record<string, string> = { soft: 'S', medium: 'M', hard: 'H', wet: 'W' };
   const lastDirection = [...events].find((e) =>
     ['longLapPenalty', 'redFlag', 'yellowFlag', 'jumpStart', 'positionDrop', 'restart'].includes(e.kind),
   );
@@ -350,7 +473,7 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
           {order.map(({ r, d, i: n }, i) => {
             const out = racing && d < 0;
             const gap = i === 0 || out ? null : (leader.d - d) / avgSpeed;
-            const lv = live(n);
+            const lv = liveData(n);
             return (
               <li
                 key={r.id}
@@ -499,7 +622,16 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
               Vai al via
             </button>
           )}
-          <button className="btn primary" onClick={onDone}>
+          <button
+            className="btn primary"
+            onClick={async () => {
+              if (live && !liveRef.current.done) {
+                // Il resto della gara lo simula il motore con le strategie attuali (IA per gli avversari).
+                await engine.dispatch({ type: 'FinishLiveRace' });
+                onDone(await engine.replay());
+              } else onDone(data);
+            }}
+          >
             {finished ? 'Vedi i risultati' : 'Salta alla fine'}
           </button>
         </div>
@@ -517,7 +649,7 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
       <aside className="rv-right">
         {mineIdx.map((n) => {
           const r = data.riders[n]!;
-          const lv = live(n);
+          const lv = liveData(n);
           const out = racing && dists[n]! < 0;
           return (
             <div key={r.id} className="rv-rider" style={{ ['--team' as string]: r.color }}>
@@ -575,10 +707,64 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
                 </div>
                 <b>{r.reliability}%</b>
               </div>
-              <div className="rv-stat">
-                <span>Ritmo</span>
-                <b className="rv-mode">{MODE_LABEL[r.mode] ?? r.mode}</b>
-              </div>
+              {lv.fuelLaps !== null && (
+                <div className="rv-stat">
+                  <span>Carburante per</span>
+                  <b
+                    className={lv.fuelLaps < lapsLeft ? 'bad' : lv.fuelLaps < lapsLeft + 0.6 ? 'warn' : 'ok'}
+                  >
+                    {lv.fuelLaps.toString().replace('.', ',')} giri
+                    <small className="muted"> · ne mancano {lapsLeft}</small>
+                  </b>
+                </div>
+              )}
+              {lv.tyreTemp !== null && (
+                <div className="rv-stat">
+                  <span>Temperatura gomma</span>
+                  <b className={lv.tyreTemp > 105 ? 'bad' : lv.tyreTemp < 85 ? 'info' : 'ok'}>
+                    {lv.tyreTemp}°
+                  </b>
+                </div>
+              )}
+              {lv.fatigue !== null && (
+                <div className="rv-stat">
+                  <span>Fatica</span>
+                  <b className={lv.fatigue > 70 ? 'bad' : lv.fatigue > 45 ? 'warn' : ''}>{lv.fatigue}%</b>
+                </div>
+              )}
+              {lv.strategy && !out && !finished ? (
+                <div className="rv-strategy" aria-label={`Strategia di ${r.name}`}>
+                  {(
+                    [
+                      [`Ritmo · ${PACE.find((x) => x.id === lv.strategy!.mode)?.full}`, 'mode', PACE],
+                      ['Carburante', 'fuelMap', FUEL],
+                      ['Gomme', 'tyreMode', TYRE],
+                    ] as const
+                  ).map(([label, key, opts]) => (
+                    <div key={key} className="rv-lever">
+                      <small>{label}</small>
+                      <div className="rv-speeds" role="group" aria-label={`${label} di ${r.name}`}>
+                        {opts.map((o) => (
+                          <button
+                            key={o.id}
+                            title={'full' in o ? o.full : o.label}
+                            aria-label={'full' in o ? o.full : o.label}
+                            className={lv.strategy![key] === o.id ? 'on' : ''}
+                            onClick={() => setStrategy(r.id, { [key]: o.id })}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rv-stat">
+                  <span>Ritmo</span>
+                  <b className="rv-mode">{PACE.find((x) => x.id === (lv.strategy?.mode ?? r.mode))?.full}</b>
+                </div>
+              )}
               <div className="rv-stat">
                 <span>Ultimo giro</span>
                 <b>{lv.last ? lapTime(lv.last) : '—'}</b>
@@ -592,8 +778,9 @@ export function RaceViewer({ data, onDone }: { data: ReplayData; onDone: () => v
         })}
         {mineIdx.length === 0 && <p className="muted">Nessun tuo pilota in questa gara.</p>}
         <p className="muted rv-note">
-          Ritmo e mappa carburante modificabili durante la gara: prossima milestone (oggi si scelgono prima
-          del via).
+          {live && !liveRef.current.done
+            ? 'Gara in diretta: ogni cambio di ritmo, carburante o gomme vale dai metri successivi.'
+            : 'Gara conclusa: qui la stai rivedendo.'}
         </p>
       </aside>
     </div>

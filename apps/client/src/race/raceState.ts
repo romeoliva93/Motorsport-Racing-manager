@@ -112,7 +112,8 @@ export function raceFrame(
   const leader = order[0]!;
   const lap = Math.min(data.laps, Math.floor(Math.max(0, leader.d) / L) + 1);
   const avgSpeed = L / ((data.results[0]?.time ?? dur) / data.laps);
-  const finished = t >= dur;
+  // Gara in diretta: finita solo quando la simulazione ha prodotto i risultati.
+  const finished = t >= dur && data.results.length > 0;
   const winnerEvent = data.events.find((e) => e.kind === 'finish');
   const redEvent = data.events.find((e) => e.kind === 'redFlag');
   const restartEvent = data.events.find((e) => e.kind === 'restart');

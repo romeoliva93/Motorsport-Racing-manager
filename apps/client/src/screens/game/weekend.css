@@ -1137,3 +1137,31 @@ b.bad {
     animation: none;
   }
 }
+
+/* Strategia in gara (gara in diretta) */
+.rv-strategy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.3rem 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--line);
+}
+.rv-lever small {
+  display: block;
+  color: var(--text-3);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.1rem;
+}
+.rv-lever .rv-speeds {
+  display: flex;
+  width: 100%;
+  padding: 0.12rem 0.4rem;
+}
+.rv-lever .rv-speeds button {
+  flex: 1;
+  padding: 0.28rem 0.15rem;
+  font-size: 0.66rem;
+}
