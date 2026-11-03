@@ -23,9 +23,14 @@ export type Command =
   /** Prossima sessione del weekend di oggi (prove, qualifiche, Sprint o gara); strategie per Sprint e gara. */
   | {
       type: 'RunSession';
+      /** Sprint/gara in diretta: la simulazione avanza a passi e le strategie si cambiano in corsa. */
+      live?: boolean;
       strategies?: Record<
         string,
-        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack' }
+        {
+          compound: 'soft' | 'medium' | 'hard' | 'wet';
+          mode: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack';
+        }
       >;
     }
   /** Simula tutto il resto del weekend di oggi con la strategia indicata. */
@@ -33,7 +38,10 @@ export type Command =
       type: 'RunRace';
       strategies: Record<
         string,
-        { compound: 'soft' | 'medium' | 'hard' | 'wet'; mode: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack' }
+        {
+          compound: 'soft' | 'medium' | 'hard' | 'wet';
+          mode: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack';
+        }
       >;
     }
   /** Chiude la stagione conclusa e apre la successiva. */
@@ -41,6 +49,16 @@ export type Command =
   /** Compra il livello successivo di un componente della moto. */
   | { type: 'BuyUpgrade'; part: PartKey }
   | { type: 'ServiceParts'; bikeId: string; parts: GarageKey[] }
+  /** Strategia in corsa di un proprio pilota (gara in diretta): ritmo, mappa carburante, gestione gomme. */
+  | {
+      type: 'SetRaceStrategy';
+      riderId: string;
+      mode?: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack';
+      fuelMap?: 'save' | 'standard' | 'performance';
+      tyreMode?: 'conservative' | 'balanced' | 'performance';
+    }
+  /** Porta a termine la gara in diretta (salta alla fine). */
+  | { type: 'FinishLiveRace' }
   | { type: 'SetGarageMode'; mode: 'auto' | 'assisted' | 'manual' }
   | { type: 'BuySpare'; group: string }
   | { type: 'ReplaceGroup'; bikeId: string; group: string }
@@ -71,6 +89,8 @@ export type GameEvents = {
   UpgradeBought: { part: string; level: number };
   PartsServiced: { bikeId: string; parts: string[]; cost: number };
   GarageModeSet: { mode: string };
+  LiveRaceStarted: { roundId: string; kind: string };
+  RaceStrategyChanged: { riderId: string };
   SpareBought: { group: string; cost: number };
   GroupReplaced: { bikeId: string; group: string };
   SetupChanged: { riderId: string; condition: string };

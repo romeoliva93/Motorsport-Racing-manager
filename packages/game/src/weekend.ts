@@ -43,6 +43,7 @@ import {
   type PaceMode,
   type RaceOutcome,
   type RaceRider,
+  type RaceSetup,
 } from '@lean-angle/sim';
 import { addNews } from './news.ts';
 import { conditionsFor, weekendWeather, type SessionWeather } from './weather.ts';
@@ -223,6 +224,8 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, w
     concentration: unit(a.concentration),
     aggression: unit(a.aggression),
     tyreManagement: Math.min(1, unit(a.tyreManagement) + upgradeBonus(s, e.teamId).tyreCare),
+    fitness: unit(a.fitness),
+    fuelManagement: unit(a.fuelManagement),
     bike,
     // affidabilità di base (costruttore + upgrade) × stato dei componenti della moto A (garage)
     reliability: reliability * bikeReliabilityFactor(mainBike(s, e.rider.id)),
@@ -426,6 +429,25 @@ function qualifyingSessions(
   round.status = 'qualified';
 }
 
+/** Gara preparata (serializzabile): impostazione della simulazione e dati per chiuderla. */
+export interface RacePrep {
+  roundId: string;
+  kind: 'sprint' | 'race';
+  setup: RaceSetup;
+  grid: string[];
+  used: Record<string, Compound>;
+  pitStarters: string[];
+  meta: ReplayData | null;
+}
+
+/** Carburante a inizio gara (litri) per categoria. */
+export const FUEL_CAPACITY: Record<CategoryTier, number> = {
+  premier: 22,
+  intermediate: 24,
+  lightweight: 11,
+  rookies: 11,
+};
+
 export interface ReplayData {
   roundId: string;
   /** 'sprint' o 'race'. */
@@ -470,19 +492,23 @@ export interface ReplayData {
 }
 
 /** Sprint o gara. Restituisce i dati per rivederla se è la gara del giocatore. */
-function raceSession(
+/**
+ * Preparazione di Sprint o gara (serializzabile: si può salvare con la gara in corso): griglia dalle qualifiche,
+ * strategie (giocatore o IA), gomme, partenza dalla corsia box, impostazione della simulazione e dati per la vista.
+ * `live` = gara seguita dal giocatore: i suoi piloti hanno strategia manuale (l'IA non la cambia).
+ */
+export function prepareRace(
   s: GameState,
-  ids: IdFactory,
   rng: Rng,
   round: Round,
   kind: 'sprint' | 'race',
   playerStrategies: Record<string, Strategy>,
-): ReplayData | null {
+  live = false,
+): RacePrep {
   const cal = new GameCalendar(s.meta.startYear);
   const playerTeam = s.meta.playerTeamId;
   const season = s.tables.seasons[round.seasonId]!;
   const cat = s.tables.categories[season.categoryId]!;
-  const reg = s.tables.regulations[season.regulationId]!;
   const quali = resultOf(s, round, 'qualifying')!;
   const list = entrants(s, round);
   const gridOrder = quali.rows
@@ -501,6 +527,7 @@ function raceSession(
       : aiStrategy(e.rider, rng, laps, left, cond);
     used.set(e.rider.id, st.compound);
     const rr = toRaceRider(s, e, st, round, cond.grip !== 'dry');
+    if (live && e.teamId === playerTeam) rr.manual = true;
     // Troppi motori usati (solo MotoGP): partenza dalla corsia box.
     if (cat.tier === 'premier' && engineStatus(s, e.rider.id, season.id, e.teamId).overLimit) {
       rr.pitLaneStart = true;
@@ -511,7 +538,9 @@ function raceSession(
   const circuit = s.tables.circuits[round.circuitId]!;
   const track = trackFor(s, round);
   const isPlayers = gridOrder.some((e) => e.teamId === playerTeam);
-  const out = runRace({
+  const capacity = FUEL_CAPACITY[cat.tier];
+  const perLap = (capacity * 0.94) / fmt.laps; // a ritmo normale e mappa standard si arriva con il 6% di margine
+  const setup: RaceSetup = {
     seed: `${s.meta.seed}::${round.id}::${kind}`,
     track,
     lengthM: circuit.lengthM,
@@ -521,7 +550,91 @@ function raceSession(
     frameEvery: isPlayers ? 0.5 : 1000,
     conditions: cond,
     sprint: kind === 'sprint',
-  });
+    fuel: { capacity, perLap, start: Math.min(capacity, perLap * laps * 1.06) },
+  };
+  const meta: ReplayData | null = isPlayers
+    ? {
+        roundId: round.id,
+        kind,
+        categoryName: cat.name,
+        tier: cat.tier,
+        circuit: circuit.name,
+        laps,
+        lengthM: circuit.lengthM,
+        country: circuit.country,
+        track: { points: track.points, sectors: track.sectors, longLap: track.longLap },
+        weather: (() => {
+          const w = weatherOf(s, round).find((x) => x.kind === kind);
+          return w
+            ? { sky: w.sky, grip: w.grip, airTemp: w.airTemp, trackTemp: w.trackTemp }
+            : { sky: 'sun', grip: 'dry', airTemp: 22, trackTemp: 35 };
+        })(),
+        riders: gridOrder.map((e, k) => {
+          const t = s.tables.teams[e.teamId]!;
+          return {
+            id: e.rider.id,
+            name: `${e.rider.firstName} ${e.rider.lastName}`,
+            nationality: e.rider.nationality,
+            short: e.rider.lastName.slice(0, 3).toUpperCase(),
+            number: e.number,
+            team: t.name,
+            color: t.colors.primary,
+            color2: t.colors.secondary,
+            mine: e.teamId === playerTeam,
+            portrait: (() => {
+              const key = portraitKey(e.rider);
+              return { key, pool: poolPortraitKey(key, cal.ageOn(e.rider.birthDay, s.meta.currentDay)) };
+            })(),
+            compound: grid[k]!.compound,
+            mode: grid[k]!.mode,
+            reliability: Math.round(grid[k]!.reliability * 100),
+            lapTimes: [],
+            wear: [],
+          };
+        }),
+        fuelCapacity: capacity,
+        frames: [],
+        frameEvery: setup.frameEvery!,
+        events: [],
+        results: [],
+      }
+    : null;
+  return {
+    roundId: round.id,
+    kind,
+    setup,
+    grid: gridOrder.map((e) => e.rider.id),
+    used: Object.fromEntries(used),
+    pitStarters: pitStarters.map((e) => e.rider.id),
+    meta,
+  };
+}
+
+/**
+ * Chiusura di Sprint o gara con il risultato della simulazione: classifica, punti, premi, notizie, forma e morale,
+ * fine stagione. Restituisce i dati per rivedere la gara (solo la gara del giocatore).
+ */
+export function finalizeRace(
+  s: GameState,
+  ids: IdFactory,
+  round: Round,
+  prep: RacePrep,
+  out: RaceOutcome,
+): ReplayData | null {
+  const kind = prep.kind;
+  const cal = new GameCalendar(s.meta.startYear);
+  const playerTeam = s.meta.playerTeamId;
+  const season = s.tables.seasons[round.seasonId]!;
+  const cat = s.tables.categories[season.categoryId]!;
+  const reg = s.tables.regulations[season.regulationId]!;
+  const list = entrants(s, round);
+  const gridOrder = prep.grid
+    .map((id) => list.find((e) => e.rider.id === id))
+    .filter((e): e is Entrant => !!e);
+  const used = new Map(Object.entries(prep.used) as [string, Compound][]);
+  const pitStarters = gridOrder.filter((e) => prep.pitStarters.includes(e.rider.id));
+  const circuit = s.tables.circuits[round.circuitId]!;
+  const isPlayers = !!prep.meta;
   const table = kind === 'sprint' ? SPRINT_POINTS : reg.points;
   const rowsOut: ResultRow[] = out.results.map((r) => {
     const e = gridOrder.find((x) => x.rider.id === r.riderId)!;
@@ -647,45 +760,12 @@ function raceSession(
         });
     }
     replay = {
-      roundId: round.id,
-      kind,
-      categoryName: cat.name,
-      tier: cat.tier,
-      circuit: circuit.name,
-      laps,
-      lengthM: circuit.lengthM,
-      country: circuit.country,
-      track: { points: track.points, sectors: track.sectors, longLap: track.longLap },
-      weather: (() => {
-        const w = weatherOf(s, round).find((x) => x.kind === kind);
-        return w
-          ? { sky: w.sky, grip: w.grip, airTemp: w.airTemp, trackTemp: w.trackTemp }
-          : { sky: 'sun', grip: 'dry', airTemp: 22, trackTemp: 35 };
-      })(),
-      riders: gridOrder.map((e, k) => {
-        const t = s.tables.teams[e.teamId]!;
-        return {
-          id: e.rider.id,
-          name: `${e.rider.firstName} ${e.rider.lastName}`,
-          nationality: e.rider.nationality,
-          short: e.rider.lastName.slice(0, 3).toUpperCase(),
-          number: e.number,
-          team: t.name,
-          color: t.colors.primary,
-          color2: t.colors.secondary,
-          mine: e.teamId === playerTeam,
-          portrait: (() => {
-            const key = portraitKey(e.rider);
-            return { key, pool: poolPortraitKey(key, cal.ageOn(e.rider.birthDay, s.meta.currentDay)) };
-          })(),
-          compound: grid[k]!.compound,
-          mode: grid[k]!.mode,
-          reliability: Math.round(grid[k]!.reliability * 100),
-          lapTimes: out.laps[k]!.times,
-          wear: out.laps[k]!.wear,
-        };
-      }),
-      fuelCapacity: { premier: 22, intermediate: 24, lightweight: 11, rookies: 11 }[cat.tier],
+      ...prep.meta!,
+      riders: prep.meta!.riders.map((r, k) => ({
+        ...r,
+        lapTimes: out.laps[k]!.times,
+        wear: out.laps[k]!.wear,
+      })),
       frames: out.frames,
       frameEvery: out.frameEvery,
       events: out.events,
@@ -719,6 +799,18 @@ function raceSession(
   return replay;
 }
 
+function raceSession(
+  s: GameState,
+  ids: IdFactory,
+  rng: Rng,
+  round: Round,
+  kind: 'sprint' | 'race',
+  playerStrategies: Record<string, Strategy>,
+): ReplayData | null {
+  const prep = prepareRace(s, rng, round, kind, playerStrategies);
+  return finalizeRace(s, ids, round, prep, runRace(prep.setup));
+}
+
 /** Disputa la prossima sessione di un round. Restituisce i dati di replay se era una Sprint/gara del giocatore. */
 export function runNextSession(
   s: GameState,
@@ -729,17 +821,27 @@ export function runNextSession(
 ): ReplayData | null {
   const kind = nextSession(s, round);
   if (!kind) return null;
+  beforeSession(s, ids, round);
   let replay: ReplayData | null = null;
-  if (!round.stage) {
-    fitNewEnginesIfDue(s, round);
-    crewChiefMaintenance(s, ids, round);
-    aiMaintenance(s, ids, round);
-  }
   if (kind === 'fp1' || kind === 'fp2' || kind === 'practice' || kind === 'warmup')
     timedSession(s, ids, round, kind, entrants(s, round), strategies);
   else if (kind === 'q1' || kind === 'q2' || kind === 'qualifying')
     qualifyingSessions(s, ids, round, kind, strategies);
   else replay = raceSession(s, ids, rng, round, kind, strategies);
+  afterSession(s, round, kind);
+  return replay;
+}
+
+/** Prima sessione del weekend: motori nuovi se dovuti (MotoGP) e manutenzione. */
+function beforeSession(s: GameState, ids: IdFactory, round: Round) {
+  if (round.stage) return;
+  fitNewEnginesIfDue(s, round);
+  crewChiefMaintenance(s, ids, round);
+  aiMaintenance(s, ids, round);
+}
+
+/** Dopo ogni sessione: chilometri al garage e avanzamento del weekend. */
+function afterSession(s: GameState, round: Round, kind: SessionKind) {
   const fmtLaps = RACE_FORMAT[tierOf(s, round)].laps;
   addSessionMileage(
     s,
@@ -749,6 +851,34 @@ export function runNextSession(
     kind === 'race' ? fmtLaps : kind === 'sprint' ? sprintLaps(fmtLaps) : undefined,
   );
   round.stage = (round.stage ?? 0) + 1;
+}
+
+/**
+ * Gara in diretta (Sprint o gara del giocatore): prepara e restituisce l'impostazione; la simulazione avanza poi a
+ * passi (RaceSim) mentre il giocatore guarda e cambia strategia. `completeLiveRace` la chiude.
+ */
+export function startLiveRace(
+  s: GameState,
+  ids: IdFactory,
+  rng: Rng,
+  round: Round,
+  strategies: Record<string, Strategy>,
+): RacePrep | null {
+  const kind = nextSession(s, round);
+  if (kind !== 'sprint' && kind !== 'race') return null;
+  beforeSession(s, ids, round);
+  return prepareRace(s, rng, round, kind, strategies, true);
+}
+
+export function completeLiveRace(
+  s: GameState,
+  ids: IdFactory,
+  round: Round,
+  prep: RacePrep,
+  out: RaceOutcome,
+): ReplayData | null {
+  const replay = finalizeRace(s, ids, round, prep, out);
+  afterSession(s, round, prep.kind);
   return replay;
 }
 

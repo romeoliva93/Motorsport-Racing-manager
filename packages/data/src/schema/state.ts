@@ -70,6 +70,12 @@ export interface GameState {
   spares?: Record<string, Record<string, number>>;
   /** Assetto di ogni pilota (asciutto e bagnato): regolazioni da −5 a +5. */
   setups?: Record<string, { dry: Record<string, number>; wet: Record<string, number> }>;
+  /**
+   * Sprint o gara in corso, seguita dal giocatore (simulazione incrementale): preparazione, fotografia della
+   * simulazione e istante raggiunto dalla visione. Permette di salvare e riprendere a metà gara.
+   * Struttura definita nei pacchetti game/sim (RacePrep, RaceSnapshot).
+   */
+  liveSession?: { prep: unknown; snapshot: unknown; viewerT: number };
 }
 
 export type TableName = keyof GameState['tables'];

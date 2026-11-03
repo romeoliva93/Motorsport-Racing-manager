@@ -41,13 +41,16 @@ import {
 } from './market.ts';
 import { monthlyFinance } from './economy.ts';
 import {
+  type RacePrep,
+  type ReplayData,
+  completeLiveRace,
   finishOtherRounds,
   nextSession,
   playerRoundToday,
   runNextSession,
   runRestOfWeekend,
+  startLiveRace,
   tyresLeft,
-  type ReplayData,
 } from './weekend.ts';
 import { addNews } from './news.ts';
 import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
@@ -64,6 +67,7 @@ import {
 } from './garage.ts';
 import { SETUP_KEYS } from './setup.ts';
 import { seasonFinished, startNextSeason } from './season.ts';
+import { RaceSim, type LiveRider, type RaceEvent, type RaceSnapshot } from '@lean-angle/sim';
 
 export interface NewCareerOptions {
   /** Seme della carriera: gare, meteo, mercato ed eventi. */
@@ -84,6 +88,17 @@ export const UNIVERSE_SEED = 'lean-angle-universo-1';
 const MAX_ADVANCE_DAYS = 60;
 const MAX_SALARY = 30_000_000;
 
+/** Avanzamento della gara in diretta restituito all'interfaccia. */
+export interface LiveChunk {
+  t: number;
+  frames: number[][];
+  events: RaceEvent[];
+  live: LiveRider[];
+  done: boolean;
+  /** A gara conclusa: dati completi per rivederla. */
+  replay: ReplayData | null;
+}
+
 export class GameEngine {
   readonly events = new EventLog<GameEvents>();
   private stateValue: GameState;
@@ -93,11 +108,86 @@ export class GameEngine {
   version = 0;
   /** Dati per rivedere l'ultima gara del giocatore (solo in memoria, non salvati). */
   lastReplay: ReplayData | null = null;
+  /** Gara in diretta (simulazione incrementale). Fotografata in `state.liveSession` prima di salvare. */
+  private live: { sim: RaceSim; prep: RacePrep } | null = null;
 
   private constructor(state: GameState) {
     this.stateValue = state;
     this.ids = new IdFactory(state.idCounters);
     this.streams = new RngStreams(state.meta.seed, state.rng);
+    // Salvataggio fatto a gara in corso: si riprende esattamente da lì.
+    const ls = state.liveSession;
+    if (ls) {
+      const prep = ls.prep as RacePrep;
+      const sim = ls.snapshot
+        ? RaceSim.restore(prep.setup, ls.snapshot as RaceSnapshot)
+        : new RaceSim(prep.setup);
+      this.live = { sim, prep };
+      this.lastReplay = this.liveReplay();
+    }
+  }
+
+  /** La gara in diretta in corso (null se nessuna). */
+  get liveRace(): { kind: string; roundId: string; t: number; viewerT: number } | null {
+    return this.live
+      ? {
+          kind: this.live.prep.kind,
+          roundId: this.live.prep.roundId,
+          t: this.live.sim.t,
+          viewerT: this.stateValue.liveSession?.viewerT ?? -45,
+        }
+      : null;
+  }
+
+  private liveReplay(): ReplayData {
+    const { sim, prep } = this.live!;
+    return { ...prep.meta!, frames: [...sim.frames], events: [...sim.events], results: [] };
+  }
+
+  /** Fotografa la gara in corso nello stato (da chiamare prima di salvare). */
+  syncLive() {
+    if (this.live && this.stateValue.liveSession)
+      this.stateValue.liveSession.snapshot = this.live.sim.snapshot();
+  }
+
+  /**
+   * Avanza la gara in diretta fino all'istante `to` (secondi di gara) e restituisce i nuovi fotogrammi ed
+   * eventi dall'indice indicato, con i dati live dei piloti. A bandiera a scacchi la gara si chiude (risultati,
+   * punti, notizie) e `done` diventa true con i dati completi per rivederla.
+   */
+  liveAdvance(to: number, fromFrame: number, fromEvent: number, viewerT?: number): LiveChunk | null {
+    if (!this.live) return null;
+    const { sim } = this.live;
+    sim.advanceTo(to);
+    if (viewerT !== undefined && this.stateValue.liveSession) this.stateValue.liveSession.viewerT = viewerT;
+    const chunk: LiveChunk = {
+      t: sim.t,
+      frames: sim.frames.slice(fromFrame),
+      events: sim.events.slice(fromEvent),
+      live: sim.live(),
+      done: sim.done,
+      replay: null,
+    };
+    if (sim.done) {
+      chunk.replay = this.completeLive();
+      this.version++;
+    }
+    return chunk;
+  }
+
+  private completeLive(): ReplayData | null {
+    const { sim, prep } = this.live!;
+    const s = this.stateValue;
+    const round = s.tables.rounds[prep.roundId as never]!;
+    const rep = completeLiveRace(s, this.ids, round, prep, sim.result());
+    this.live = null;
+    delete s.liveSession;
+    if (rep) this.lastReplay = rep;
+    if (!nextSession(s, round)) finishOtherRounds(s, this.ids, this.streams.get('race-ai'));
+    this.stateValue.idCounters = this.ids.snapshot();
+    this.stateValue.rng = this.streams.snapshot();
+    this.events.emit('SessionDone', s.meta.currentDay, { roundId: round.id, session: prep.kind });
+    return rep;
   }
 
   static newCareer(opts: NewCareerOptions): GameEngine {
@@ -131,7 +221,9 @@ export class GameEngine {
     if (s.meta.playerTeamId === null) return ['SetPlayerTeam', 'CreateTeam'];
     const out: CommandType[] = [];
     const today = playerRoundToday(s);
-    if (today && today.status !== 'raced') {
+    if (this.live) {
+      out.push('SetRaceStrategy', 'FinishLiveRace');
+    } else if (today && today.status !== 'raced') {
       out.push('RunSession', 'RunRace');
     } else if (seasonFinished(s)) {
       out.push('StartNextSeason');
@@ -247,14 +339,33 @@ export class GameEngine {
         return this.openNegotiation(cmd.riderId)
           ? ok(true)
           : err('Nessuna trattativa aperta con questo pilota');
+      case 'SetRaceStrategy': {
+        if (!this.live) return err('Nessuna gara in corso');
+        const mine = this.live.prep.meta?.riders.find((x) => x.id === cmd.riderId)?.mine;
+        if (!mine) return err('Puoi cambiare la strategia solo dei tuoi piloti');
+        if (
+          cmd.mode &&
+          !['veryConservative', 'conservative', 'normal', 'attack', 'maxAttack'].includes(cmd.mode)
+        )
+          return err('Ritmo non valido');
+        if (cmd.fuelMap && !['save', 'standard', 'performance'].includes(cmd.fuelMap))
+          return err('Mappa carburante non valida');
+        if (cmd.tyreMode && !['conservative', 'balanced', 'performance'].includes(cmd.tyreMode))
+          return err('Gestione gomme non valida');
+        return ok(true);
+      }
+      case 'FinishLiveRace':
+        return this.live ? ok(true) : err('Nessuna gara in corso');
       case 'RunSession':
       case 'RunRace': {
+        if (this.live) return err('Gara in corso: guardala fino alla fine o saltala');
         const r = playerRoundToday(s);
         if (!r) return err("Oggi non c'è un Gran Premio");
         if (!nextSession(s, r)) return err('Weekend già concluso');
         for (const [riderId, st] of Object.entries(cmd.strategies ?? {})) {
           if (!['soft', 'medium', 'hard', 'wet'].includes(st.compound)) return err('Mescola non valida');
-          if (!['veryConservative', 'conservative', 'normal', 'attack', 'maxAttack'].includes(st.mode)) return err('Ritmo non valido');
+          if (!['veryConservative', 'conservative', 'normal', 'attack', 'maxAttack'].includes(st.mode))
+            return err('Ritmo non valido');
           if (cmd.type === 'RunSession' && tyresLeft(s, r, riderId)[st.compound] <= 0)
             return err('Non restano gomme nuove di questa mescola');
         }
@@ -359,10 +470,34 @@ export class GameEngine {
       case 'WithdrawNegotiation':
         this.openNegotiation(cmd.riderId)!.status = 'withdrawn';
         return;
+      case 'SetRaceStrategy': {
+        const change = {
+          ...(cmd.mode ? { mode: cmd.mode } : {}),
+          ...(cmd.fuelMap ? { fuelMap: cmd.fuelMap } : {}),
+          ...(cmd.tyreMode ? { tyreMode: cmd.tyreMode } : {}),
+        };
+        this.live!.sim.setStrategy(cmd.riderId, change);
+        this.events.emit('RaceStrategyChanged', s.meta.currentDay, { riderId: cmd.riderId });
+        return;
+      }
+      case 'FinishLiveRace':
+        this.live!.sim.runToEnd();
+        this.completeLive();
+        return;
       case 'RunSession': {
         const round = playerRoundToday(s)!;
         const session = nextSession(s, round)!;
         const rng = this.streams.get('race-ai');
+        if (cmd.live && (session === 'sprint' || session === 'race')) {
+          const prep = startLiveRace(s, this.ids, rng, round, cmd.strategies ?? {});
+          if (prep?.meta) {
+            this.live = { sim: new RaceSim(prep.setup), prep };
+            s.liveSession = { prep, snapshot: null, viewerT: -45 };
+            this.lastReplay = this.liveReplay();
+            this.events.emit('LiveRaceStarted', s.meta.currentDay, { roundId: round.id, kind: session });
+            return;
+          }
+        }
         const rep = runNextSession(s, this.ids, rng, round, cmd.strategies ?? {});
         if (rep) this.lastReplay = rep;
         if (!nextSession(s, round)) finishOtherRounds(s, this.ids, rng);

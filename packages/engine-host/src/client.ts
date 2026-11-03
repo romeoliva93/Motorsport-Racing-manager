@@ -1,7 +1,15 @@
 /**
  * Lato interfaccia del protocollo: richieste con Promise, notifiche di cambiamento.
  */
-import type { Command, CommandType, QueryArgs, QueryName, QueryResult, ReplayData } from '@lean-angle/game';
+import type {
+  Command,
+  CommandType,
+  LiveChunk,
+  QueryArgs,
+  QueryName,
+  QueryResult,
+  ReplayData,
+} from '@lean-angle/game';
 import type { SaveMeta } from '@lean-angle/persistence';
 import type { HostMessage, Request, Transport } from './protocol.ts';
 
@@ -72,6 +80,22 @@ export class EngineClient {
   /** Dati per rivedere l'ultima gara del giocatore (null se non disponibile). */
   replay() {
     return this.request<ReplayData | null>({ op: 'replay' });
+  }
+  /** Gara in diretta in corso (null se nessuna). */
+  liveStatus() {
+    return this.request<{ kind: string; roundId: string; t: number; viewerT: number } | null>({
+      op: 'liveStatus',
+    });
+  }
+  /** Avanza la gara in diretta e restituisce i nuovi fotogrammi/eventi e i dati live dei piloti. */
+  liveAdvance(to: number, fromFrame: number, fromEvent: number, viewerT?: number) {
+    return this.request<LiveChunk | null>({
+      op: 'liveAdvance',
+      to,
+      fromFrame,
+      fromEvent,
+      ...(viewerT !== undefined ? { viewerT } : {}),
+    });
   }
   availableCommands() {
     return this.request<CommandType[]>({ op: 'availableCommands' });

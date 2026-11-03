@@ -67,7 +67,15 @@ export function createEngineHost(opts: EngineHostOptions) {
         return engine ? engine.availableCommands() : [];
       case 'replay':
         return engine?.lastReplay ?? null;
+      case 'liveStatus':
+        return engine?.liveRace ?? null;
+      case 'liveAdvance': {
+        const chunk = current().liveAdvance(req.to, req.fromFrame, req.fromEvent, req.viewerT);
+        if (chunk?.done) changed();
+        return chunk;
+      }
       case 'save': {
+        current().syncLive(); // gara in corso: la fotografia della simulazione va nel salvataggio
         const record = createSaveRecord(current().state as GameState, req.slot, now());
         await opts.store.put(record);
         return record.meta;
