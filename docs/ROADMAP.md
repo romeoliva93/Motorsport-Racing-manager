@@ -9,7 +9,7 @@ autorizzazione.
 |---|---|---|
 | **A — Correzioni grafiche immediate** | ritratti coerenti, garage definitivo "moto al centro" (approvato), Home con dati reali, forma e morale, rifinitura 2D, pulizia del repository | **fatta** |
 | **B — Simulazione incrementale** | gare non precalcolate, ritmo 5 livelli, carburante 3 mappe, gomme 3 gestioni, IA con le stesse leve, salvataggio a metà gara | **fatta** (`SIMULAZIONE-INCREMENTALE.md`) |
-| **C — Prove e briefing** | sessioni simulate, confidenza circuito/moto, feedback pilota, consigli capotecnico, tempi interventi, riunione post-sessione | pianificata (dopo B) |
+| **C — Prove e briefing** | sessioni simulate, confidenza circuito/moto, feedback pilota, consigli capotecnico, tempi interventi, riunione post-sessione | **primo passo fatto** (programma per sessione, confidenza, riunione tecnica, 45 min di lavoro, cronologia); prossimo: uscite multiple con rientro ai box |
 | **D — Sviluppo tecnico** | gruppi tecnici (fatto), manutenzione delegabile (fatto), upgrade con compromessi, centro R&D, moto della stagione successiva, progetti paralleli | parziale |
 | **E — Test e costruttori** | test ufficiali pre/metà/post stagione, test privati, componenti sperimentali, squadre ufficiali e satellite, condivisione dati | pianificata |
 | **F — 3D professionale** | solo dopo un modello di moto approvato: moto, piloti, ambienti, telecamere, ottimizzazione su GPU reale | congelata |
