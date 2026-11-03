@@ -1,5 +1,8 @@
 import { Portrait } from '../../design-system/Portrait.tsx';
 import { FlagName } from '../../design-system/Flag.tsx';
+import { WeatherIcon, SKY_LABEL } from '../../design-system/WeatherIcon.tsx';
+import { TrackMap } from './Weekend.tsx';
+import type { Sky } from '@lean-angle/game';
 import { Helmet } from '../../design-system/Helmet.tsx';
 import { formatMoney } from '@lean-angle/core';
 import { useQuery } from '../../engine/hooks.ts';
@@ -11,23 +14,19 @@ import { TeamBike } from '../../design-system/TeamBike.tsx';
 
 type Next = { label: string; hint: string; action: () => void } | null;
 
-/** Home: cosa fare adesso, i tuoi piloti, la classifica, i soldi e le ultime notizie. */
+/** Home (dashboard): prossimo GP, attività, piloti, moto, classifica o preparazione, finanze, notizie. */
 export function Overview({ go, next }: { go: (s: Section) => void; next: Next }) {
   const sum = useQuery('careerSummary');
   const wk = useQuery('weekendView');
-  const ch = useQuery('championship');
-  const fin = useQuery('financeView');
+  const dq = useQuery('dashboardView');
   const news = useQuery('newsFeed', 'all', 5);
   const bq = useQuery('bikeView');
-  const sq = useQuery('sponsorView');
   if (sum.status !== 'ready') return <div className="loading">Caricamento…</div>;
   const s = sum.data;
   const team = s.team!;
   const w = wk.status === 'ready' ? wk.data : null;
-  const c = ch.status === 'ready' ? ch.data : null;
-  const f = fin.status === 'ready' ? fin.data : null;
+  const d = dq.status === 'ready' ? dq.data : null;
   const bike = bq.status === 'ready' ? bq.data : null;
-  const sp = sq.status === 'ready' ? sq.data : null;
   const firstTime = s.roundsDone === 0;
   const empty = 2 - team.riders.length;
 
@@ -66,36 +65,63 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
         )}
       </div>
 
-      {firstTime && (
-        <Card title="Come si gioca" className="s12">
-          <div className="howto">
-            <div>
-              <span>1</span>
-              <b>Prepara la squadra</b>
-              <p className="t2">
-                Controlla i tuoi due piloti e, finché il campionato non parte, usa il mercato per migliorare
-                la squadra.
-              </p>
-            </div>
-            <div>
-              <span>2</span>
-              <b>Corri i Gran Premi</b>
-              <p className="t2">
-                Ogni weekend: qualifiche per l’ordine di partenza, poi scegli gomme e ritmo e guarda la gara
-                dall’alto.
-              </p>
-            </div>
-            <div>
-              <span>3</span>
-              <b>Fai quadrare i conti</b>
-              <p className="t2">
-                Sponsor e premi portano soldi, stipendi e trasferte li consumano. A fine anno rinnova i
-                contratti e riparti.
-              </p>
+      {d?.nextGp && (
+        <Card title={`Gran Premio ${d.nextGp.number} di ${d.nextGp.total}`} className="s8 accent">
+          <div className="dash-gp">
+            {d.nextGp.track && <TrackMap points={d.nextGp.track} size={11} />}
+            <div className="dash-gp-main">
+              <b className="dash-gp-name">{d.nextGp.circuit}</b>
+              <span className="t2">
+                <FlagName code={d.nextGp.country} size={0.9} /> · {d.nextGp.date} ·{' '}
+                {d.nextGp.today ? <b className="or">si corre oggi</b> : `tra ${d.nextGp.inDays} giorni`}
+              </span>
+              <div className="dash-facts">
+                <span>
+                  <small>Lunghezza</small>
+                  <b>{d.nextGp.lengthKm.toString().replace('.', ',')} km</b>
+                </span>
+                <span>
+                  <small>Curve</small>
+                  <b>{d.nextGp.turns}</b>
+                </span>
+                <span>
+                  <small>Giri gara</small>
+                  <b>{d.nextGp.laps}</b>
+                </span>
+                {d.nextGp.forecast && (
+                  <span className="dash-weather" title="Previsione per la gara">
+                    <WeatherIcon sky={d.nextGp.forecast.sky as Sky} size={1.6} />
+                    <span>
+                      <small>Previsione gara</small>
+                      <b>
+                        {SKY_LABEL[d.nextGp.forecast.sky as Sky]} · {d.nextGp.forecast.airTemp}° aria ·{' '}
+                        {d.nextGp.forecast.trackTemp}° asfalto · pioggia {d.nextGp.forecast.rainChance}%
+                      </b>
+                    </span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </Card>
       )}
+
+      <Card title="Da fare" className={d?.nextGp ? 's4' : 's12'}>
+        {!d || d.tasks.length === 0 ? (
+          <p className="muted">Nessuna attività in sospeso: la squadra è pronta.</p>
+        ) : (
+          <ul className="dash-tasks">
+            {d.tasks.map((t, i) => (
+              <li key={i} className={t.tone}>
+                <button onClick={() => go(t.section as Section)}>
+                  <span>{t.text}</span>
+                  <b>▸</b>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <Card
         title="I tuoi piloti"
@@ -106,20 +132,65 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
         }
         className="s8"
       >
-        <RiderCards teamId={team.id} teamName={team.name} colors={team.colors} standings={c} />
+        {d && d.riders.length === 0 && <p className="warn">Nessun pilota sotto contratto: vai al mercato.</p>}
+        <div className="two-col">
+          {d?.riders.map((r) => (
+            <div key={r.id} className="tile rider-tile">
+              <span className="ghost-num">{r.number}</span>
+              <div style={{ display: 'flex', gap: '.8rem', alignItems: 'center' }}>
+                <Portrait
+                  portrait={r.portrait}
+                  name={r.name}
+                  size={4.2}
+                  fallback={<Helmet team={team.name} colors={team.colors} size={5.2} />}
+                />
+                <div>
+                  <div className="display" style={{ fontSize: '1.2rem' }}>
+                    {r.name}
+                  </div>
+                  <div className="muted" style={{ fontSize: '.85rem' }}>
+                    <FlagName code={r.nationality} size={0.85} />
+                  </div>
+                </div>
+              </div>
+              <div className="rider-stats">
+                <div>
+                  <small className="muted">Valutazione</small>
+                  <b className={ratingTone(r.rating)}>{r.rating}</b>
+                </div>
+                <div>
+                  <small className="muted">Morale</small>
+                  <b className={r.morale >= 65 ? 'ok' : r.morale >= 45 ? '' : 'warn'}>{r.morale}</b>
+                </div>
+                <div>
+                  <small className="muted">Campionato</small>
+                  <b>{r.position ? `${r.position}° · ${r.points} pt` : '—'}</b>
+                </div>
+                <div>
+                  <small className="muted">Ultima gara</small>
+                  <b style={{ fontSize: '.9rem' }}>
+                    {r.lastResult
+                      ? `${r.lastResult.position ? `${r.lastResult.position}°` : 'ritirato'} · ${r.lastResult.circuit}`
+                      : '—'}
+                  </b>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
 
       <Card
         title="La tua moto"
         aside={
           <button className="btn ghost" onClick={() => go('bike')}>
-            Upgrade
+            Garage
           </button>
         }
         className="s4"
       >
-        {bike ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.4rem' }}>
+        {bike && d?.bike ? (
+          <div className="dash-bike">
             <TeamBike
               team={bike.team}
               tier={bike.tier as BikeTier}
@@ -127,43 +198,56 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
               number={bike.numbers[0] ?? null}
               width={22}
             />
-            <span className="muted">
-              Qualità {bike.rating} · media avversarie {bike.rivalsAvg}
-            </span>
+            <div className="row">
+              <span className="muted">Affidabilità in gara</span>
+              <b className={d.bike.reliability >= 90 ? 'ok' : d.bike.reliability >= 82 ? 'warn' : 'bad'}>
+                {d.bike.reliability.toString().replace('.', ',')}%
+              </b>
+            </div>
+            <div className="row">
+              <span className="muted">Qualità / avversarie</span>
+              <b>
+                {bike.rating} / {bike.rivalsAvg}
+              </b>
+            </div>
+            {d.bike.critical.slice(0, 2).map((c) => (
+              <div key={c.name + c.rider + c.slot} className="row">
+                <span className="warn">
+                  {c.name} · moto {c.slot} {c.rider.split(' ').at(-1)}
+                </span>
+                <b className="warn">{c.condition}%</b>
+              </div>
+            ))}
+            {d.bike.inProduction.slice(0, 2).map((p) => (
+              <div key={p.part} className="row">
+                <span className="info">
+                  {p.part} liv. {p.level} in arrivo
+                </span>
+                <b>{p.ready}</b>
+              </div>
+            ))}
           </div>
         ) : null}
       </Card>
 
-      {sp?.windowOpen && (
-        <div className="nextstep s12" style={{ marginBottom: 0 }}>
-          <div className="what">
-            <small>Prima del primo Gran Premio</small>
-            <b>Scegli lo sponsor della stagione: più soldi in cambio di un obiettivo</b>
-          </div>
-          <button className="btn primary" onClick={() => go('sponsors')}>
-            Vedi le offerte ▸
-          </button>
-        </div>
-      )}
-
       <Card
-        title="Classifica"
+        title={d?.standings ? 'Classifica' : 'Preparazione alla stagione'}
         aside={
-          <button className="btn ghost" onClick={() => go('championship')}>
-            Completa
-          </button>
+          d?.standings ? (
+            <button className="btn ghost" onClick={() => go('championship')}>
+              Completa
+            </button>
+          ) : undefined
         }
         className="s5"
       >
-        {!c || c.riders.length === 0 ? (
-          <p className="muted">La classifica appare dopo la prima gara.</p>
-        ) : (
+        {d?.standings ? (
           <table className="std static">
             <tbody>
-              {c.riders.slice(0, 6).map((r, i) => (
-                <tr key={r.riderId} className={r.teamId === c.myTeamId ? 'mine' : ''}>
+              {d.standings.map((r) => (
+                <tr key={r.position} className={r.mine ? 'mine' : ''}>
                   <td style={{ width: '2.4rem' }}>
-                    <Pos value={i + 1} />
+                    <Pos value={r.position} />
                   </td>
                   <td>
                     <span className="swatch" style={{ background: r.color }} />
@@ -176,35 +260,46 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
               ))}
             </tbody>
           </table>
+        ) : (
+          <ul className="dash-prep">
+            {d?.preparation?.map((p) => (
+              <li key={p.text} className={p.done ? 'ok' : ''}>
+                <span>{p.done ? '✓' : '○'}</span> {p.text}
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
 
       <Card
-        title="Soldi"
+        title="Finanze"
         aside={
           <button className="btn ghost" onClick={() => go('finance')}>
-            Finanze
+            Dettagli
           </button>
         }
         className="s3"
       >
-        {f && (
+        {d?.finance && (
           <>
             <div className="muted">In cassa</div>
-            <div className="big" style={{ fontSize: '1.6rem', margin: '.2rem 0 .7rem' }}>
-              {formatMoney(f.balance)}
+            <div className="big" style={{ fontSize: '1.6rem', margin: '.2rem 0 .6rem' }}>
+              {formatMoney(d.finance.balance)}
+            </div>
+            <div className="row">
+              <span className="muted">Entrate al mese</span>
+              <b className="ok">+{formatMoney(d.finance.income)}</b>
             </div>
             <div className="row">
               <span className="muted">
-                Ogni mese
-                <Help>
-                  Sponsor meno stipendi e costi di gestione. Premi e diritti TV arrivano dopo ogni gara.
-                </Help>
+                Uscite al mese
+                <Help>Stipendi e costi di gestione. Premi e diritti TV arrivano dopo ogni gara.</Help>
               </span>
-              <b className={f.monthly.net < 0 ? 'bad' : 'ok'}>
-                {f.monthly.net >= 0 ? '+' : '−'}
-                {formatMoney(Math.abs(f.monthly.net))}
-              </b>
+              <b className="bad">−{formatMoney(d.finance.expenses)}</b>
+            </div>
+            <div className="row">
+              <span className="muted">Sponsor</span>
+              <b>{d.finance.sponsor ?? <span className="warn">da scegliere</span>}</b>
             </div>
           </>
         )}
@@ -244,65 +339,6 @@ export function Overview({ go, next }: { go: (s: Section) => void; next: Next })
           </Explain>
         </div>
       )}
-    </div>
-  );
-}
-
-function RiderCards({
-  teamId,
-  teamName,
-  colors,
-  standings,
-}: {
-  teamId: string;
-  teamName: string;
-  colors: { primary: string; secondary: string };
-  standings: { riders: { riderId: string; points: number }[] } | null;
-}) {
-  const q = useQuery('teamRiders', teamId as `tem_${string}`);
-  const riders = q.status === 'ready' ? q.data.filter((r) => r.role === 'race') : [];
-  if (q.status === 'ready' && riders.length === 0)
-    return <p className="warn">Nessun pilota sotto contratto: vai al mercato.</p>;
-  return (
-    <div className="two-col">
-      {riders.map((r) => {
-        const pos = standings ? standings.riders.findIndex((x) => x.riderId === r.id) : -1;
-        return (
-          <div key={r.id} className="tile rider-tile">
-            <span className="ghost-num">{r.number}</span>
-            <div style={{ display: 'flex', gap: '.8rem', alignItems: 'center' }}>
-              <Portrait
-                portrait={r.portrait}
-                name={r.name}
-                size={4.2}
-                fallback={<Helmet team={teamName} colors={colors} size={5.2} />}
-              />
-              <div>
-                <div className="display" style={{ fontSize: '1.2rem' }}>
-                  {r.name}
-                </div>
-                <div className="muted" style={{ fontSize: '.85rem' }}>
-                  <FlagName code={r.nationality} size={0.85} /> · {r.age} anni
-                </div>
-              </div>
-            </div>
-            <div className="rider-stats">
-              <div>
-                <small className="muted">Valutazione</small>
-                <b className={ratingTone(r.rating)}>{r.rating}</b>
-              </div>
-              <div>
-                <small className="muted">In classifica</small>
-                <b>{pos >= 0 ? `${pos + 1}° · ${standings!.riders[pos]!.points} pt` : '—'}</b>
-              </div>
-              <div>
-                <small className="muted">Contratto fino al</small>
-                <b style={{ fontSize: '.9rem' }}>{r.contractEnd}</b>
-              </div>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }

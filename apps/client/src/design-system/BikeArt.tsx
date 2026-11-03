@@ -25,6 +25,7 @@ export function BikeArt({
   selected = null,
   onSelect,
   labels = {},
+  schematic = false,
 }: {
   tier: BikeTier;
   colors: { primary: string; secondary: string };
@@ -36,6 +37,8 @@ export function BikeArt({
   onSelect?: (z: BikeZone) => void;
   /** Nome del gruppo per ogni zona (per accessibilità). */
   labels?: Partial<Record<BikeZone, string>>;
+  /** Stile da schema tecnico: disegno desaturato e scuro, così risalta solo la zona selezionata. */
+  schematic?: boolean;
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const id = (n: string) => `${n}-${uid}`;
@@ -124,11 +127,22 @@ export function BikeArt({
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        <filter id={id('schema')}>
+          <feColorMatrix type="saturate" values="0.1" />
+          <feComponentTransfer>
+            <feFuncR type="linear" slope="0.55" />
+            <feFuncG type="linear" slope="0.6" />
+            <feFuncB type="linear" slope="0.75" />
+          </feComponentTransfer>
+        </filter>
       </defs>
 
       {/* Ombra a terra */}
       <ellipse cx={600} cy={598} rx={440} ry={14} fill="#000" opacity={0.4} />
-      <g transform={small ? 'translate(48 48) scale(0.92)' : undefined}>
+      <g
+        transform={small ? 'translate(48 48) scale(0.92)' : undefined}
+        filter={schematic ? `url(#${id('schema')})` : undefined}
+      >
         {/* Ruota posteriore: gomma, cerchio, corona */}
         <circle cx={300} cy={470} r={125} fill={`url(#${id('tyre')})`} />
         <circle cx={300} cy={470} r={100} fill="#0c0d0f" />

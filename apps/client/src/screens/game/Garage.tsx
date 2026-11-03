@@ -4,7 +4,7 @@ import type { BikeView } from '@lean-angle/game';
 import { engine } from '../../engine/engine.ts';
 import { Explain } from '../../design-system/components.tsx';
 import { TeamBike } from '../../design-system/TeamBike.tsx';
-import type { BikeTier } from '../../design-system/BikeArt.tsx';
+import { BikeArt, type BikeTier } from '../../design-system/BikeArt.tsx';
 
 /** Immagini originali dei gruppi tecnici (tools/portraits/parts.py). */
 const IMG = Object.fromEntries(
@@ -29,11 +29,11 @@ const state = (c: number) =>
 const pct = (v: number) => `${v.toString().replace('.', ',')}%`;
 
 /**
- * Garage (prototipo): moto della squadra vista dall'alto al centro, schede dei gruppi tecnici intorno, pannello
+ * Garage: moto della squadra vista dall'alto al centro, schede dei gruppi tecnici intorno, pannello
  * di confronto e azioni sotto. Due schede: Componenti (stato e sviluppo) e Assetto (regolazioni per pilota).
  * Tutti i valori arrivano dal gioco (bikeView); ogni pulsante invia un comando reale al motore.
  */
-export function GarageV2({ b, notify }: { b: BikeView; notify: (t: string, err?: boolean) => void }) {
+export function Garage({ b, notify }: { b: BikeView; notify: (t: string, err?: boolean) => void }) {
   const [tab, setTab] = useState<'components' | 'setup'>('components');
   const [riderIdx, setRiderIdx] = useState(0);
   const [slot, setSlot] = useState<'A' | 'B'>('A');
@@ -86,21 +86,19 @@ export function GarageV2({ b, notify }: { b: BikeView; notify: (t: string, err?:
             <small>Prest.</small>
             <b>{x.performance}</b>
           </span>
-          <span title="Usura media dei componenti">
+          <span title="Usura media dei componenti del gruppo">
             <small>Usura</small>
             <b>{x.wear}%</b>
           </span>
-          <span title="Affidabilità del gruppo">
-            <small>Affid.</small>
-            <b>{pct(x.reliability)}</b>
-          </span>
-        </span>
-        <span className="gx-tags">
           <span className={`pill ${st.tone}`}>{st.label}</span>
           {x.next?.inProduction ? (
-            <span className="pill info">In produzione</span>
+            <span className="gx-up info" title={`In produzione: pronto il ${x.next.inProduction.ready}`}>
+              ⚙
+            </span>
           ) : upgrade ? (
-            <span className="pill or">Aggiornamento disponibile</span>
+            <span className="gx-up" title="Aggiornamento disponibile">
+              ▲
+            </span>
           ) : null}
         </span>
       </button>
@@ -151,6 +149,36 @@ export function GarageV2({ b, notify }: { b: BikeView; notify: (t: string, err?:
           <small>Chilometri</small>
           <b>{bike.km.toLocaleString('it-IT')}</b>
         </div>
+        <div className="gar-kpi" title="Qualità della moto (costruttore + sviluppo) e media delle avversarie">
+          <small>Qualità</small>
+          <b>
+            {b.rating}{' '}
+            <span className={b.rating >= b.rivalsAvg ? 'ok' : 'bad'} style={{ fontSize: '.8rem' }}>
+              ({b.rating - b.rivalsAvg >= 0 ? '+' : ''}
+              {b.rating - b.rivalsAvg})
+            </span>
+          </b>
+        </div>
+        {b.concession && (
+          <div
+            className="gar-kpi"
+            title="Fascia di concessione del costruttore: più bassa = upgrade meno cari e più rapidi, più motori"
+          >
+            <small>Concessioni</small>
+            <b>Fascia {b.concession}</b>
+          </div>
+        )}
+        {(() => {
+          const en = b.engines.find((x) => x.name === g.rider);
+          return en ? (
+            <div className="gar-kpi" title="Motori usati nella stagione sulla dotazione del regolamento">
+              <small>Motori</small>
+              <b className={en.overLimit ? 'bad' : en.allocation - en.used <= 1 ? 'warn' : ''}>
+                {en.used} di {en.allocation}
+              </b>
+            </div>
+          ) : null;
+        })()}
         <div className="gar-kpi">
           <small>Stato tecnico</small>
           <b className={state(worstCond).tone}>{state(worstCond).label}</b>
@@ -232,6 +260,21 @@ export function GarageV2({ b, notify }: { b: BikeView; notify: (t: string, err?:
                 rider={g.rider}
                 width={46}
               />
+              {/* Schema tecnico: la zona del gruppo selezionato si illumina (le foto delle moto variano, una
+                  maschera sulla foto non sarebbe precisa). Cliccando una zona si seleziona il gruppo. */}
+              <div className="gx-schema" aria-label={`Schema tecnico: ${group.name}`}>
+                <small>Schema tecnico · {group.name}</small>
+                <BikeArt
+                  tier={b.tier as BikeTier}
+                  colors={b.colors}
+                  width={20}
+                  schematic
+                  zones={bike.groups.map((x) => x.zone)}
+                  selected={group.zone}
+                  labels={Object.fromEntries(bike.groups.map((x) => [x.zone, x.name]))}
+                  onSelect={(z) => setSel(bike.groups.find((x) => x.zone === z)?.key ?? null)}
+                />
+              </div>
             </div>
             <div className="gx-col">{bike.groups.slice(half).map(card)}</div>
           </div>

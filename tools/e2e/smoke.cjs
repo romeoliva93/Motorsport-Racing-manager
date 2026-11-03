@@ -45,8 +45,7 @@ async function waitForServer(url, ms = 20000) {
       if (m.type() === 'warning' && /WebGL/i.test(m.text())) warnings.push(m.text());
     });
     page.on('pageerror', (e) => errors.push(e.message));
-    const shot = async (name) =>
-      SHOTS && page.screenshot({ path: path.join(SHOT_DIR, `app-${name}.png`) });
+    const shot = async (name) => SHOTS && page.screenshot({ path: path.join(SHOT_DIR, `app-${name}.png`) });
     const step = (msg) => console.log('✓', msg);
 
     await page.goto(URL);
@@ -71,7 +70,7 @@ async function waitForServer(url, ms = 20000) {
     await page.getByText('Teo Varriale').first().waitFor();
     if (!(await page.locator('.topbar').innerText()).includes('mln'))
       throw new Error('Il saldo non è espresso in milioni');
-    await page.getByText('Come si gioca').waitFor();
+    await page.getByText('Preparazione alla stagione').waitFor();
     await shot('03-home');
     step('home con piloti reali e guida per iniziare');
 
@@ -236,11 +235,15 @@ async function waitForServer(url, ms = 20000) {
     await page.locator('.gx-card').first().waitFor();
     const nCards = await page.locator('.gx-card').count();
     if (nCards !== 6) throw new Error(`Il garage MotoGP deve mostrare 6 schede, ne mostra ${nCards}`);
-    if ((await page.locator('.bike-photo').count()) !== 0) throw new Error('Foto esterna della moto ancora presente');
+    if ((await page.locator('.bike-photo').count()) !== 0)
+      throw new Error('Foto esterna della moto ancora presente');
     await page.getByRole('button', { name: 'Moto B', exact: true }).click();
     await page.getByRole('button', { name: 'Moto A', exact: true }).click();
     await page.locator('.gx-card', { hasText: 'Freni' }).click();
     await page.locator('.gx-detail h3', { hasText: 'Freni' }).waitFor();
+    // La zona dei freni si illumina nello schema tecnico; cliccando la zona del motore si seleziona quel gruppo.
+    await page.locator('.gx-schema .bz.on').waitFor();
+    await page.locator('.gx-schema', { hasText: 'Freni' }).waitFor();
     await page.mouse.move(5, 5);
     await page.waitForTimeout(400);
     await shot('18-garage');
@@ -256,9 +259,9 @@ async function waitForServer(url, ms = 20000) {
     await page.getByRole('button', { name: 'Applica assetto' }).click();
     await page.getByText(/Assetto asciutto di .* salvato/).waitFor();
     await shot('18-garage-assetto');
-    await page.getByRole('button', { name: 'Versione attuale' }).click();
-    await page.locator('.gar-groups button').first().waitFor();
-    step('garage (prototipo): 6 schede, Moto A/B, ricambio ordinato e montato, assetto salvato; versione attuale ok');
+    if ((await page.getByRole('button', { name: 'Versione attuale' }).count()) !== 0)
+      throw new Error('Il selettore del vecchio garage è ancora presente');
+    step('garage: 6 schede, schema tecnico, Moto A/B, ricambio ordinato e montato, assetto salvato');
 
     await page.locator('.nav button', { hasText: 'Classifiche' }).click();
     await page.getByText('Classifica piloti').waitFor();

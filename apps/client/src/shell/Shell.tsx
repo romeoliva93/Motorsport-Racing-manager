@@ -14,7 +14,7 @@ import { ChampionshipScreen } from '../screens/game/Championship.tsx';
 import { FinanceScreen } from '../screens/game/Finance.tsx';
 import { NewsScreen } from '../screens/game/News.tsx';
 import { BikeScreen } from '../screens/game/BikeScreen.tsx';
-import { garageFocus } from '../screens/game/GarageV2.tsx';
+import { garageFocus } from '../screens/game/Garage.tsx';
 import { SponsorsScreen } from '../screens/game/Sponsors.tsx';
 
 export type Section =

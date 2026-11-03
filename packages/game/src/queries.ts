@@ -34,6 +34,7 @@ import {
   sponsorView,
   weekendView,
 } from './views.ts';
+import { dashboardView } from './dashboard.ts';
 import { activeRiderContract, askingSalary, buyoutFor, ineligibility, marketOpen } from './market.ts';
 
 const cal = (s: GameState) => new GameCalendar(s.meta.startYear);
@@ -749,6 +750,7 @@ export const QUERIES = {
   bikeView,
   sponsorView,
   riderProfile,
+  dashboardView,
 } as const;
 export type QueryName = keyof typeof QUERIES;
 export type QueryArgs<N extends QueryName> = (typeof QUERIES)[N] extends (

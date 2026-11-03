@@ -6,16 +6,6 @@
     radial-gradient(1100px 700px at 78% 45%, rgba(106, 168, 255, 0.1), transparent 60%),
     linear-gradient(180deg, #121316, #0d0e10);
 }
-.menu-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.35;
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(900px 600px at 75% 50%, #000, transparent 75%);
-}
 .menu-track {
   position: absolute;
   right: 4vw;

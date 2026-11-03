@@ -297,7 +297,6 @@ body .gx-setup,
 body .rv-rider,
 body .rv-left-head,
 body .rv-bar,
-body .gar-group-card,
 body .rv-board {
   border-radius: var(--r-2);
   background: var(--panel);
@@ -330,7 +329,6 @@ body .gx-tabs > button {
 body .rv-rider-name b,
 body .gx-team b,
 body .gx-name,
-body .gar-group-name,
 body .gx-detail h3 {
   font-stretch: 82%;
   font-style: italic;
@@ -377,4 +375,122 @@ body .gx-detail h3 {
   font-stretch: 80%;
   text-transform: uppercase;
   color: var(--ink);
+}
+
+/* ---- Home (dashboard) ---- */
+.dash-gp {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+}
+.dash-gp .track-map {
+  flex: none;
+}
+.dash-gp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.dash-gp-name {
+  font: italic 900 2rem/1.05 var(--font-display);
+  font-stretch: 75%;
+  text-transform: uppercase;
+}
+.dash-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.6rem;
+  margin-top: 0.5rem;
+}
+.dash-facts > span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.dash-facts small {
+  color: var(--text-3);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.dash-facts .dash-weather {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dash-weather > span {
+  display: flex;
+  flex-direction: column;
+}
+.dash-tasks,
+.dash-prep {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.dash-tasks button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0;
+  border-left: 3px solid var(--info);
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+}
+.dash-tasks li.warn button {
+  border-left-color: var(--warn);
+}
+.dash-tasks li.bad button {
+  border-left-color: var(--bad);
+}
+.dash-tasks button:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.dash-tasks b {
+  color: var(--signal);
+}
+.dash-prep li {
+  color: var(--text-2);
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--line);
+}
+.dash-prep li:first-child {
+  border-top: 0;
+}
+.dash-prep li span {
+  display: inline-block;
+  width: 1.2rem;
+  color: var(--text-3);
+  font-weight: 900;
+}
+.dash-prep li.ok,
+.dash-prep li.ok span {
+  color: var(--ok);
+}
+.dash-bike {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.dash-bike .team-bike {
+  align-self: center;
+  margin-bottom: 0.4rem;
+}
+.rider-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 700px) {
+  .dash-gp {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

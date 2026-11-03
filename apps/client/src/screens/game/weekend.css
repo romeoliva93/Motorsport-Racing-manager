@@ -54,50 +54,6 @@
 }
 
 /* Fasi del weekend */
-.wk-steps {
-  display: flex;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  flex-wrap: wrap;
-}
-.wk-steps li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.9rem 0.45rem 0.45rem;
-  border-radius: 999px;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  color: var(--text-3);
-  font-weight: 600;
-  font-size: 0.88rem;
-}
-.wk-steps li span {
-  display: grid;
-  place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  background: var(--bg-3);
-  font-size: 0.78rem;
-}
-.wk-steps li.done {
-  color: var(--text-2);
-}
-.wk-steps li.done span {
-  background: var(--ok);
-  color: #0d1a12;
-}
-.wk-steps li.now {
-  color: var(--text-1);
-  border-color: var(--signal);
-}
-.wk-steps li.now span {
-  background: var(--signal);
-  color: var(--signal-ink);
-}
 
 /* Strategia */
 .strat-grid {
@@ -213,20 +169,6 @@
   flex-direction: column;
   gap: 0.8rem;
 }
-.rv-head {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.rv-head > div:first-child {
-  flex: 1;
-  min-width: 12rem;
-}
-.rv-head b {
-  display: block;
-  font-size: 1.6rem;
-}
 .rv-speeds {
   display: inline-flex;
   background: var(--bg-2);
@@ -250,11 +192,6 @@
 .rv-clock {
   font-variant-numeric: tabular-nums;
   min-width: 4.5rem;
-}
-.rv-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 19rem;
-  gap: 1rem;
 }
 .rv-stage {
   position: relative;
@@ -342,9 +279,6 @@
   .track-map {
     max-width: 100%;
     width: 12rem !important;
-  }
-  .rv-body {
-    grid-template-columns: minmax(0, 1fr);
   }
   .rv-stage {
     height: 60vh;
@@ -801,16 +735,7 @@ table.std tbody tr.cut td {
 }
 
 /* ---- Garage ---- */
-.gar-top {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.8rem;
-}
-.gar-top .spacer {
-  flex: 1;
-}
+
 .gar-kpi {
   display: flex;
   flex-direction: column;
@@ -824,149 +749,21 @@ table.std tbody tr.cut td {
   font-size: 1.15rem;
   font-variant-numeric: tabular-nums;
 }
-.gar-main {
-  display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr) 15rem;
-  gap: 0.8rem;
-  align-items: start;
-}
-.gar-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.gar-tile {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.2rem 0.5rem;
-  text-align: left;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-  padding: 0.45rem 0.6rem;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-}
-.gar-tile:hover {
-  border-color: var(--info);
-}
-.gar-tile.on {
-  border-color: var(--signal);
-  box-shadow: 0 0 0 1px var(--signal) inset;
-}
-.gar-name {
-  font-weight: 700;
-  font-size: 0.88rem;
-}
-.gar-rel {
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.85rem;
-}
-.gar-bar {
-  grid-column: 1 / -1;
-  height: 0.3rem;
-  background: var(--bg-3);
-  border-radius: 99px;
-  overflow: hidden;
-}
-.gar-bar i {
-  display: block;
-  height: 100%;
-}
-.gar-bar i.ok {
-  background: var(--ok);
-}
-.gar-bar i.info {
-  background: var(--info);
-}
-.gar-bar i.warn {
-  background: var(--warn);
-}
-.gar-bar i.bad {
-  background: var(--bad);
-}
-.gar-tile small {
-  grid-column: 1 / -1;
-  color: var(--text-3);
-  font-size: 0.72rem;
-}
-.gar-rel.ok,
+
 b.ok {
   color: var(--ok);
 }
-.gar-rel.info,
+
 b.info {
   color: var(--info);
 }
-.gar-rel.warn,
+
 b.warn {
   color: var(--warn);
 }
-.gar-rel.bad,
+
 b.bad {
   color: var(--bad);
-}
-.gar-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-  min-width: 0;
-}
-.gar-center svg {
-  max-width: 100%;
-  height: auto;
-}
-.gar-detail {
-  width: 100%;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--signal);
-  border-radius: var(--r-2);
-  padding: 0.7rem 0.9rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.8rem 1.4rem;
-}
-.gar-detail > div:first-child {
-  display: flex;
-  flex-direction: column;
-  min-width: 9rem;
-}
-.gar-detail > div:first-child b {
-  font-size: 1.2rem;
-}
-.gar-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.2rem;
-  flex: 1;
-}
-.gar-facts span {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-.gar-facts small {
-  color: var(--text-3);
-  font-size: 0.7rem;
-}
-@media (max-width: 1100px) {
-  .gar-main {
-    grid-template-columns: 1fr 1fr;
-  }
-  .gar-center {
-    grid-column: 1 / -1;
-    order: -1;
-  }
-}
-@media (max-width: 600px) {
-  .gar-main {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Vista 2D interattiva e selezione */
@@ -993,85 +790,6 @@ b.bad {
 .garage .tabs {
   margin: 0.6rem 0 0.8rem;
 }
-.gar-v2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 24rem;
-  gap: 1rem;
-  align-items: start;
-}
-.gar-stage {
-  background: radial-gradient(ellipse at 50% 60%, #23262d 0%, #121317 70%);
-  border: 1px solid var(--line);
-  border-radius: var(--r-3);
-  padding: 0.6rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.gar-hint {
-  font-size: 0.8rem;
-  margin: 0.2rem 0 0;
-}
-.gar-side {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-.gar-group-card {
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--signal);
-  border-radius: var(--r-2);
-  padding: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.gar-group-name {
-  font-size: 1.2rem;
-}
-.gar-groups {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.gar-groups button {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 5rem 3rem;
-  gap: 0.6rem;
-  align-items: center;
-  text-align: left;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-  padding: 0.5rem 0.7rem;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.gar-groups button.on {
-  border-color: var(--signal);
-}
-.gar-groups b {
-  text-align: right;
-}
-.gar-maint-row {
-  display: grid;
-  grid-template-columns: 1fr 3rem auto;
-  gap: 0.8rem;
-  align-items: center;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-  padding: 0.5rem 0.7rem;
-}
-.gar-maint h4 {
-  margin: 1rem 0 0.5rem;
-}
 .gar-decisions {
   display: flex;
   flex-direction: column;
@@ -1088,34 +806,9 @@ b.bad {
   border-radius: var(--r-2);
   padding: 0.5rem 0.7rem;
 }
-.gar-status td.ok {
-  color: var(--ok);
-}
-.gar-status td.info {
-  color: var(--info);
-}
-.gar-status td.warn {
-  color: var(--warn);
-}
-.gar-status td.bad {
-  color: var(--bad);
-}
-.gar-status details summary {
-  cursor: pointer;
-  font-size: 0.75rem;
-}
-@media (max-width: 1100px) {
-  .gar-v2 {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 
 /* ---- Garage v3 (prototipo): moto dall'alto al centro, schede intorno ---- */
-.gx-switch {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
+
 .gx {
   display: flex;
   flex-direction: column;
@@ -1280,11 +973,6 @@ b.bad {
 .gx-stats b {
   font-variant-numeric: tabular-nums;
 }
-.gx-tags {
-  display: flex;
-  gap: 0.3rem;
-  flex-wrap: wrap;
-}
 .pill.or {
   background: rgba(255, 122, 26, 0.16);
   color: var(--signal);
@@ -1399,5 +1087,53 @@ b.bad {
 @media (max-width: 700px) {
   .gx-main {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Garage: schema tecnico sulla moto, con la zona del gruppo selezionato illuminata */
+.gx-bike {
+  position: relative;
+  flex-direction: column;
+}
+.gx-schema {
+  position: relative;
+  align-self: center;
+  margin-top: 0.6rem;
+  width: 22rem;
+  max-width: 100%;
+  background: rgba(8, 10, 15, 0.82);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--signal);
+  padding: 0.35rem 0.5rem 0.2rem;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  backdrop-filter: blur(4px);
+}
+.gx-schema small {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+  color: var(--text-3);
+}
+.gx-schema .bike-art .bz.on {
+  animation: gx-pulse 1.6s ease-in-out infinite;
+}
+@keyframes gx-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+.gx-up {
+  color: var(--signal);
+  font-weight: 900;
+  font-size: 0.9rem;
+  align-self: center;
+}
+.gx-up.info {
+  color: var(--info);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gx-schema .bike-art .bz.on {
+    animation: none;
   }
 }
