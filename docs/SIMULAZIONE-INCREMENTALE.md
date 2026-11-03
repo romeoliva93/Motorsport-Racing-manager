@@ -1,67 +1,51 @@
-# Piano tecnico — Simulazione incrementale (Milestone B) · DA APPROVARE
+# Simulazione incrementale della gara (Milestone B) · IMPLEMENTATA
 
-> Stato: **proposta**. Nessuna modifica al motore di gara è stata fatta. Serve l'approvazione dell'utente.
+Sprint e gara si simulano **a passi** mentre il giocatore le guarda: le strategie dei propri piloti si cambiano in
+corsa, l'IA usa le stesse leve, e la partita si può salvare a metà gara e riprendere dallo stesso punto.
 
-## 1. Situazione attuale (verificata nel codice)
-- `packages/sim/src/race.ts → simulateRace(seed, riders, laps, cond)` simula **tutta** la gara in un colpo:
-  produce fotogrammi (distanza di ogni pilota ogni `frameEvery` secondi), eventi e risultati.
-- `packages/game/src/weekend.ts → raceSession()` chiama la simulazione, **salva subito** risultati, punti, notizie e
-  usura, poi passa i fotogrammi al client (`ReplayData`), che li riproduce (2D e 3D).
-- Conseguenza: ritmo, gomme e carburante si scelgono solo prima del via; cambiarli in corsa non ha effetto.
+## Motore (`packages/sim/src/race.ts`)
+- `class RaceSim`: passo fisso `RACE_DT = 0,25 s`; `advanceTo(t)`, `step()`, `runToEnd()`, `result()`.
+- Stato serializzabile: `snapshot()` / `RaceSim.restore()` (comprese le estrazioni casuali: `Rng.snapshot()` conserva
+  anche la normale di riserva). Gli infiniti sono codificati come ±1e12 per stare in JSON.
+- `runRace(setup)` = `new RaceSim(setup).runToEnd()`: la gara non in diretta usa lo stesso codice.
+- Per pilota: distanza, giro, gomma (usura, temperatura), carburante, stanchezza, penalità, stato.
 
-## 2. Proposta
-### 2.1 Motore a passi
-- Nuovo `RaceSim` in `packages/sim` con stato **serializzabile** (JSON): per pilota distanza, giro, gomma (età,
-  temperatura, usura), carburante, ritmo/mappe, stanchezza, penalità, stato (in pista/box/ritirato); globali: tempo,
-  bandiere, meteo, eventi già emessi, **stato del generatore casuale**.
-- `step(state, dt=0,5 s, commands)` avanza di un passo; `simulateRace()` diventa un ciclo di `step()` senza comandi
-  (stessi risultati di oggi a parità di seme → i test esistenti restano validi come regressione).
-- Determinismo: un generatore per pilota derivato dal seme della sessione; i comandi sono applicati **al confine del
-  passo** e registrati con il tempo di applicazione → rigiocando seme + comandi si ottiene lo stesso risultato.
-
-### 2.2 Strategie in gara (giocatore e IA, stesse regole)
-| Leva | Valori | Effetto (calcolato a ogni passo) |
+## Leve (giocatore e IA, stesse regole)
+| Leva | Valori | Effetti |
 |---|---|---|
-| Ritmo | molto conservativo · conservativo · normale · aggressivo · attacco massimo | tempo sul giro, degrado e temperatura gomme, consumo, rischio errore, affaticamento |
-| Carburante | risparmio · standard · prestazione | potenza (tempo), consumo; a secco = ritiro o ritmo forzato in risparmio |
-| Gomme | conservativa · bilanciata · prestazionale | grip immediato vs degrado; interagisce col ritmo |
-- IA: decisioni ogni giro con le stesse leve (distacchi, usura, carburante residuo, carattere del pilota).
+| Ritmo | molto conservativo · conservativo · normale · attacco · attacco massimo | tempo sul giro, rischio caduta, degrado e temperatura gomme, consumo, stanchezza, sorpassi |
+| Carburante | risparmio · standard · prestazione | potenza e consumo; a secco = ritiro (`fuel`) |
+| Gomme | conservativa · bilanciata · prestazionale | grip immediato contro degrado |
 
-### 2.3 Dove gira
-- La gara gira nel **worker** (come oggi il motore di gioco). Il client chiede `advance(secondi)` con la velocità
-  scelta (1×–16×); il worker restituisce lo stato per 2D/3D. Pausa = nessun avanzamento.
-- Risultati, punti e usura si scrivono **solo alla bandiera a scacchi** (oggi: subito).
-- "Salta alla fine" = avanzare fino al termine senza disegnare.
+- Serbatoio per categoria (`FUEL_CAPACITY` in `weekend.ts`); il carico di partenza basta per la gara con il 6% di
+  margine a ritmo standard, quindi spingere a lungo in "prestazione" obbliga a risparmiare dopo.
+- IA (`aiDecide`, una volta per giro): distacchi, usura, carburante residuo, giri mancanti.
+- Ogni cambio è un evento `strategy` nella cronaca della gara.
 
-### 2.4 Salvataggio a metà sessione
-- Nel `GameState`: `liveSession?: { roundId, kind, simState, commandLog, selectedRiderId, view }`.
-- Caricando si riprende dallo stesso passo; nessun ricalcolo → nessun cambio di risultato.
-- Migrazione schema 5 → 6: `liveSession` assente nei vecchi salvataggi (nessun dato da convertire).
+## Dove gira
+- Nel Web Worker, dentro `GameEngine`: `RunSession { live: true }` prepara la gara (`startLiveRace`), crea la
+  `RaceSim` e scrive `state.liveSession`.
+- Il visore (`RaceViewer.tsx`) chiede blocchi con `liveAdvance(t, fromFrame, fromEvent, viewerT)` e tiene un piccolo
+  anticipo (≥ 4 s di gara, di più alle velocità alte); la riproduzione non supera mai i fotogrammi già calcolati.
+- Risultati, punti, usura, forma e morale si scrivono **solo alla fine** (`completeLiveRace`).
+- "Salta alla fine" = comando `FinishLiveRace`.
+- Durante la gara in diretta i comandi ammessi sono solo `SetRaceStrategy` (solo per i propri piloti) e
+  `FinishLiveRace`.
 
-### 2.5 Prove e qualifiche (Milestone C, stessa base)
-- Sessione a tempo con uscite: il manager sceglie giri, gomme, carburante, ritmo; rientro ai box → briefing breve
-  (pilota + capotecnico, 4 scelte) e modifiche d'assetto con tempi (piccole regolazioni: minuti; interventi grossi:
-  molto di più; meccanici disponibili accorciano i tempi).
-- Confidenza col circuito e con la moto: due valori che crescono con i giri (rendimenti decrescenti), influenzati da
-  meteo, esperienza, qualità dell'assetto.
+## Salvataggio a metà gara
+- `liveSession = { prep, snapshot, viewerT }` (campo facoltativo di `GameState`): preparazione della gara, stato
+  completo della simulazione e posizione del visore.
+- Al caricamento `GameEngine` ricostruisce la `RaceSim`; il weekend riapre il visore da `viewerT`.
+- Test: salvare, serializzare, ricaricare e finire dà risultati **identici** a non aver salvato
+  (`packages/game/src/live.test.ts`); l'e2e salva al giro 3 e riprende al giro 3–4 con la strategia mantenuta.
 
-## 3. Rischi
-| Rischio | Mitigazione |
-|---|---|
-| Risultati diversi dagli attuali (bilanciamento) | test di regressione su 200 gare: distribuzione vittorie, ritiri, distacchi entro tolleranza |
-| Prestazioni (gara 16× nel worker) | passo 0,5 s × 22 piloti = calcolo leggero; misura nel test (< 50 ms per minuto di gara) |
-| Determinismo rotto da ordine dei comandi | comandi applicati solo ai confini del passo, registrati e ordinati |
-| Salvataggi vecchi | `liveSession` opzionale; migrazione testata |
-| Complessità del codice | `RaceSim` isolato in `packages/sim`, il resto del gioco vede solo `step()` e `result()` |
+## Verifiche (`packages/sim/src/raceSim.test.ts`)
+- a passi = tutta insieme; snapshot/ripresa identica; un cambio di strategia cambia il risultato;
+- attacco massimo contro molto conservativo: più veloce, più usura, più consumo, più cadute;
+- mappa risparmio e ritiro per carburante; l'IA usa le leve;
+- bilanciamento su 120 gare (vittorie dei primi 5 per valore > 50%, ritiri medi 0,3–4, ritiri per carburante rari).
+  Confronto su 200 gare con il motore precedente: vittorie dei primi 5 0,665 → 0,625; ritiri medi 0,45 → 0,64.
 
-## 4. Test previsti
-1. stesso seme senza comandi = risultati identici a `simulateRace()` attuale;
-2. stesso seme + stessi comandi = stessi risultati (anche con salvataggio/caricamento in mezzo);
-3. ritmo "attacco massimo" → giri più veloci, più usura gomme e consumo, più errori (statistica su 200 gare);
-4. carburante "risparmio" → consumo minore e giri più lenti; a secco → effetto previsto;
-5. cambio vista 2D/3D durante il passo: nessun effetto sullo stato;
-6. IA: le squadre usano le leve (non restano sempre su "normale");
-7. compatibilità: salvataggi schema 5 si caricano.
-
-## 5. Stima
-Motore a passi + strategie + salvataggio: 2 milestone di lavoro. Prove/qualifiche e briefing: 1–2 milestone dopo.
+## Prossimo passo (Milestone C)
+Prove libere e qualifiche con uscite dai box, giri, confidenza, briefing con pilota e capotecnico, modifiche
+d'assetto con tempi di lavoro e riunione tecnica: vedi `ROADMAP.md`.

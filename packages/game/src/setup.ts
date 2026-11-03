@@ -88,9 +88,11 @@ export function setupFeedback(
   turns: number,
   wet: boolean,
   cur: Record<string, number>,
+  /** Commenti chiari anche con feedback tecnico basso (dopo abbastanza giri di prove). */
+  clear = false,
 ) {
   const ideal = idealSetup(r, turns, wet);
-  const precise = r.attributes.technicalFeedback >= 70;
+  const precise = clear || r.attributes.technicalFeedback >= 70;
   return SETUP_KEYS[tier].map((k) => {
     const d = ideal[k.key]! - (cur[k.key] ?? 0);
     const text =

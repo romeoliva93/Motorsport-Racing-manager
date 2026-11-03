@@ -152,7 +152,21 @@ async function waitForServer(url, ms = 20000) {
     step(`avanzamento al Gran Premio: ${dateBefore} → ${dateAfter}`);
     await page.locator('.wx-box').waitFor();
     await shot('11-weekend');
-    for (const name of ['Prove libere 1', 'Prove', 'Prove libere 2', 'Qualifiche 1', 'Qualifiche 2']) {
+    // Prove libere 1 con programma "Assetto", poi riunione tecnica con il capotecnico.
+    await page.getByRole('button', { name: 'Programma Assetto' }).first().click();
+    await page.getByRole('button', { name: 'Corri Prove libere 1', exact: true }).click();
+    await page.locator('.wk-sess.done', { hasText: 'Prove libere 1' }).first().waitFor();
+    await page.getByText('Riunione tecnica').waitFor();
+    await page.getByText('Confidenza col circuito').waitFor();
+    const logBefore = await page.locator('.brief-log li').count();
+    const applyBtn = page.getByRole('button', { name: /^Applica: / });
+    if ((await applyBtn.count()) > 0 && (await applyBtn.isEnabled())) {
+      await applyBtn.click();
+      await page.waitForFunction((n) => document.querySelectorAll('.brief-log li').length > n, logBefore);
+      step('riunione tecnica: consiglio del capotecnico applicato, minuti scalati e cronologia aggiornata');
+    } else step('riunione tecnica: nessuna modifica consigliata');
+    await shot('11-briefing');
+    for (const name of ['Prove', 'Prove libere 2', 'Qualifiche 1', 'Qualifiche 2']) {
       await page.getByRole('button', { name: `Corri ${name}`, exact: true }).click();
       await page.locator('.wk-sess.done', { hasText: name }).first().waitFor();
     }

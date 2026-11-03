@@ -12,7 +12,10 @@ import './weekend.css';
 type Compound = 'soft' | 'medium' | 'hard' | 'wet';
 type Mode = 'conservative' | 'normal' | 'attack';
 type Session = WeekendView['sessions'][number];
-type Plan = Record<string, { compound: Compound; mode: Mode }>;
+type Program = 'track' | 'setup' | 'longRun';
+type Plan = Record<string, { compound: Compound; mode: Mode; program?: Program }>;
+type MyRider = WeekendView['myRiders'][number];
+const PRACTICE = ['fp1', 'fp2', 'practice', 'warmup'];
 
 export const TYRES: { id: Compound; label: string; short: string; text: string }[] = [
   {
@@ -269,6 +272,10 @@ export function WeekendScreen({
         />
       )}
 
+      {w.state === 'today' && w.next && w.myRiders.some((r) => r.practice.log.length > 0) && (
+        <Briefing w={w} busy={busy} notify={notify} />
+      )}
+
       {w.state === 'today' && !w.next && w.race && (
         <>
           <MyRaceSummary rows={w.race} />
@@ -369,10 +376,20 @@ function SessionPanel({
 }) {
   const raceType = session.kind === 'sprint' || session.kind === 'race';
   const initial = useMemo(
-    () => Object.fromEntries(w.myRiders.map((r) => [r.id, { ...r.suggested }])) as Plan,
-    [w.myRiders],
+    () =>
+      Object.fromEntries(
+        w.myRiders.map((r) => [
+          r.id,
+          {
+            ...r.suggested,
+            ...(PRACTICE.includes(session.kind) ? { program: r.practice.suggestedProgram } : {}),
+          },
+        ]),
+      ) as Plan,
+    [w.myRiders, session.kind],
   );
   const [plan, setPlan] = useState<Plan>(initial);
+  const practice = PRACTICE.includes(session.kind);
   const riders = w.myRiders.filter((r) => r.inNext);
   const sat = w.myRiders.filter((r) => !r.inNext);
   const sendPlan = Object.fromEntries(Object.entries(plan).filter(([id]) => riders.some((r) => r.id === id)));
@@ -436,6 +453,33 @@ function SessionPanel({
                 })}
               </div>
               <div className="muted strat-text">{TYRES.find((t) => t.id === p.compound)!.text}</div>
+              {practice && (
+                <>
+                  <div className="strat-label">
+                    Programma di lavoro
+                    <Help>
+                      Cosa fa il pilota in questa sessione. Il circuito fa crescere la confidenza con la
+                      pista, l’assetto quella con la moto (e rende più chiari i suoi commenti), il passo gara
+                      dà dati sulle gomme per la domenica. La confidenza vale in pista fino a ±1% di ritmo.
+                    </Help>
+                  </div>
+                  <div className="choice">
+                    {r.practice.programs.map((g) => (
+                      <button
+                        key={g.id}
+                        className={p.program === g.id ? 'on' : ''}
+                        aria-label={`Programma ${g.label}`}
+                        onClick={() => setPlan({ ...plan, [r.id]: { ...p, program: g.id } })}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="muted strat-text">
+                    {r.practice.programs.find((g) => g.id === p.program)?.text}
+                  </div>
+                </>
+              )}
               {raceType && (
                 <>
                   <div className="strat-label">Ritmo</div>
@@ -487,6 +531,127 @@ function SessionPanel({
         >
           Simula il resto del weekend
         </button>
+      </div>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+/** Riunione tecnica dopo ogni uscita: confidenza, commenti del pilota, consiglio del capotecnico, cronologia. */
+function Briefing({
+  w,
+  busy,
+  notify,
+}: {
+  w: WeekendView;
+  busy: boolean;
+  notify: (t: string, e?: boolean) => void;
+}) {
+  const [sel, setSel] = useState(w.myRiders[0]?.id ?? '');
+  const r: MyRider | undefined = w.myRiders.find((x) => x.id === sel) ?? w.myRiders[0];
+  if (!r) return null;
+  const p = r.practice;
+  const c = p.advice.change;
+  const keyName = (k: string) => p.feedback.find((f) => f.key === k)?.name ?? k;
+  const sign = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
+  async function apply() {
+    if (!c) return;
+    try {
+      await engine.dispatch({
+        type: 'SetSetup',
+        riderId: r!.id,
+        condition: p.wet ? 'wet' : 'dry',
+        values: { [c.key]: c.to },
+      });
+      notify(`${keyName(c.key)} portato a ${sign(c.to)} (${c.minutes} min di lavoro).`);
+    } catch (e) {
+      notify((e as Error).message, true);
+    }
+  }
+  return (
+    <Card
+      title="Riunione tecnica"
+      aside={
+        p.minutesLeft !== null
+          ? `${Math.max(0, p.minutesLeft)} di ${p.breakMinutes} min per le modifiche`
+          : undefined
+      }
+    >
+      {w.myRiders.length > 1 && (
+        <div className="choice brief-pick">
+          {w.myRiders.map((x) => (
+            <button key={x.id} className={x.id === r.id ? 'on' : ''} onClick={() => setSel(x.id)}>
+              {x.name}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="brief">
+        <div className="brief-conf">
+          {(
+            [
+              ['Confidenza col circuito', p.trackConf],
+              ['Confidenza con la moto', p.bikeConf],
+              [`Intesa con l’assetto (${p.wet ? 'bagnato' : 'asciutto'})`, p.match],
+            ] as const
+          ).map(([label, v]) => (
+            <div key={label} className="brief-bar">
+              <span>{label}</span>
+              <i>
+                <b style={{ width: `${v}%` }} className={v >= 75 ? 'ok' : v >= 55 ? 'mid' : 'low'} />
+              </i>
+              <em>{v}</em>
+            </div>
+          ))}
+          <small className="muted">
+            {p.laps} giri nel weekend{p.longRun ? ' · passo gara fatto: gomme gestite meglio in gara' : ''}
+          </small>
+        </div>
+        <div className="brief-talk">
+          <h4>
+            {r.name} <small className="muted">{p.clear ? 'commenti chiari' : 'commenti vaghi'}</small>
+          </h4>
+          <ul>
+            {p.feedback.map((f) => (
+              <li key={f.key} className={f.ok ? 'ok' : ''}>
+                <b>{f.name}:</b> {f.text}
+              </li>
+            ))}
+          </ul>
+          <h4>{p.advice.crewChief} · capotecnico</h4>
+          <p>{p.advice.text}</p>
+          {c && (
+            <button
+              className="btn primary"
+              disabled={busy || (p.minutesLeft !== null && c.minutes > p.minutesLeft)}
+              onClick={apply}
+              title={
+                p.minutesLeft !== null && c.minutes > p.minutesLeft
+                  ? 'Non c’è abbastanza tempo prima della prossima sessione'
+                  : undefined
+              }
+            >
+              Applica: {keyName(c.key)} {sign(c.from)} → {sign(c.to)} ({c.minutes} min)
+            </button>
+          )}
+          <p className="muted brief-note">Tutte le regolazioni sono nel Garage, scheda Assetto.</p>
+        </div>
+        <div className="brief-log">
+          <h4>Cronologia del weekend</h4>
+          <ol>
+            {p.log
+              .slice()
+              .reverse()
+              .map((e, i) => (
+                <li key={i} className={e.kind}>
+                  <b>{e.session}</b> {e.text}
+                  {e.best !== undefined && ` · migliore ${lapTime(e.best)}`}
+                  {e.match !== undefined && ` · intesa ${e.match}%`}
+                  {e.minutes !== undefined && ` · ${e.minutes} min`}
+                </li>
+              ))}
+          </ol>
+        </div>
       </div>
     </Card>
   );

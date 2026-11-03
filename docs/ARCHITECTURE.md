@@ -211,11 +211,13 @@ l'archivio statistico (vedi [ADR-0002](adr/0002-state-and-persistence.md)).
 ## Stato effettivo (2 novembre 2026)
 
 ### Simulazione
-- `packages/sim/src/race.ts`: gara simulata per intero (`simulateRace`) → fotogrammi, eventi, risultati, tempi e
-  usura gomme giro per giro. Qualifiche/prove: `runQualifying` (solo giro migliore). Deterministica dal seme.
-- `packages/game/src/weekend.ts`: traduce piloti/moto/assetti in parametri (`toRaceRider`), esegue le sessioni,
-  salva risultati e notizie, aggiunge i chilometri al garage. Piano per la versione incrementale:
-  `docs/PIANO-SIMULAZIONE-INCREMENTALE.md`.
+- `packages/sim/src/race.ts`: `RaceSim`, gara a passi di 0,25 s con stato serializzabile (snapshot/ripresa),
+  strategie in corsa (ritmo, carburante, gomme) per giocatore e IA → fotogrammi, eventi, risultati. `runRace` la
+  porta a termine in un colpo. Qualifiche/prove: `runQualifying` (solo giro migliore). Deterministica dal seme.
+- `packages/game/src/weekend.ts`: traduce piloti/moto/assetti in parametri (`toRaceRider`), prepara e chiude le
+  sessioni (`prepareRace` / `finalizeRace`), salva risultati, notizie, forma e morale, aggiunge i chilometri al
+  garage. Gara in diretta: `startLiveRace` / `completeLiveRace`, gestite da `GameEngine` (`liveAdvance`,
+  `state.liveSession`). Dettagli: `docs/SIMULAZIONE-INCREMENTALE.md`.
 
 ### Renderer
 - `apps/client/src/race/raceState.ts → raceFrame(t)`: unica funzione di stato per un istante (classifica,

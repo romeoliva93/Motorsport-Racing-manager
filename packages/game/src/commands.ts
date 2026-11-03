@@ -30,6 +30,8 @@ export type Command =
         {
           compound: 'soft' | 'medium' | 'hard' | 'wet';
           mode: 'veryConservative' | 'conservative' | 'normal' | 'attack' | 'maxAttack';
+          /** Prove libere: programma di lavoro del pilota. */
+          program?: 'track' | 'setup' | 'longRun';
         }
       >;
     }

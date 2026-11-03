@@ -54,7 +54,7 @@ licenze: [docs/ASSETS_E_LICENZE.md](docs/ASSETS_E_LICENZE.md).
 | [docs/GDD.md](docs/GDD.md) | Game Design Document |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Milestone e priorità |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architettura tecnica e stato effettivo del codice |
-| [docs/PIANO-SIMULAZIONE-INCREMENTALE.md](docs/PIANO-SIMULAZIONE-INCREMENTALE.md) | Simulazione a passi, strategie in gara, salvataggio a metà sessione |
+| [docs/SIMULAZIONE-INCREMENTALE.md](docs/SIMULAZIONE-INCREMENTALE.md) | Simulazione a passi, strategie in gara, salvataggio a metà sessione |
 | [docs/SALVATAGGI.md](docs/SALVATAGGI.md) | Formato dei salvataggi, versioni e migrazioni |
 | [docs/SIMULATION.md](docs/SIMULATION.md) | Modello di simulazione e formule |
 | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) | Modello dati e convenzioni |

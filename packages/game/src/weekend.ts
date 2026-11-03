@@ -4,6 +4,14 @@
  */
 import { setupFactor, setupMatch, turnsOf } from './setup.ts';
 import {
+  PRACTICE_KINDS,
+  confidenceFactor,
+  defaultConfidence,
+  practiceRiderOf,
+  practicesDone,
+  recordPracticeRun,
+} from './practice.ts';
+import {
   addSessionMileage,
   aiMaintenance,
   crewChiefMaintenance,
@@ -22,6 +30,7 @@ import {
   type CategoryTier,
   type GameState,
   type ManufacturerId,
+  type PracticeProgram,
   type ResultRow,
   type Rider,
   type RiderId,
@@ -54,6 +63,8 @@ import { settleDeals } from './sponsors.ts';
 export interface Strategy {
   compound: Compound;
   mode: PaceMode;
+  /** Programma di lavoro nelle prove libere (solo giocatore). */
+  program?: PracticeProgram;
 }
 
 /** Giri e velocità media di riferimento per categoria (gare più corte del reale per renderle guardabili). */
@@ -201,29 +212,31 @@ function aiStrategy(
 function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, wet = false): RaceRider {
   const a = e.rider.attributes;
   const { bike, reliability } = bikeOf(s, e.teamId, e.manufacturerId);
+  const mine = e.teamId === s.meta.playerTeamId;
+  const match = round ? setupMatch(s, e.rider, tierOf(s, round), turnsOf(s, round), wet, mine) : 0.75;
+  // Confidenza col circuito e con la moto costruita nelle prove (±1% di ritmo); passo gara = gomme gestite meglio.
+  const pr = round && mine ? practiceRiderOf(s, round.id, e.rider.id) : null;
+  const conf = pr
+    ? pr
+    : round
+      ? defaultConfidence(e.rider, practicesDone(sessionsOf(s, round), round.stage ?? 0), match * 100)
+      : null;
   return {
     id: e.rider.id,
     // Assetto: intesa fra le regolazioni scelte e quelle ideali per pilota e circuito (±1,5% di ritmo).
     skill:
       riderSkill(e.rider) *
-      (round
-        ? setupFactor(
-            setupMatch(
-              s,
-              e.rider,
-              tierOf(s, round),
-              turnsOf(s, round),
-              wet,
-              e.teamId === s.meta.playerTeamId,
-            ),
-          )
-        : 1),
+      (round ? setupFactor(match) : 1) *
+      (conf ? confidenceFactor(conf.trackConf, conf.bikeConf) : 1),
     overtaking: unit(a.overtaking),
     defending: unit(a.defending),
     consistency: unit(a.consistency),
     concentration: unit(a.concentration),
     aggression: unit(a.aggression),
-    tyreManagement: Math.min(1, unit(a.tyreManagement) + upgradeBonus(s, e.teamId).tyreCare),
+    tyreManagement: Math.min(
+      1,
+      (unit(a.tyreManagement) + upgradeBonus(s, e.teamId).tyreCare) * (pr?.longRun ? 1.04 : 1),
+    ),
     fitness: unit(a.fitness),
     fuelManagement: unit(a.fuelManagement),
     bike,
@@ -234,7 +247,7 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, w
   };
 }
 
-const tierOf = (s: GameState, round: Round): CategoryTier =>
+export const tierOf = (s: GameState, round: Round): CategoryTier =>
   s.tables.categories[s.tables.seasons[round.seasonId]!.categoryId]!.tier;
 const refLapOf = (s: GameState, round: Round) => {
   const c = s.tables.circuits[round.circuitId]!;
@@ -383,6 +396,24 @@ function timedSession(
     } satisfies ResultRow;
   });
   store(s, ids, round, kind, out);
+  // Prove del giocatore: giri, confidenza e cronologia per il briefing.
+  if ((PRACTICE_KINDS as readonly string[]).includes(kind))
+    for (const e of list)
+      if (e.teamId === s.meta.playerTeamId) {
+        const wet = cond.grip !== 'dry';
+        const m = setupMatch(s, e.rider, tierOf(s, round), turnsOf(s, round), wet, true);
+        const row = out.find((x) => x.riderId === e.rider.id);
+        recordPracticeRun(
+          s,
+          round,
+          kind,
+          e.rider,
+          strategies[e.rider.id]?.program ?? 'track',
+          wet,
+          m * 100,
+          row?.bestLap ?? null,
+        );
+      }
   return out;
 }
 

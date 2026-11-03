@@ -49,9 +49,12 @@ import {
   playerRoundToday,
   runNextSession,
   runRestOfWeekend,
+  sessionsOf,
   startLiveRace,
+  tierOf as tierOfRound,
   tyresLeft,
 } from './weekend.ts';
+import { SESSION_SHORT, changeMinutes, practiceRider, workMinutesLeft } from './practice.ts';
 import { addNews } from './news.ts';
 import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
 import { dealWindowOpen, signDeal } from './sponsors.ts';
@@ -65,7 +68,9 @@ import {
   spareCost,
   sparesOf,
 } from './garage.ts';
-import { SETUP_KEYS } from './setup.ts';
+import { SETUP_KEYS, setupOf } from './setup.ts';
+
+const fmtSigned = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
 import { seasonFinished, startNextSeason } from './season.ts';
 import { RaceSim, type LiveRider, type RaceEvent, type RaceSnapshot } from '@lean-angle/sim';
 
@@ -425,6 +430,21 @@ export class GameEngine {
           if (!allowed.includes(k)) return err('Regolazione non consentita in questa categoria');
           if (!Number.isInteger(v) || v < -5 || v > 5) return err('Valore fuori scala (da −5 a +5)');
         }
+        // Durante il weekend il tempo per le modifiche fra una sessione e l'altra è limitato.
+        const round = playerRoundToday(s);
+        const left = workMinutesLeft(s, round, cmd.riderId);
+        if (left !== null) {
+          const need = changeMinutes(
+            s,
+            cmd.riderId,
+            setupOf(s, cmd.riderId, cmd.condition === 'wet'),
+            cmd.values,
+          );
+          if (need > left)
+            return err(
+              `Tempo insufficiente: servono ${need} minuti di lavoro, ne restano ${Math.max(0, left)} prima della prossima sessione`,
+            );
+        }
         return ok(true);
       }
       case 'SignSponsorDeal':
@@ -547,6 +567,26 @@ export class GameEngine {
       case 'SetSetup': {
         s.setups = s.setups ?? {};
         const cur = s.setups[cmd.riderId] ?? { dry: {}, wet: {} };
+        const round = playerRoundToday(s);
+        const rider = s.tables.riders[cmd.riderId as keyof typeof s.tables.riders]!;
+        if (round && workMinutesLeft(s, round, cmd.riderId) !== null) {
+          const before = { ...cur[cmd.condition] };
+          const minutes = changeMinutes(s, cmd.riderId, before, cmd.values);
+          const pr = practiceRider(s, round, rider);
+          pr.minutesUsed += minutes;
+          const tier = tierOfRound(s, round);
+          const names = Object.fromEntries(SETUP_KEYS[tier].map((k) => [k.key, k.name]));
+          const changes = Object.entries(cmd.values)
+            .filter(([k, v]) => (before[k] ?? 0) !== v)
+            .map(([k, v]) => `${names[k] ?? k} ${fmtSigned(before[k] ?? 0)} → ${fmtSigned(v)}`);
+          if (changes.length > 0)
+            pr.log.push({
+              session: SESSION_SHORT[sessionsOf(s, round)[(round.stage ?? 1) - 1]!] ?? '',
+              kind: 'change',
+              text: `${cmd.condition === 'wet' ? 'Bagnato: ' : ''}${changes.join(', ')}`,
+              minutes,
+            });
+        }
         s.setups[cmd.riderId] = { ...cur, [cmd.condition]: { ...cur[cmd.condition], ...cmd.values } };
         this.events.emit('SetupChanged', s.meta.currentDay, {
           riderId: cmd.riderId,

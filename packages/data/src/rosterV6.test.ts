@@ -26,12 +26,15 @@ describe('griglia iniziale solo maschile (v6)', () => {
 
   it('la migrazione v5 → v6 rinomina le pilote nei salvataggi esistenti e lascia tutto il resto', () => {
     const now = generateWorld({ seed: SEED });
-    const old = JSON.parse(serializeState(now)) as Record<string, any>;
+    const old = JSON.parse(serializeState(now)) as {
+      schemaVersion: number;
+      tables: Record<string, Record<string, Record<string, unknown>>>;
+    };
     old.schemaVersion = 5;
-    old.tables.riders.rdr_000030.firstName = 'Beatrice';
-    old.tables.riders.rdr_000030.lastName = 'Galimberti';
-    old.tables.riders.rdr_000046.firstName = 'Paula';
-    old.tables.riders.rdr_000046.lastName = 'Urquiza';
+    old.tables.riders!.rdr_000030!.firstName = 'Beatrice';
+    old.tables.riders!.rdr_000030!.lastName = 'Galimberti';
+    old.tables.riders!.rdr_000046!.firstName = 'Paula';
+    old.tables.riders!.rdr_000046!.lastName = 'Urquiza';
     old.tables.news = {
       n1: {
         id: 'n1',
@@ -45,7 +48,7 @@ describe('griglia iniziale solo maschile (v6)', () => {
     const back = deserializeState(JSON.stringify(old));
     expect(back.tables.riders).toEqual(now.tables.riders);
     expect(back.tables.contracts).toEqual(now.tables.contracts);
-    const n = (back.tables as any).news.n1;
+    const n = (back.tables.news as Record<string, { title: string; body: string }>).n1!;
     expect(n.title).toBe('Rinaldini sul podio');
     expect(n.body).toBe('Elia Rinaldini terza.');
   });

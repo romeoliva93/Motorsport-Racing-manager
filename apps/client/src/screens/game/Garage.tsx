@@ -424,6 +424,12 @@ export function Garage({ b, notify }: { b: BikeView; notify: (t: string, err?: b
             <div>
               <small className="muted">Assetto di {sv.rider}</small>
               <h3>{b.nextCircuit ? `Per ${b.nextCircuit}` : 'Assetto base'}</h3>
+              {sv.workLeft !== null && (
+                <small className={sv.workLeft > 10 ? 'muted' : 'warn'}>
+                  Weekend in corso: {Math.max(0, sv.workLeft)} minuti per le modifiche prima della prossima
+                  sessione
+                </small>
+              )}
             </div>
             <div className="rv-speeds" role="group" aria-label="Condizione">
               <button className={!wet ? 'on' : ''} onClick={() => setWet(false)}>

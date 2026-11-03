@@ -16,6 +16,7 @@ import {
   rows,
   teamBalance,
   type PartKey,
+  type CategoryTier,
   type Rider,
   type SessionKind,
   type GameState,
@@ -45,6 +46,17 @@ import {
   sparesOf,
 } from './garage.ts';
 import { SETUP_KEYS, setupFeedback, setupMatch, setupOf, turnsOf } from './setup.ts';
+import {
+  BREAK_MINUTES,
+  PROGRAMS,
+  baseTrackConf,
+  changeMinutes,
+  crewChiefAdvice,
+  feedbackIsClear,
+  practiceRiderOf,
+  workMinutesLeft,
+} from './practice.ts';
+import type { PracticeLogEntry, PracticeProgram } from '@lean-angle/data';
 import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
@@ -57,6 +69,7 @@ import { compoundForecast, unit } from '@lean-angle/sim';
 import { conditionsFor, type SessionWeather } from './weather.ts';
 import {
   RACE_FORMAT,
+  playerRoundToday,
   bikeOf,
   TYRE_ALLOCATION,
   WEEKEND_FORMAT,
@@ -199,9 +212,35 @@ export interface WeekendView {
     why: string;
     /** Secondi persi da ogni mescola rispetto alla migliore, per ciascun ritmo (0 = la migliore). */
     forecast: Record<Strategy['mode'], Record<Strategy['compound'], number>>;
+    /** Prove e briefing: confidenza, commenti, consiglio del capotecnico, tempo di lavoro, cronologia. */
+    practice: PracticeView;
   }[];
   /** Ultima gara del giocatore, per mostrare i risultati fra un weekend e l'altro. */
   last: { circuit: string; number: number; race: ResultRowView[] } | null;
+}
+
+export interface PracticeView {
+  laps: number;
+  trackConf: number;
+  bikeConf: number;
+  longRun: boolean;
+  /** Intesa con l'assetto per la condizione della prossima sessione (0–100). */
+  match: number;
+  wet: boolean;
+  /** Minuti di lavoro rimasti prima della prossima sessione (null = nessun limite). */
+  minutesLeft: number | null;
+  breakMinutes: number;
+  feedback: { key: string; name: string; text: string; ok: boolean }[];
+  clear: boolean;
+  advice: {
+    crewChief: string;
+    text: string;
+    /** Modifica proposta (null = nessuna). */
+    change: { key: string; from: number; to: number; minutes: number } | null;
+  };
+  suggestedProgram: PracticeProgram;
+  programs: { id: PracticeProgram; label: string; text: string }[];
+  log: PracticeLogEntry[];
 }
 
 export function weekendView(s: GameState): WeekendView {
@@ -335,6 +374,7 @@ export function weekendView(s: GameState): WeekendView {
         suggested: { compound, mode } as Strategy,
         why,
         forecast,
+        practice: practiceView(s, current, r, cat.tier, nextCond.grip !== 'dry'),
       },
     ];
   });
@@ -636,6 +676,8 @@ export interface BikeView {
     riderId: string;
     rider: string;
     feedbackQuality: 'preciso' | 'vago';
+    /** Minuti di lavoro rimasti prima della prossima sessione del weekend (null = nessun limite). */
+    workLeft: number | null;
     keys: { key: string; name: string; low: string; high: string }[];
     dry: {
       values: Record<string, number>;
@@ -766,11 +808,13 @@ export function bikeView(s: GameState): BikeView | null {
         setups: entry.seats.flatMap((seat) => {
           const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
           if (!r) return [];
+          const today = playerRoundToday(s);
+          const clear = feedbackIsClear(r, next ? practiceRiderOf(s, next.id, r.id) : null);
           const side = (wet: boolean) => {
             const values = setupOf(s, r.id, wet);
             return {
               values,
-              feedback: setupFeedback(r, tier, turns, wet, values),
+              feedback: setupFeedback(r, tier, turns, wet, values, clear),
               match: Math.round(setupMatch(s, r, tier, turns, wet, true) * 100),
             };
           };
@@ -778,8 +822,8 @@ export function bikeView(s: GameState): BikeView | null {
             {
               riderId: r.id,
               rider: `${r.firstName} ${r.lastName}`,
-              feedbackQuality:
-                r.attributes.technicalFeedback >= 70 ? ('preciso' as const) : ('vago' as const),
+              feedbackQuality: clear ? ('preciso' as const) : ('vago' as const),
+              workLeft: workMinutesLeft(s, today, r.id),
               keys: SETUP_KEYS[tier],
               dry: side(false),
               wet: side(true),
@@ -1011,5 +1055,45 @@ export function riderProfile(s: GameState, riderId: string): RiderProfile | null
     history,
     career: careerTotals(history),
     preferences: technicalPreferences(r),
+  };
+}
+
+function practiceView(s: GameState, round: Round, r: Rider, tier: CategoryTier, wet: boolean): PracticeView {
+  const turns = turnsOf(s, round);
+  const pr = practiceRiderOf(s, round.id, r.id);
+  const cur = setupOf(s, r.id, wet);
+  const match = Math.round(setupMatch(s, r, tier, turns, wet, true) * 100);
+  const clear = feedbackIsClear(r, pr);
+  const names = Object.fromEntries(SETUP_KEYS[tier].map((k) => [k.key, k.name]));
+  const adv = crewChiefAdvice(s, r, tier, turns, wet, cur);
+  const from = cur[adv.key ?? ''] ?? 0;
+  const to = Math.max(-5, Math.min(5, from + adv.delta));
+  const trackConf = Math.round(pr?.trackConf ?? baseTrackConf(r));
+  const bikeConf = Math.round(pr?.bikeConf ?? 50);
+  return {
+    laps: pr?.laps ?? 0,
+    trackConf,
+    bikeConf,
+    longRun: pr?.longRun ?? false,
+    match,
+    wet,
+    minutesLeft: workMinutesLeft(s, round, r.id),
+    breakMinutes: BREAK_MINUTES,
+    feedback: setupFeedback(r, tier, turns, wet, cur, clear).map((f) => ({
+      ...f,
+      name: names[f.key] ?? f.key,
+    })),
+    clear,
+    advice: {
+      crewChief: adv.name,
+      text: adv.text,
+      change:
+        adv.key && to !== from
+          ? { key: adv.key, from, to, minutes: changeMinutes(s, r.id, cur, { [adv.key]: to }) }
+          : null,
+    },
+    suggestedProgram: match < 70 ? 'setup' : trackConf < 72 ? 'track' : 'longRun',
+    programs: (Object.keys(PROGRAMS) as PracticeProgram[]).map((id) => ({ id, ...PROGRAMS[id] })),
+    log: pr?.log ?? [],
   };
 }

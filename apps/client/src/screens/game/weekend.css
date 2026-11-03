@@ -1165,3 +1165,89 @@ b.bad {
   padding: 0.28rem 0.15rem;
   font-size: 0.66rem;
 }
+
+/* Riunione tecnica (prove) */
+.brief-pick {
+  margin-bottom: 0.8rem;
+}
+.brief {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.4fr) minmax(220px, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .brief {
+    grid-template-columns: 1fr;
+  }
+}
+.brief h4 {
+  margin: 0 0 0.4rem;
+}
+.brief-conf {
+  display: grid;
+  gap: 0.55rem;
+}
+.brief-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.6rem;
+  font-size: 0.85rem;
+}
+.brief-bar i {
+  grid-column: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line, rgba(255, 255, 255, 0.1));
+  overflow: hidden;
+}
+.brief-bar i b {
+  display: block;
+  height: 100%;
+}
+.brief-bar i b.ok {
+  background: var(--ok, #3ccf7a);
+}
+.brief-bar i b.mid {
+  background: var(--warn, #f2b233);
+}
+.brief-bar i b.low {
+  background: var(--bad, #e5484d);
+}
+.brief-bar em {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-style: normal;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.brief-talk ul,
+.brief-log ol {
+  margin: 0 0 0.8rem;
+  padding-left: 1.1rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.brief-talk li.ok {
+  color: var(--muted, #9aa3ad);
+}
+.brief-log ol {
+  list-style: none;
+  padding: 0;
+  max-height: 260px;
+  overflow: auto;
+}
+.brief-log li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+.brief-log li.change b::after {
+  content: ' · modifica';
+  font-weight: 400;
+  color: var(--accent, #ff4d2e);
+}
+.brief-note {
+  font-size: 0.8rem;
+  margin-top: 0.6rem;
+}

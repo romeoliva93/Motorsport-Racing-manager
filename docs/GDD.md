@@ -371,8 +371,8 @@ Ogni pilota ha il suo assetto (asciutto e bagnato), con le regolazioni consentit
 dallo stile del pilota e dal circuito; il pilota lo descrive a parole (preciso o vago secondo il suo feedback
 tecnico). Intesa alta = fino a +1,5% di ritmo, bassa = fino a −1,5%.
 
-## 26. Pianificato: strategie in gara, prove, confidenza, briefing, test
-Vedi `PIANO-SIMULAZIONE-INCREMENTALE.md` (ritmo a 5 livelli, carburante a 3 mappe, gomme a 3 gestioni modificabili
-in gara, IA con le stesse leve, salvataggio a metà sessione), poi prove con uscite e briefing brevi, confidenza col
-circuito e con la moto, test ufficiali e privati (Milestone C–E). Grafica: 2D modalità principale; 3D congelato
+## 26. Strategie in gara (fatto) e prossimi passi
+Sprint e gara si guardano in diretta: ritmo a 5 livelli, carburante a 3 mappe e gomme a 3 gestioni si cambiano in
+corsa, l'IA usa le stesse leve, si può salvare a metà gara (`SIMULAZIONE-INCREMENTALE.md`). Prossimi: prove con
+uscite e briefing brevi, confidenza col circuito e con la moto, test ufficiali e privati (Milestone C–E). Grafica: 2D modalità principale; 3D congelato
 finché un modello di moto non è approvato.
