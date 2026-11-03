@@ -1,7 +1,7 @@
 /**
  * Test end-to-end dell'app: `npm run e2e` (richiede `npm run build`).
  * Avvia `vite preview`, guida un browser vero (Playwright) lungo il flusso principale e salva gli screenshot
- * in docs/images/app-*.png. Fallisce se un passo non trova i dati attesi o se ci sono errori in console.
+ * in test-results/screenshots/ (cartella ignorata da Git: artefatti temporanei, non nel repository). Fallisce se un passo non trova i dati attesi o se ci sono errori in console.
  */
 const { spawn } = require('node:child_process');
 const path = require('node:path');
@@ -11,6 +11,8 @@ const ROOT = path.resolve(__dirname, '../..');
 const PORT = 4173;
 const URL = `http://localhost:${PORT}/`;
 const SHOTS = process.env.E2E_SHOTS !== '0';
+const SHOT_DIR = path.join(__dirname, '..', '..', 'test-results', 'screenshots');
+require('node:fs').mkdirSync(SHOT_DIR, { recursive: true });
 
 async function waitForServer(url, ms = 20000) {
   const t0 = Date.now();
@@ -44,7 +46,7 @@ async function waitForServer(url, ms = 20000) {
     });
     page.on('pageerror', (e) => errors.push(e.message));
     const shot = async (name) =>
-      SHOTS && page.screenshot({ path: path.join(ROOT, `docs/images/app-${name}.png`) });
+      SHOTS && page.screenshot({ path: path.join(SHOT_DIR, `app-${name}.png`) });
     const step = (msg) => console.log('✓', msg);
 
     await page.goto(URL);
@@ -300,7 +302,7 @@ async function waitForServer(url, ms = 20000) {
   } catch (e) {
     console.error('E2E FALLITO:', e.message);
     if (errors.length) console.error('Errori in pagina:\n' + errors.join('\n'));
-    if (page) await page.screenshot({ path: path.join(ROOT, 'e2e-failure.png') }).catch(() => {});
+    if (page) await page.screenshot({ path: path.join(SHOT_DIR, 'e2e-failure.png') }).catch(() => {});
     process.exitCode = 1;
   } finally {
     await browser?.close();

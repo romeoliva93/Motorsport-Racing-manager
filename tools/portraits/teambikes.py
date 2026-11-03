@@ -11,8 +11,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from generate import color_name  # noqa: E402
-from bikes import TIERS  # noqa: E402
 
+TIERS = {
+    'premier': 'MotoGP prototype racing motorcycle with large aerodynamic winglets and carbon fiber parts',
+    'intermediate': 'Moto2 racing motorcycle with a 765cc three-cylinder engine',
+    'lightweight': 'Moto3 small 250cc racing motorcycle',
+    'rookies': 'small 250cc junior cup racing motorcycle, identical spec bike',
+}
 TMP = os.path.join(HERE, 'out', 'teambikes')
 OUT = os.path.join(ROOT, 'apps', 'client', 'src', 'assets', 'teambikes')
 

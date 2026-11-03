@@ -3,7 +3,7 @@
  *
  * Ogni persona dell'universo di partenza ha un ritratto proprio, identificato da nome, cognome e giorno di
  * nascita (non dall'ID interno): il volto resta lo stesso anche se il personaggio cambia squadra o se il mondo
- * viene rigenerato con un ordine diverso. I file stanno in `apps/client/src/assets/portraits/<chiave>.webp`.
+ * viene rigenerato con un ordine diverso. Le immagini stanno negli atlanti `apps/client/src/assets/atlas/` (index.json: chiave → casella).
  *
  * I personaggi che nascono durante la carriera (nuovi rookie, giovani dai campionati nazionali) prendono il volto
  * da un archivio di volti di riserva per fascia d'età, assegnato in modo stabile.

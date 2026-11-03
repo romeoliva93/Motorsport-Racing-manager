@@ -11,13 +11,14 @@ Uso:
   python3 tools/portraits/generate.py                 # tutti (riprende da dove si è fermato)
 
 Ogni ritratto usa un seme ricavato dalla sua chiave: rigenerando si ottiene lo stesso volto.
-I file vanno in apps/client/src/assets/portraits/<chiave>.webp (384x384): il gioco li trova da solo alla
-compilazione successiva.
+I file vanno in tools/portraits/out/portraits/<chiave>.webp (384x384); poi `python3 tools/portraits/atlas.py`
+li inserisce nei fogli usati dal gioco.
 """
 import argparse, hashlib, json, os, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(ROOT, 'apps', 'client', 'src', 'assets', 'portraits')
+# Uscita fuori dal gioco: atlas.py la raccoglie nei fogli (apps/client/src/assets/atlas).
+OUT = os.path.join(ROOT, 'tools', 'portraits', 'out', 'portraits')
 
 REGIONS = {
     'south': ['ITA', 'ESP', 'POR', 'SMR', 'FRA', 'TUR'],
@@ -143,7 +144,10 @@ def main():
             and (keys is None or p['key'] in keys)]
     todo.sort(key=lambda p: (order[p['kind']], p.get('organizer', False), roles.get(p['role'], 9), p['key']))
     os.makedirs(OUT, exist_ok=True)
-    todo = [p for p in todo if a.force or not os.path.exists(os.path.join(OUT, p['key'] + '.webp'))]
+    # Già presenti: negli atlanti del gioco o generati e non ancora raccolti.
+    atlas = os.path.join(ROOT, 'apps', 'client', 'src', 'assets', 'atlas', 'index.json')
+    done = set(json.load(open(atlas))['map']) if os.path.exists(atlas) else set()
+    todo = [p for p in todo if a.force or (p['key'] not in done and not os.path.exists(os.path.join(OUT, p['key'] + '.webp')))]
     if a.limit:
         todo = todo[: a.limit]
     if a.print:

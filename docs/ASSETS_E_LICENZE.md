@@ -31,11 +31,10 @@
 ## Inventario degli asset
 | Asset | Quantità | Origine | Dove |
 |---|---|---|---|
-| Ritratti personaggi | 567 (36 piloti rigenerati il 2/11) | SDXL-Turbo, `tools/portraits/generate.py` | originali `assets/portraits/`, nel gioco `assets/atlas/` (4 fogli) |
+| Ritratti personaggi | 567 (36 piloti rigenerati il 2/11) | SDXL-Turbo, `tools/portraits/generate.py` | nel gioco `assets/atlas/` (4 fogli, `index.json` chiave → casella); nuovi ritratti in `tools/portraits/out/` poi `atlas.py` |
 | Gruppi tecnici garage | 7 | SDXL-Turbo, `tools/portraits/parts.py` | `assets/parts/` |
 | Foto moto per squadra (livrea della scuderia) | 41 | SDXL-Turbo, `tools/portraits/teambikes.py` (2 varianti, scelta in `teams-choice.json`) | `assets/teambikes/` (garage e home) |
-| Foto moto per costruttore | 13 | SDXL-Turbo, `tools/portraits/bikes.py` | `assets/bikes/` (archivio, non usate nelle schermate) |
-| Illustrazioni moto (profilo e dall'alto) | codice | originale (SVG) | `design-system/BikeArt.tsx`, `BikeTop.tsx` |
+| Illustrazione moto (riserva per squadre senza foto) | codice | originale (SVG) | `design-system/BikeArt.tsx` |
 | Modelli 3D moto/piloti | codice | originale (Three.js) | `race/bikeModel.ts` |
 | Bandiere | 1 set | `flag-icons` (licenza MIT) | dipendenza npm |
 | Libreria 3D | — | Three.js (licenza MIT) | dipendenza npm |

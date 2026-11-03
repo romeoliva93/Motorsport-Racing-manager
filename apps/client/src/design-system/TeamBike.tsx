@@ -18,10 +18,6 @@ export const teamSlug = (name: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-export function hasTeamBikePhoto(team: string) {
-  return !!FILES[teamSlug(team)];
-}
-
 export function TeamBike({
   team,
   tier,

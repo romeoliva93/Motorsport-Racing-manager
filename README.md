@@ -1,37 +1,16 @@
 # motorcycle-manager
 
-**LEAN ANGLE — Moto Racing Manager** (titolo provvisorio): videogioco manageriale motociclistico
-per PC in un universo originale. Il giocatore è il Team Principal di una scuderia della
-*Velocity World Championship* e gestisce piloti, personale, moto, sviluppo, sponsor e finanze,
-mentre una simulazione deterministica fa correre ogni sessione del weekend.
+**LEAN ANGLE — Moto Racing Manager**: gioco manageriale di motociclismo nel browser, in un universo originale
+(squadre, piloti, costruttori e marchi inventati). Il giocatore guida una scuderia in uno dei quattro campionati
+(Premier, Intermediate, Lightweight, Velocity Rookies Cup): piloti, staff, mercato, sponsor, finanze, sviluppo e
+garage della moto, weekend di gara con prove, qualifiche, Sprint e gara simulate in modo deterministico, viste in
+2D (principale) o 3D (sperimentale).
 
-## Stato del progetto
+Stato dettagliato: [docs/report/REPORT-LEAN-ANGLE.md](docs/report/REPORT-LEAN-ANGLE.md) ·
+priorità: [docs/ROADMAP.md](docs/ROADMAP.md).
 
-| Fase | Stato |
-|---|---|
-| 0 — Progettazione | Completata (PR in revisione) |
-| 1 — Fondamenta | **Completata** (M1.1–M1.8), in revisione nella PR |
-| 2–6 | Pianificate, vedi [roadmap](docs/ROADMAP.md) |
-
-Il codice contiene le fondamenta (`packages/core`, `packages/data`): generatore casuale deterministico,
-identificativi, tempo di gioco, eventi, denaro, schema delle entità, validatore delle regole del mondo,
-salvataggio versionato, **contenuti originali e generatore del mondo** (4 categorie, 41 squadre, 135 piloti,
-oltre 500 membri dello staff, 20 circuiti, calendario, contratti, moto, strutture, budget).
-Il motore gira in un Web Worker e l'**interfaccia React** permette già di: creare una carriera **scegliendo una
-squadra esistente o creandone una nuova** (nome, sigla, nazionalità, sede, colori, categoria, tipologia,
-costruttore), **trattare con tutti i piloti al Mercato** prima del primo Gran Premio (offerte, controproposte,
-clausole, rinnovi), consultare Panoramica, Scuderia, Piloti, Personale e Calendario con dati reali, far avanzare
-il tempo, salvare e ricaricare (IndexedDB, slot multipli). Gli importi sono in euro, mostrati in milioni.
-
-> Nomi provvisori: le categorie si chiamano per ora **MotoGP, Moto2 e Moto3** su richiesta, in attesa dei nomi
-> definitivi. Sono marchi registrati: vanno sostituiti prima di qualunque distribuzione pubblica.
-**Non si corrono ancora gare**: weekend, simulazione, economia e classifiche arrivano con la Fase 2.
-Le voci del menu dei sistemi non ancora sviluppati sono visibili ma disabilitate ("In sviluppo").
-
-Screenshot dell'app: `docs/images/app-*.png` (generati dal test end-to-end).
-
-**Versione online** (privata, condivisibile dal menu Condividi della pagina): https://claude.ai/artifact/Hm8aBjMgYxqp3obqHN2Bag
-— pubblicata dalla build di `apps/client`. Lì i salvataggi restano nel browser di chi gioca.
+**Versione online** (privata, condivisibile dal menu della pagina): https://claude.ai/artifact/Hm8aBjMgYxqp3obqHN2Bag
+— build di `apps/client`; i salvataggi restano nel browser di chi gioca.
 
 ## Sviluppo
 
@@ -39,57 +18,61 @@ Requisiti: Node.js ≥ 22.
 
 ```bash
 npm install
-npm run dev          # avvia l'app in sviluppo (http://localhost:5173)
-npm run build        # build di produzione dell'app (apps/client/dist)
-npm run e2e          # test end-to-end con Playwright (richiede la build)
-npm run check        # lint + controllo tipi + test
-npm test             # solo test (Vitest)
-npm run format       # formattazione (Prettier)
+npm run dev          # app in sviluppo (http://localhost:5173)
+npm run build        # build di produzione (apps/client/dist)
+npm run check        # lint + controllo tipi + test Vitest
+npm run e2e          # carriera completa nel browser con Playwright (richiede la build)
 npm run worldgen:report -- <seme>   # riepilogo del mondo generato da un seme
 ```
 
+Gli screenshot della prova Playwright finiscono in `test-results/screenshots/` (ignorata da Git): sono artefatti
+temporanei di verifica, non vanno nel repository.
+
 | Pacchetto | Contenuto |
 |---|---|
-| `packages/core` | `Rng`/`RngStreams` (SFC32 con seme), `IdFactory`, `GameCalendar`, `EventLog`, `Result`, denaro intero, utilità matematiche |
-| `packages/data` | entità (mondo, persone, squadre, moto, contratti, finanze), `GameState` normalizzato, `validateGameState`, serializzazione con migrazioni, contenuti originali (`content/`) e `generateWorld` (`worldgen/`) |
-| `packages/game` | `GameEngine` (comandi validati, avanzamento del tempo, eventi) e viste per l'interfaccia con filtro delle informazioni nascoste |
-| `packages/persistence` | formato dei salvataggi, `SaveStore`, archivio in memoria |
-| `packages/engine-host` | protocollo motore ↔ interfaccia, host (Worker) e client con Promise |
-| `apps/client` | app React + Vite: design system, menu, nuova carriera, schermate di gioco, Worker del motore, salvataggi IndexedDB |
+| `packages/core` | generatore casuale con seme, ID, calendario di gioco, eventi, denaro |
+| `packages/data` | schema dello stato di gioco, contenuti originali, generatore del mondo, salvataggi con migrazioni |
+| `packages/sim` | motore di gara e di qualifica |
+| `packages/game` | `GameEngine`: comandi, weekend, regolamento, economia, garage, assetti, viste per l'interfaccia |
+| `packages/persistence` | formato dei salvataggi e archivio |
+| `packages/engine-host` | motore nel Web Worker e client con Promise |
+| `apps/client` | app React + Vite: design system "Paddock Night", schermate, vista gara 2D/3D |
+| `tools/` | prova e2e, report del mondo, generazione locale delle immagini (`tools/portraits/`) |
 
-I confini fra pacchetti sono controllati da ESLint: `core` ← `data` ← (`game`, `persistence`) ← `engine-host` ← `apps/client`.
-Il contenitore desktop Tauri non è ancora configurato: per ora l'app gira nel browser.
+Confini fra pacchetti controllati da ESLint: `core` ← `data` ← (`sim`, `game`, `persistence`) ← `engine-host` ← `apps/client`.
+
+## Immagini del gioco
+
+Ritratti, foto delle moto delle squadre e immagini dei gruppi tecnici sono generati **in locale e gratis**
+(SDXL-Turbo, Stability AI Community License) con gli script in `tools/portraits/`. Inventario, provenienza e
+licenze: [docs/ASSETS_E_LICENZE.md](docs/ASSETS_E_LICENZE.md).
 
 ## Documentazione
 
 | Documento | Contenuto |
 |---|---|
-| [docs/GDD.md](docs/GDD.md) | Game Design Document: universo, modalità, campionati, sistemi |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Analisi repository, scelta tecnologica, architettura, cartelle |
-| [docs/TECH_TEAM.md](docs/TECH_TEAM.md) | Squadra tecnica, Moto A/B, briefing, mercato e crescita degli ingegneri |
-| [docs/REGULATIONS.md](docs/REGULATIONS.md) | Regolamenti delle categorie (moto per pilota, età, sostituzioni, test) |
-| [docs/INJURIES_AND_TESTERS.md](docs/INJURIES_AND_TESTERS.md) | Infortuni, decisione sul posto vacante, sostituti, collaudatori, test |
-| [docs/ART_PROMPTS.md](docs/ART_PROMPTS.md) | Schede per generare ritratti e moto realistici |
+| [docs/GDD.md](docs/GDD.md) | Game Design Document |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Milestone e priorità |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architettura tecnica e stato effettivo del codice |
+| [docs/PIANO-SIMULAZIONE-INCREMENTALE.md](docs/PIANO-SIMULAZIONE-INCREMENTALE.md) | Simulazione a passi, strategie in gara, salvataggio a metà sessione |
+| [docs/SALVATAGGI.md](docs/SALVATAGGI.md) | Formato dei salvataggi, versioni e migrazioni |
+| [docs/SIMULATION.md](docs/SIMULATION.md) | Modello di simulazione e formule |
 | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) | Modello dati e convenzioni |
-| [docs/SIMULATION.md](docs/SIMULATION.md) | Modello di simulazione e formule principali |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Fasi, milestone, funzionalità della v0.1, primo modulo |
-| [docs/UI_DESIGN.md](docs/UI_DESIGN.md) | Proposta grafica, menu principale, dashboard |
-| [docs/adr/](docs/adr) | Decisioni tecniche (Architecture Decision Records) |
-| [docs/mockups/](docs/mockups) | Mockup HTML statici (dati illustrativi) |
-| [docs/report/](docs/report) | Report completo scaricabile (PDF e Markdown) |
-| [docs/images/collage-tutti-i-mockup.jpg](docs/images/collage-tutti-i-mockup.jpg) | Tutti i mockup in un’unica immagine |
-
-## Tecnologia proposta
-
-TypeScript (monorepo npm) · simulazione in pacchetti puri su Web Worker · React + Vite ·
-Canvas 2D (3D futuro dietro un'interfaccia di rendering) · Tauri 2 per il desktop ·
-Vitest + Playwright. Dettagli e alternative in [ADR-0001](docs/adr/0001-tech-stack.md).
+| [docs/REGULATIONS.md](docs/REGULATIONS.md) | Regolamenti delle categorie |
+| [docs/TECH_TEAM.md](docs/TECH_TEAM.md) | Squadra tecnica, Moto A/B, briefing |
+| [docs/INJURIES_AND_TESTERS.md](docs/INJURIES_AND_TESTERS.md) | Infortuni, sostituti, collaudatori |
+| [docs/UI_DESIGN.md](docs/UI_DESIGN.md) | Design system e regole dell'interfaccia |
+| [docs/ASSETS_E_LICENZE.md](docs/ASSETS_E_LICENZE.md) | Asset, generazione, licenze |
+| [docs/adr/](docs/adr) | Decisioni architetturali (ADR) |
 
 ## Regole di sviluppo
-Nessun pulsante finto, nessun risultato prestabilito, nessun dato statico nelle schermate
-operative, sistemi indipendenti e testati, formule documentate, PR per ogni milestone e
-nessun merge su `main` senza approvazione.
+
+Nessun pulsante finto, nessun risultato prestabilito, nessun dato statico nelle schermate operative, sistemi
+testati, formule documentate, un ramo e una PR per milestone, nessun merge su `main` senza approvazione.
 
 ## Crediti
 
 - Bandiere: [flag-icons](https://github.com/lipis/flag-icons) di Panayiotis Lipiridis, licenza MIT.
+- Grafica 3D: [Three.js](https://threejs.org), licenza MIT.
+- Carattere: Archivo (Google Fonts), SIL Open Font License.
+- Immagini generate con SDXL-Turbo (Stability AI Community License) — vedi docs/ASSETS_E_LICENZE.md.

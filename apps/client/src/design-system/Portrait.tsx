@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 /**
- * Ritratto fotografico del personaggio (originali in `src/assets/portraits/`, raccolti in `src/assets/atlas/`).
+ * Ritratto fotografico del personaggio (raccolti nei fogli `src/assets/atlas/`, generati da tools/portraits).
  * Ordine: foto propria → volto di riserva (personaggi nati durante la carriera) → `fallback` (es. il casco).
  * L'elenco dei file esistenti è noto alla compilazione: il browser non chiede mai foto che non ci sono.
  */

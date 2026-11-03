@@ -32,3 +32,7 @@ strumento di generazione di fotografie.
 - (+) Volto stabile per tutta la carriera; abbigliamento separato dal volto.
 - (−) Le foto sono un lavoro di contenuti separato; finché mancano compare un segnaposto.
 - (−) Serve una soluzione per generare automaticamente foto dei personaggi creati durante la carriera.
+
+
+> Aggiornamento (novembre 2026): i ritratti sono generati in locale (tools/portraits) e raccolti in atlanti
+> `apps/client/src/assets/atlas/` (chiave del personaggio → casella). Gli originali non sono più nel repository.

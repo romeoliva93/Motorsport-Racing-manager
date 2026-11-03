@@ -1,7 +1,7 @@
 # LEAN ANGLE — Report di stato aggiornato
 
 *Aggiornato dopo la revisione del 2 novembre 2026 · ramo `m1/piloti-bandiere-classifiche` · non unito a `main`.*
-*La versione precedente è conservata in [REPORT-LEAN-ANGLE-2026-11-02-storico.md](REPORT-LEAN-ANGLE-2026-11-02-storico.md).*
+*I report precedenti sono fuori dal repository operativo (archivio consegnato a parte; recuperabili dalla cronologia Git).*
 
 Verifiche: **137 test automatici verdi**, prova Playwright della carriera verde (incluso cambio 2D/3D, garage,
 ricambi, assetto, salvataggio/caricamento).

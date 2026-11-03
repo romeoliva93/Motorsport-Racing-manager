@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ASSETS = join(__dirname, '..', 'assets');
@@ -15,12 +15,8 @@ const roster = JSON.parse(
 }[];
 
 describe('atlanti dei ritratti', () => {
-  it('ogni ritratto originale è nel foglio, e solo quelli', () => {
-    const files = readdirSync(join(ASSETS, 'portraits'))
-      .filter((f) => f.endsWith('.webp'))
-      .map((f) => f.replace('.webp', ''))
-      .sort();
-    expect(Object.keys(atlas.map).sort()).toEqual(files);
+  it('i fogli contengono esattamente i personaggi del mondo fisso', () => {
+    expect(Object.keys(atlas.map).sort()).toEqual([...new Set(roster.map((p) => p.key))].sort());
   });
   it('ogni personaggio del mondo fisso ha la sua casella', () => {
     for (const p of roster) expect(atlas.map[p.key], p.key).toBeDefined();
