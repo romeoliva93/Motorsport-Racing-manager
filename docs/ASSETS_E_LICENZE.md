@@ -27,13 +27,15 @@
 1. Registrazione gratuita alla Community License (se ricavi < 1 M$).
 2. Verifica legale sulla proteggibilità delle immagini nel paese di pubblicazione.
 3. Controllo visivo finale di loghi casuali (il modello a volte disegna scritte inventate su divise e carene).
+   Stato al 3/11/2026: moto rifatte con img2img e varianti scelte per avere carene pulite; restano piccoli segni
+   illeggibili su poche carene (es. Lupo Blu Junior, Pampas) e su alcune divise dei ritratti.
 
 ## Inventario degli asset
 | Asset | Quantità | Origine | Dove |
 |---|---|---|---|
-| Ritratti personaggi | 567 (36 piloti rigenerati il 2/11) | SDXL-Turbo, `tools/portraits/generate.py` | nel gioco `assets/atlas/` (4 fogli, `index.json` chiave → casella); nuovi ritratti in `tools/portraits/out/` poi `atlas.py` |
-| Gruppi tecnici garage | 7 | SDXL-Turbo, `tools/portraits/parts.py` | `assets/parts/` |
-| Foto moto per squadra (livrea della scuderia) | 41 | SDXL-Turbo, `tools/portraits/teambikes.py` (2 varianti, scelta in `teams-choice.json`) | `assets/teambikes/` (garage e home) |
+| Ritratti personaggi | 567 (36 piloti rigenerati il 2/11, 2 nuovi piloti Moto2 il 3/11) | SDXL-Turbo, `tools/portraits/generate.py` | nel gioco `assets/atlas/` (4 fogli, `index.json` chiave → casella); nuovi ritratti in `tools/portraits/out/` poi `atlas.py --inplace` (riscrive solo i fogli toccati) |
+| Gruppi tecnici garage | 7 | SDXL-Turbo, `tools/portraits/parts.py`; telaio con `tools/portraits/chassis.py` (disegno della sagoma → img2img), motore isolato scelto fra le varianti; scritta inventata tolta dall'immagine dei freni | `assets/parts/` |
+| Foto moto per squadra (livrea della scuderia) | 41 | SDXL-Turbo **immagine → immagine** (forza 0,7) partendo dal disegno `BikeArt` nei colori della squadra: `render-liveries.cjs` (pagina `apps/client/livery.html`) → `teambikes.py` → scelta in `teams-choice.json` → `--install`. Stessa sagoma dell'illustrazione, colori esatti, nessuna scritta voluta | `assets/teambikes/` (garage e home) |
 | Illustrazione moto (riserva per squadre senza foto) | codice | originale (SVG) | `design-system/BikeArt.tsx` |
 | Modelli 3D moto/piloti | codice | originale (Three.js) | `race/bikeModel.ts` |
 | Bandiere | 1 set | `flag-icons` (licenza MIT) | dipendenza npm |
