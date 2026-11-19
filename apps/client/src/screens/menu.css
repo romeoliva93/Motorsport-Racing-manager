@@ -112,7 +112,7 @@
   color: var(--signal-ink);
 }
 .menu-nav .item.primary small {
-  color: rgba(23, 21, 12, 0.7);
+  color: rgba(255, 255, 255, 0.82);
 }
 .menu-nav .item:disabled {
   color: var(--text-3);
@@ -188,4 +188,39 @@
   color: var(--text-3);
   font-size: 0.78rem;
   max-width: 20rem;
+}
+
+/* Logo del gioco nel menu: lo sfondo nero dell'immagine si fonde con quello del menu. */
+.brand h1.brand-logo {
+  margin: 0 0 0 -1.2rem;
+  font-size: 0;
+  line-height: 0;
+}
+.brand-logo img {
+  display: block;
+  width: min(36rem, 100%);
+  height: auto;
+  mix-blend-mode: lighten;
+}
+@media (max-width: 1000px) {
+  .brand h1.brand-logo {
+    margin-left: -0.6rem;
+  }
+}
+
+/* Puntino che percorre la pista */
+.runner-trail {
+  stroke: #e3120b;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+.runner-glow {
+  fill: rgba(227, 18, 11, 0.28);
+}
+.runner-dot {
+  fill: #ff2a1f;
+  stroke: #ffffff;
+  stroke-width: 2.5;
 }

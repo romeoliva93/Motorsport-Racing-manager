@@ -1199,7 +1199,7 @@ export function drawDynamic(
   for (const b of bikes) {
     if (!b.battle) continue;
     const p = P(b.pos);
-    ctx.fillStyle = `rgba(255, 122, 26, ${0.18 + 0.1 * Math.sin(time * 5)})`;
+    ctx.fillStyle = `rgba(227, 18, 11, ${0.18 + 0.1 * Math.sin(time * 5)})`;
     ctx.beginPath();
     ctx.arc(p[0], p[1], L * 0.95, 0, Math.PI * 2);
     ctx.fill();
@@ -1214,7 +1214,7 @@ export function drawDynamic(
       ctx.beginPath();
       ctx.arc(p[0], p[1], L * 0.85, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.strokeStyle = '#ff7a1a';
+      ctx.strokeStyle = '#e3120b';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(p[0], p[1], L * 0.85 + 2.5, 0, Math.PI * 2);
@@ -1241,7 +1241,7 @@ export function drawDynamic(
     ctx.lineTo(-L * 0.1, W * 0.5);
     ctx.quadraticCurveTo(L * 0.3, W * 0.55, L * 0.42, 0);
     ctx.fill();
-    ctx.strokeStyle = b.mine ? '#ff7a1a' : 'rgba(0,0,0,0.6)';
+    ctx.strokeStyle = b.mine ? '#e3120b' : 'rgba(0,0,0,0.6)';
     ctx.lineWidth = b.mine ? 2 : 1;
     ctx.stroke();
     // Pilota: schiena e casco.
@@ -1307,7 +1307,7 @@ export function drawDynamic(
       ctx.stroke();
     }
     if (strong) {
-      ctx.fillStyle = b.mine ? '#ff7a1a' : b.selected ? '#ffffff' : 'rgba(16,17,19,0.88)';
+      ctx.fillStyle = b.mine ? '#e3120b' : b.selected ? '#ffffff' : 'rgba(16,17,19,0.88)';
       ctx.fillRect(x, y, w, h);
       ctx.fillStyle = b.mine || b.selected ? '#17150c' : '#f3f1ec';
       ctx.textAlign = 'left';

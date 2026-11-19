@@ -9,10 +9,12 @@ export type Quality = 'low' | 'medium' | 'high';
 export interface Prefs {
   raceView: '2d' | '3d';
   quality: Quality;
+  /** La guida per i nuovi giocatori è già stata vista (o saltata). */
+  tutorialSeen: boolean;
 }
 
 const KEY = 'lean-angle.prefs';
-const DEFAULTS: Prefs = { raceView: '2d', quality: 'medium' };
+const DEFAULTS: Prefs = { raceView: '2d', quality: 'medium', tutorialSeen: false };
 let current: Prefs = load();
 const listeners = new Set<() => void>();
 
@@ -24,6 +26,7 @@ function load(): Prefs {
     return {
       raceView: p.raceView === '3d' ? '3d' : '2d',
       quality: p.quality === 'low' || p.quality === 'high' ? p.quality : 'medium',
+      tutorialSeen: p.tutorialSeen === true,
     };
   } catch {
     return DEFAULTS;

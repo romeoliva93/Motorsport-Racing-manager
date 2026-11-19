@@ -391,7 +391,7 @@ export default function Race3D(props: Race3DProps) {
       c.width = 512;
       c.height = 64;
       const x = c.getContext('2d')!;
-      x.fillStyle = ['#ff7a1a', '#14161a', '#3d9bff', '#f3f1ec', '#34d17c'][i % 5]!;
+      x.fillStyle = ['#e3120b', '#14161a', '#3d9bff', '#f3f1ec', '#34d17c'][i % 5]!;
       x.fillRect(0, 0, 512, 64);
       x.fillStyle = i % 5 === 3 ? '#14161a' : '#ffffff';
       x.font = 'italic 900 40px Archivo, system-ui, sans-serif';

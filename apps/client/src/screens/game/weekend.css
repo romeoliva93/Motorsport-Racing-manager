@@ -104,7 +104,7 @@
 }
 .choice button.on {
   border-color: var(--signal);
-  background: rgba(255, 122, 26, 0.1);
+  background: rgba(227, 18, 11, 0.1);
   color: var(--text-1);
 }
 .tyre {
@@ -228,7 +228,7 @@
   border-radius: 6px;
 }
 .rv-board li.mine {
-  background: rgba(255, 122, 26, 0.12);
+  background: rgba(227, 18, 11, 0.12);
 }
 .rv-board li.out {
   opacity: 0.45;
@@ -974,7 +974,7 @@ b.bad {
   font-variant-numeric: tabular-nums;
 }
 .pill.or {
-  background: rgba(255, 122, 26, 0.16);
+  background: rgba(227, 18, 11, 0.16);
   color: var(--signal);
 }
 .gx-detail {

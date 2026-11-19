@@ -16,6 +16,8 @@ import { NewsScreen } from '../screens/game/News.tsx';
 import { BikeScreen } from '../screens/game/BikeScreen.tsx';
 import { garageFocus } from '../screens/game/Garage.tsx';
 import { SponsorsScreen } from '../screens/game/Sponsors.tsx';
+import { Tutorial } from '../tutorial/Tutorial.tsx';
+import { getPrefs, setPrefs } from '../prefs.ts';
 
 export type Section =
   | 'overview'
@@ -91,11 +93,10 @@ const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
 ];
 /** Sistemi previsti dalla roadmap e non ancora sviluppati: elencati, non cliccabili. */
 const COMING = [
-  'Moto e componenti',
-  'Sviluppo tecnico',
+  'Sviluppo tecnico avanzato',
   'Strutture',
   'Accademia',
-  'Sponsor',
+  'Test ufficiali e privati',
   'Statistiche',
   'Archivio storico',
 ];
@@ -118,6 +119,12 @@ export function Shell({
   const [toast, setToast] = useState<{ text: string; err?: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [seasonEnd, setSeasonEnd] = useState(false);
+  // Guida: si apre da sola alla prima carriera, poi dal pulsante "Guida".
+  const [guide, setGuide] = useState(() => !getPrefs().tutorialSeen);
+  const closeGuide = () => {
+    setGuide(false);
+    setPrefs({ tutorialSeen: true });
+  };
   const version = useEngineVersion();
   const [commands, setCommands] = useState<string[]>([]);
   const summary = useQuery('careerSummary');
@@ -228,6 +235,9 @@ export function Shell({
           <button className="btn" onClick={save}>
             Salva
           </button>
+          <button className="btn ghost" onClick={() => setGuide(true)} title="Come si gioca">
+            Guida
+          </button>
           <button className="btn ghost" onClick={exit} title="Torna al menu principale">
             Menu
           </button>
@@ -294,6 +304,7 @@ export function Shell({
           <SponsorsScreen notify={notify} />
         ) : null}
       </main>
+      {guide && <Tutorial onClose={closeGuide} go={(sec) => go(sec)} />}
       {toast && (
         <div className={`toast ${toast.err ? 'err' : ''}`} role="status">
           {toast.text}

@@ -74,8 +74,8 @@ h4 {
   font-weight: 700;
 }
 .btn.primary:hover:not(:disabled) {
-  background: #ff9442;
-  border-color: #ff9442;
+  background: #ff3b30;
+  border-color: #ff3b30;
 }
 .btn.ghost {
   background: transparent;
@@ -89,7 +89,7 @@ h4 {
 .btn.sel {
   border-color: var(--signal);
   color: var(--signal);
-  background: rgba(255, 122, 26, 0.08);
+  background: rgba(227, 18, 11, 0.08);
 }
 .btn.big-cta {
   padding: 0.85rem 1.4rem;
@@ -158,7 +158,7 @@ h4 {
   color: var(--warn);
 }
 .pill.or {
-  background: rgba(255, 122, 26, 0.14);
+  background: rgba(227, 18, 11, 0.14);
   color: var(--signal);
 }
 .pill.info {

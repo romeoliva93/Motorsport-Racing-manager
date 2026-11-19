@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { SaveMeta } from '@lean-angle/persistence';
 import { engine } from '../engine/engine.ts';
 import type { AppScreen } from '../App.tsx';
 import { Backdrop } from '../design-system/Backdrop.tsx';
 import { setPrefs, usePrefs, webglAvailable } from '../prefs.ts';
+import { Tutorial } from '../tutorial/Tutorial.tsx';
+import logo from '../assets/brand/logo.webp';
 import './menu.css';
 
 const TRACK =
@@ -13,6 +15,7 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
   const [saves, setSaves] = useState<SaveMeta[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState(false);
+  const [guide, setGuide] = useState(false);
   useEffect(() => {
     engine.listSaves().then(setSaves, (e: Error) => setError(e.message));
   }, []);
@@ -30,34 +33,22 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
 
   return (
     <div className="menu-stage">
-      <Backdrop color="#6aa8ff" intensity={0.8} />
+      <Backdrop color="#e3120b" intensity={0.6} />
       <svg className="menu-track" viewBox="0 0 1000 620" aria-hidden>
         <defs>
           <linearGradient id="mg" x1="0" x2="1">
-            <stop offset="0" stopColor="#ff7a1a" />
+            <stop offset="0" stopColor="#e3120b" />
             <stop offset="1" stopColor="#f3f1ec" />
           </linearGradient>
         </defs>
-        <path id="trk" className="base" d={TRACK} />
+        <path className="base" d={TRACK} />
         <path className="line" d={TRACK} />
-        <circle r="7" fill="#ff7a1a">
-          <animateMotion dur="9s" repeatCount="indefinite">
-            <mpath href="#trk" />
-          </animateMotion>
-        </circle>
-        <circle r="6" fill="#6aa8ff">
-          <animateMotion dur="9.4s" begin="-0.5s" repeatCount="indefinite">
-            <mpath href="#trk" />
-          </animateMotion>
-        </circle>
+        <TrackRunner />
       </svg>
       <div className="menu-left">
         <div className="brand">
-          <div className="kicker">Motorcycle · gioco manageriale di motociclismo</div>
-          <h1>
-            Racing
-            <br />
-            <span>Manager</span>
+          <h1 className="brand-logo">
+            <img src={logo} alt="Motorcycle Racing Manager" />
           </h1>
           <p>Guida una squadra nel mondiale: scegli i piloti, prepara la gara, fai quadrare i conti.</p>
         </div>
@@ -90,6 +81,9 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
           <button className="item" onClick={() => go({ name: 'newCareer', mode: 'create' })}>
             Crea la tua squadra <small>Parti da zero</small>
           </button>
+          <button className="item" onClick={() => setGuide(true)}>
+            Come si gioca <small>Guida per i nuovi giocatori</small>
+          </button>
           <button className="item" onClick={() => setSettings((x) => !x)} aria-expanded={settings}>
             Impostazioni <small>Vista della gara e grafica 3D</small>
           </button>
@@ -97,8 +91,60 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
         {settings && <Settings />}
         {error && <div className="bad">{error}</div>}
       </div>
+      {guide && <Tutorial onClose={() => setGuide(false)} />}
       <footer className="menu-foot">Versione di prova · piloti, squadre e marchi sono inventati</footer>
     </div>
+  );
+}
+
+/**
+ * Puntino che percorre la pista del menu (un giro ogni 11 s) con una scia che sfuma.
+ * Calcolato in JavaScript lungo il tracciato, così segue esattamente la pista a qualsiasi frequenza dello schermo.
+ */
+function TrackRunner() {
+  const path = useRef<SVGPathElement>(null);
+  const dot = useRef<SVGGElement>(null);
+  const trail = useRef<SVGPolylineElement>(null);
+  useEffect(() => {
+    // Elementi catturati subito: all'uscita dal menu React stacca i ref prima di fermare l'animazione.
+    const p = path.current;
+    const g = dot.current;
+    const line = trail.current;
+    if (!p || !g || !line || typeof p.getTotalLength !== 'function') return;
+    const len = p.getTotalLength();
+    const LAP = 11000;
+    const still = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0;
+    let alive = true;
+    const t0 = performance.now();
+    const draw = (now: number) => {
+      if (!alive) return;
+      const d = (((now - t0) % LAP) / LAP) * len;
+      const at = p.getPointAtLength(d);
+      g.setAttribute('transform', `translate(${at.x} ${at.y})`);
+      const pts: string[] = [];
+      for (let k = 0; k <= 24; k++) {
+        const q = p.getPointAtLength((d - k * 6 + len) % len);
+        pts.push(`${q.x},${q.y}`);
+      }
+      line.setAttribute('points', pts.join(' '));
+      if (!still) raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+    return () => {
+      alive = false;
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <g className="runner">
+      <path ref={path} d={TRACK} fill="none" stroke="none" />
+      <polyline ref={trail} className="runner-trail" fill="none" />
+      <g ref={dot}>
+        <circle r="16" className="runner-glow" />
+        <circle r="7.5" className="runner-dot" />
+      </g>
+    </g>
   );
 }
 

@@ -22,8 +22,8 @@
   --text-3: #8a867e;
 
   /* Azione e identità */
-  --signal: #ff7a1a; /* arancione: azioni principali */
-  --signal-ink: #1a0d03;
+  --signal: #e3120b; /* rosso del logo: azioni principali */
+  --signal-ink: #ffffff;
   --accent-blue: #3d9bff; /* informazioni e componenti */
   --team: #3d7bfd; /* sostituito dalla shell con il colore della squadra */
   --orange: var(--signal);

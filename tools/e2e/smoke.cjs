@@ -50,8 +50,19 @@ async function waitForServer(url, ms = 20000) {
 
     await page.goto(URL);
     await page.getByRole('button', { name: /Nuova carriera/ }).waitFor();
+    await page.locator('.brand-logo img[alt="Motorcycle Racing Manager"]').waitFor();
+    if (!(await page.locator('.brand-logo img').evaluate((i) => i.naturalWidth > 0)))
+      throw new Error('Il logo del menu non si carica');
     await shot('01-menu');
-    step('menu principale');
+    step('menu principale con il logo');
+    await page.getByRole('button', { name: /Come si gioca/ }).click();
+    await page.getByRole('dialog', { name: 'Guida al gioco' }).waitFor();
+    await page.getByRole('button', { name: /^Avanti/ }).click();
+    await page.locator('.tut-body h2', { hasText: 'La Home' }).waitFor();
+    await shot('01-guida');
+    await page.getByRole('button', { name: 'Salta la guida' }).click();
+    await page.getByRole('dialog', { name: 'Guida al gioco' }).waitFor({ state: 'detached' });
+    step('guida dal menu principale');
 
     await page.getByRole('button', { name: /Nuova carriera/ }).click();
     if (await page.getByLabel('Seme del mondo').count())
@@ -66,6 +77,21 @@ async function waitForServer(url, ms = 20000) {
     step('scelta squadra con dati del mondo generato');
 
     await page.getByRole('button', { name: /Inizia la carriera/ }).click();
+    await page.locator('.topbar h2', { hasText: 'Home' }).waitFor();
+    // Prima carriera: la guida si apre da sola; "Mostrami" porta alla schermata e la riduce a una barra.
+    await page.getByRole('dialog', { name: 'Guida al gioco' }).waitFor();
+    const nSteps = await page.locator('.tut-index li').count();
+    if (nSteps < 10) throw new Error(`Guida troppo corta: ${nSteps} passi`);
+    for (let k = 0; k < 2; k++) await page.getByRole('button', { name: /^Avanti/ }).click();
+    await page.locator('.tut-body h2', { hasText: 'Lo sponsor' }).waitFor();
+    await page.getByRole('button', { name: 'Mostrami' }).click();
+    await page.locator('.topbar h2', { hasText: 'Sponsor' }).waitFor();
+    await page.getByRole('button', { name: 'Riprendi la guida' }).click();
+    await page.locator('.tut-index li').last().locator('button').click();
+    await page.getByRole('button', { name: 'Inizia a giocare' }).click();
+    await page.getByRole('dialog', { name: 'Guida al gioco' }).waitFor({ state: 'detached' });
+    step(`guida automatica alla prima carriera (${nSteps} passi, «Mostrami» apre la schermata)`);
+    await page.locator('.nav button', { hasText: 'Home' }).click();
     await page.locator('.topbar h2', { hasText: 'Home' }).waitFor();
     await page.getByText('Teo Varriale').first().waitFor();
     if (!(await page.locator('.topbar').innerText()).includes('mln'))
@@ -94,10 +120,7 @@ async function waitForServer(url, ms = 20000) {
     if ((await cards.count()) < 2) throw new Error('Mancano i due titolari nel selettore');
     const first = await page.locator('.rh-id h1').innerText();
     await cards.nth(1).click();
-    await page.waitForFunction(
-      (f) => document.querySelector('.rh-id h1')?.textContent !== f.replace('\n', ''),
-      first,
-    );
+    await page.waitForFunction((f) => document.querySelector('.rh-id h1')?.innerText !== f, first);
     const second = await page.locator('.rh-id h1').innerText();
     if (first === second) throw new Error('Lo switch non cambia pilota');
     if ((await page.locator('.rider-hero img.flag').count()) < 1) throw new Error('Bandiera mancante');

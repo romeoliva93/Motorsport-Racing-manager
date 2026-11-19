@@ -33,13 +33,13 @@ body {
       color-mix(in srgb, var(--team) 18%, transparent),
       transparent 60%
     ),
-    radial-gradient(900px 600px at -10% 110%, rgba(255, 122, 26, 0.07), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(227, 18, 11, 0.07), transparent 60%),
     repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0.018) 0 2px, transparent 2px 46px), var(--bg-0);
   background-attachment: fixed;
   letter-spacing: 0.005em;
 }
 ::selection {
-  background: rgba(255, 122, 26, 0.35);
+  background: rgba(227, 18, 11, 0.35);
 }
 * {
   scrollbar-width: thin;
@@ -128,9 +128,9 @@ h2 {
   background: linear-gradient(180deg, #303746, #232a36);
 }
 .btn.primary {
-  background: linear-gradient(180deg, #ff9142 0%, #ff7a1a 55%, #e8630a 100%);
+  background: linear-gradient(180deg, #ff3b2f 0%, #e3120b 55%, #b80d07 100%);
   box-shadow: none;
-  color: #1a0b02;
+  color: #ffffff;
   text-transform: uppercase;
   font-weight: 900;
   font-style: italic;
@@ -138,7 +138,7 @@ h2 {
   letter-spacing: 0.04em;
 }
 .btn.primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #ffa25e 0%, #ff8a33 60%, #f06d12 100%);
+  background: linear-gradient(180deg, #ff5a4f 0%, #f0261d 60%, #c8120b 100%);
 }
 .btn.ghost {
   background: transparent;
@@ -210,7 +210,7 @@ body .rv-speeds button.on {
   font-weight: 600;
 }
 .nav button.on {
-  background: linear-gradient(90deg, rgba(255, 122, 26, 0.2), transparent 85%);
+  background: linear-gradient(90deg, rgba(227, 18, 11, 0.2), transparent 85%);
   box-shadow: inset 4px 0 0 var(--signal);
   color: #fff;
 }

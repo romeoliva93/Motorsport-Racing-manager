@@ -1,16 +1,59 @@
-# motorcycle-manager
+<p align="center"><img src="apps/client/src/assets/brand/logo.webp" alt="Motorcycle Racing Manager" width="640"></p>
 
-**Motorcycle Racing Manager**: gioco manageriale di motociclismo nel browser, in un universo originale
-(squadre, piloti, costruttori e marchi inventati). Il giocatore guida una scuderia in uno dei quattro campionati
-(Premier, Intermediate, Lightweight, Velocity Rookies Cup): piloti, staff, mercato, sponsor, finanze, sviluppo e
-garage della moto, weekend di gara con prove, qualifiche, Sprint e gara simulate in modo deterministico, viste in
-2D (principale) o 3D (sperimentale).
+# Motorcycle Racing Manager
 
-Stato dettagliato: [docs/report/REPORT.md](docs/report/REPORT.md) ·
-priorità: [docs/ROADMAP.md](docs/ROADMAP.md).
+Gioco manageriale di motociclismo che si gioca nel browser. Sei il **manager di una squadra**: non guidi la moto,
+ma scegli i piloti, prepari la moto e il weekend, decidi la strategia in gara e fai quadrare i conti. Squadre,
+piloti, circuiti, costruttori e marchi sono **inventati**.
 
-**Versione online** (privata, condivisibile dal menu della pagina): https://claude.ai/artifact/Hm8aBjMgYxqp3obqHN2Bag
-— build di `apps/client`; i salvataggi restano nel browser di chi gioca.
+Quattro campionati: **MotoGP**, **Moto2**, **Moto3** e **Velocity Rookies Cup**. Puoi guidare una squadra
+esistente oppure crearne una tua.
+
+**Versione online** (privata, condivisibile dal menu della pagina): https://claude.ai/artifact/Hm8aBjMgYxqp3obqHN2Bag.
+I salvataggi restano nel browser di chi gioca.
+
+## Come si gioca: riepilogo
+
+> Nel gioco c'è una **guida completa a passi**: si apre da sola alla prima carriera, poi dal pulsante **Guida**
+> in basso a sinistra o da **Come si gioca** nel menu principale. Con «Mostrami» apre la schermata di cui parla.
+
+### L'obiettivo
+Fare punti in campionato, raggiungere l'obiettivo dello sponsor e non restare senza soldi. Il tempo avanza solo
+quando lo decidi tu: il **pulsante arancione in alto a destra** indica sempre il prossimo passo («Vai al Gran
+Premio», «Vai al weekend», «Chiudi la stagione»).
+
+### Cosa fare, in ordine
+1. **Nuova carriera** → scegli categoria e squadra (oppure **Crea la tua squadra**).
+2. **Sponsor**: firma il contratto della stagione prima del primo Gran Premio (sicuro, bilanciato o ambizioso;
+   più soldi = obiettivo più difficile).
+3. **Piloti** e **Mercato piloti**: controlla attributi, morale, forma e contratti; fai offerte (stipendio e
+   anni), valuta le controproposte. Il mercato è aperto fino al primo Gran Premio e a fine stagione.
+4. **Moto e upgrade** (garage): la moto è al centro, intorno i gruppi tecnici con livello, prestazione, usura e
+   stato. Scegli la manutenzione (automatica, assistita o manuale), compra ricambi, ordina upgrade alla fabbrica
+   (arrivano dopo qualche giorno). In MotoGP: Moto A e Moto B, motori limitati.
+5. **Assetto** (nel garage): per ogni pilota, su asciutto e bagnato. Il pilota commenta le regolazioni; un buon
+   assetto vale fino all'1,5% di ritmo.
+6. **Vai al Gran Premio**: i giorni scorrono fino al weekend.
+7. **Prove libere**: scegli gomma e programma di lavoro (*Circuito*, *Assetto*, *Passo gara*). Dopo ogni uscita
+   c'è la **riunione tecnica**: confidenza col circuito e con la moto, commenti del pilota, consiglio del
+   capotecnico da applicare (hai 45 minuti di lavoro fra una sessione e l'altra), cronologia del weekend.
+8. **Qualifiche** (Q1/Q2 o qualifica unica): gomma per il giro secco; l'ingegnere consiglia sempre.
+9. **Sprint e gara in diretta** (2D o 3D, da 1× a 16×): cambia in corsa **ritmo** (5 livelli), **mappa
+   carburante** (risparmio, standard, prestazione) e **gestione gomme**. Se il carburante finisce il pilota si
+   ritira. Gli avversari usano le stesse leve; ci sono penalità, bandiere e guasti. Si può salvare a metà gara.
+10. **Dopo la gara**: punti, classifiche (piloti, squadre, costruttori), premi, forma e morale, usura della moto,
+    notizie. Poi di nuovo «Vai al Gran Premio».
+11. **Finanze**: entrate (sponsor, premi) e uscite (stipendi, gestione, trasferte, ricambi, upgrade). Tieni
+    d'occhio il saldo mensile in Home.
+12. **Salva** spesso (in basso a sinistra). A fine campionato **Chiudi la stagione**: riepilogo, contratti in
+    scadenza, stagione successiva.
+
+### Consigli per i primi Gran Premi
+- Firma lo sponsor e ordina un upgrade prima della prima gara; lascia la manutenzione in *Automatica*.
+- Nelle libere usa il programma *Assetto* e applica i consigli del capotecnico.
+- In gara parti con ritmo normale; alza il ritmo se le gomme e il carburante lo permettono.
+
+Stato del progetto: [docs/report/REPORT.md](docs/report/REPORT.md) · priorità: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Sviluppo
 

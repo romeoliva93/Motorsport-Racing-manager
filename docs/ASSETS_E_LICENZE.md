@@ -36,6 +36,7 @@
 | Ritratti personaggi | 567 (36 piloti rigenerati il 2/11, 2 nuovi piloti Moto2 il 3/11) | SDXL-Turbo, `tools/portraits/generate.py` | nel gioco `assets/atlas/` (4 fogli, `index.json` chiave → casella); nuovi ritratti in `tools/portraits/out/` poi `atlas.py --inplace` (riscrive solo i fogli toccati) |
 | Gruppi tecnici garage | 7 | SDXL-Turbo, `tools/portraits/parts.py`; telaio con `tools/portraits/chassis.py` (disegno della sagoma → img2img), motore isolato scelto fra le varianti; scritta inventata tolta dall'immagine dei freni | `assets/parts/` |
 | Foto moto per squadra (livrea della scuderia) | 41 | SDXL-Turbo **immagine → immagine** (forza 0,7) partendo dal disegno `BikeArt` nei colori della squadra: `render-liveries.cjs` (pagina `apps/client/livery.html`) → `teambikes.py` → scelta in `teams-choice.json` → `--install`. Stessa sagoma dell'illustrazione, colori esatti, nessuna scritta voluta | `assets/teambikes/` (garage e home) |
+| Logo del gioco (menu, guida, README) e icona del browser | 1 + 2 icone | **fornito dall'utente** il 19/11/2026; icona ritagliata dal logo | `assets/brand/logo.webp`, `public/favicon.png`, `public/icon-192.png` |
 | Illustrazione moto (riserva per squadre senza foto) | codice | originale (SVG) | `design-system/BikeArt.tsx` |
 | Modelli 3D moto/piloti | codice | originale (Three.js) | `race/bikeModel.ts` |
 | Bandiere | 1 set | `flag-icons` (licenza MIT) | dipendenza npm |

@@ -327,9 +327,9 @@ export function BikeArt({
       {/* Zone selezionabili dei gruppi tecnici */}
       <g
         transform={small ? 'translate(48 48) scale(0.92)' : undefined}
-        fill="#ff7a1a"
+        fill="#e3120b"
         fillOpacity={0.3}
-        stroke="#ff7a1a"
+        stroke="#e3120b"
         strokeWidth={5}
         filter={`url(#${id('glow')})`}
       >

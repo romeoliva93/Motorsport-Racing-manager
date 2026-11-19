@@ -372,7 +372,7 @@ export function materialsFor(look: BikeLook, wet: boolean) {
     glass: std(0x1d2a33, 0.05, 0.1, { transparent: true, opacity: 0.55 }),
     suit: std(look.color, 0.6, 0.05),
     suit2: std(look.color2, 0.6, 0.05),
-    helmet: std(look.mine ? 0xff7a1a : 0xf3f1ec, 0.2, 0.3),
+    helmet: std(look.mine ? 0xe3120b : 0xf3f1ec, 0.2, 0.3),
     visor: std(0x0c0e12, 0.05, 0.6),
   } satisfies Record<MatKey, THREE.Material>;
 }
