@@ -23,7 +23,10 @@ quando lo decidi tu: il **pulsante arancione in alto a destra** indica sempre il
 Premio», «Vai al weekend», «Chiudi la stagione»).
 
 ### Cosa fare, in ordine
-1. **Nuova carriera** → scegli categoria e squadra (oppure **Crea la tua squadra**).
+1. **Nuova carriera** → scegli categoria e una **squadra cliente** (satellite, indipendente o privata: le
+   squadre ufficiali appartengono ai costruttori), poi il **costruttore** che ti fornisce le moto. Ogni
+   costruttore offre agevolazioni diverse (moto più veloce, affidabilità, gomme, upgrade scontati o più
+   rapidi, contributo alla firma) e chiede un canone annuo. Oppure **Crea la tua squadra**.
 2. **Sponsor**: firma il contratto della stagione prima del primo Gran Premio (sicuro, bilanciato o ambizioso;
    più soldi = obiettivo più difficile).
 3. **Piloti** e **Mercato piloti**: controlla attributi, morale, forma e contratti; fai offerte (stipendio e
@@ -37,13 +40,17 @@ Premio», «Vai al weekend», «Chiudi la stagione»).
 7. **Prove libere**: scegli gomma e programma di lavoro (*Circuito*, *Assetto*, *Passo gara*). Dopo ogni uscita
    c'è la **riunione tecnica**: confidenza col circuito e con la moto, commenti del pilota, consiglio del
    capotecnico da applicare (hai 45 minuti di lavoro fra una sessione e l'altra), cronologia del weekend.
-8. **Qualifiche** (Q1/Q2 o qualifica unica): gomma per il giro secco; l'ingegnere consiglia sempre.
+8. **Qualifiche** (Q1/Q2 o qualifica unica): gomma per il giro secco; l'ingegnere consiglia sempre. Prove e
+   qualifiche si seguono nella **schermata tempi** (settori: rosso miglior assoluto, arancio miglior personale,
+   grigio più lento); in gara la stessa schermata è la vista «Tempi».
 9. **Sprint e gara in diretta** (2D o 3D, da 1× a 16×): cambia in corsa **ritmo** (5 livelli), **mappa
    carburante** (risparmio, standard, prestazione) e **gestione gomme**. Se il carburante finisce il pilota si
    ritira. Gli avversari usano le stesse leve; ci sono penalità, bandiere e guasti. Si può salvare a metà gara.
-10. **Dopo la gara**: punti, classifiche (piloti, squadre, costruttori), premi, forma e morale, usura della moto,
-    notizie. Poi di nuovo «Vai al Gran Premio».
-11. **Finanze**: entrate (sponsor, premi) e uscite (stipendi, gestione, trasferte, ricambi, upgrade). Tieni
+10. **Dopo la gara**: punti, classifiche (piloti, team, scuderie/costruttori, indipendenti), premi, forma e
+    morale, usura della moto, notizie. In **Squadre e piloti** vedi tutte le squadre per costruttore, con i loro
+    piloti. Poi di nuovo «Vai al Gran Premio».
+11. **Finanze**: entrate (sponsor, premi) e uscite (stipendi, gestione, canone del costruttore, trasferte,
+    ricambi, upgrade). Tieni
     d'occhio il saldo mensile in Home.
 12. **Salva** spesso (in basso a sinistra). A fine campionato **Chiudi la stagione**: riepilogo, contratti in
     scadenza, stagione successiva.

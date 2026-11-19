@@ -26,7 +26,7 @@ import {
   type TeamId,
   type TransactionCategory,
 } from '@lean-angle/data';
-import { payrollMonthly, runningCostMonthly, sponsorMonthly } from './economy.ts';
+import { payrollMonthly, runningCostMonthly, sponsorMonthly, supplyMonthly } from './economy.ts';
 import { activeRiderContract, buyoutFor } from './market.ts';
 import { riderDetail, type RiderDetail } from './queries.ts';
 import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
@@ -486,7 +486,7 @@ export const CATEGORY_LABEL: Record<TransactionCategory, string> = {
 export interface FinanceView {
   balance: number;
   opening: number;
-  monthly: { salaries: number; running: number; sponsor: number; net: number };
+  monthly: { salaries: number; running: number; supply: number; sponsor: number; net: number };
   perRace: { rights: number; travel: number; prizePerPoint: number };
   racesLeft: number;
   forecastYearEnd: number;
@@ -515,11 +515,14 @@ export function financeView(s: GameState): FinanceView | null {
   const salaries = payrollMonthly(s, teamId);
   const sponsor = sponsorMonthly(s, teamId);
   const running = runningCostMonthly(s, teamId);
+  const supply = supplyMonthly(s, teamId);
   const racesLeft = seasonRounds(s, entry.seasonId).filter((r) => r.status !== 'raced').length;
   // Mesi in cui si paga ancora (il 1° di ogni mese successivo a oggi, fino a dicembre).
   const monthsLeft = 12 - now.month;
   const forecastYearEnd =
-    balance + monthsLeft * (sponsor - salaries - running) + racesLeft * (RACE_FEE[tier] - TRAVEL_COST[tier]);
+    balance +
+    monthsLeft * (sponsor - salaries - running - supply) +
+    racesLeft * (RACE_FEE[tier] - TRAVEL_COST[tier]);
   // Saldo a fine mese.
   let bal =
     (acc?.openingBalance ?? 0) + trx.filter((t) => t.day < yearStart).reduce((a, t) => a + t.amount, 0);
@@ -536,7 +539,7 @@ export function financeView(s: GameState): FinanceView | null {
   return {
     balance,
     opening: acc?.openingBalance ?? 0,
-    monthly: { salaries, running, sponsor, net: sponsor - salaries - running },
+    monthly: { salaries, running, supply, sponsor, net: sponsor - salaries - running - supply },
     perRace: { rights: RACE_FEE[tier], travel: TRAVEL_COST[tier], prizePerPoint: PRIZE_PER_POINT[tier] },
     racesLeft,
     forecastYearEnd,

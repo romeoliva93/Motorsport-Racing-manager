@@ -197,7 +197,7 @@ export function dashboardView(s: GameState): DashboardView | null {
       ? {
           balance: f.balance,
           income: f.monthly.sponsor,
-          expenses: f.monthly.salaries + f.monthly.running,
+          expenses: f.monthly.salaries + f.monthly.running + f.monthly.supply,
           net: f.monthly.net,
           sponsor: sp?.deal?.sponsorName ?? null,
         }

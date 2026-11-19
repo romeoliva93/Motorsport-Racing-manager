@@ -28,6 +28,19 @@ export const TUTORIAL: TutorialStep[] = [
     tip: 'Puoi riaprire questa guida quando vuoi dal pulsante «Guida» in basso a sinistra.',
   },
   {
+    id: 'makers',
+    title: 'Costruttori e squadre',
+    section: 'paddock',
+    intro:
+      'Come nel mondiale: ogni costruttore (scuderia) ha la sua squadra ufficiale e fornisce le moto alle squadre clienti (satellite, indipendenti, private).',
+    points: [
+      'Si parte sempre da una squadra cliente: le squadre ufficiali appartengono ai costruttori.',
+      'All’inizio scegli il costruttore che ti fornisce le moto. Ognuno offre agevolazioni diverse (moto più veloce, affidabilità, gomme, upgrade scontati o più rapidi, contributo alla firma) e chiede un canone annuo, pagato ogni mese.',
+      '«Squadre e piloti» mostra tutte le squadre della categoria raggruppate per costruttore, con piloti, valutazioni e punti.',
+      'In Classifiche trovi piloti, team, scuderie (costruttori) e indipendenti.',
+    ],
+  },
+  {
     id: 'home',
     title: 'La Home',
     section: 'overview',
@@ -127,6 +140,7 @@ export const TUTORIAL: TutorialStep[] = [
       'Moto2 e Moto3: Prove libere 1 · Prove (primi 14 in Q2) · Q1 · Q2 · Gara. Rookies Cup: libere, qualifica unica, gara.',
       'Ogni pilota ha un numero limitato di gomme per tutto il weekend: ogni sessione ne usa un treno.',
       'Prima di ogni sessione scegli la gomma; l’ingegnere suggerisce sempre una scelta e spiega perché.',
+      'Prove e qualifiche si seguono nella schermata tempi: ogni settore si colora al passaggio (rosso miglior tempo assoluto, arancio miglior tempo personale, grigio più lento).',
       '«Simula il resto del weekend» corre tutto in automatico, gara compresa.',
     ],
   },
@@ -150,7 +164,7 @@ export const TUTORIAL: TutorialStep[] = [
     intro:
       'Sprint e gara si guardano in diretta, in 2D (vista principale) o in 3D, e le decisioni contano mentre si corre.',
     points: [
-      'Velocità da 1× a 16×, pausa, cambio 2D/3D senza effetti sulla gara.',
+      'Velocità da 1× a 16×, pausa, cambio 2D / 3D / Tempi senza effetti sulla gara.',
       'Ritmo a 5 livelli (da molto prudente ad attacco massimo): più veloce = più usura, più consumo, più rischio di caduta.',
       'Carburante: risparmio, standard, prestazione. Se finisce, il pilota si ritira: tieni d’occhio «carburante per N giri».',
       'Gomme: conservativa, bilanciata, prestazionale.',
@@ -176,7 +190,7 @@ export const TUTORIAL: TutorialStep[] = [
     intro: 'Una squadra senza soldi non va lontano.',
     points: [
       'Entrate: sponsor (ogni mese), premi per i punti.',
-      'Uscite: stipendi di piloti e personale, gestione, trasferte, ricambi, revisioni e upgrade.',
+      'Uscite: stipendi di piloti e personale, gestione, canone di fornitura del costruttore, trasferte, ricambi, revisioni e upgrade.',
       'La Home mostra entrate e uscite del mese: se le uscite superano le entrate, rimedia prima che la cassa finisca.',
     ],
   },

@@ -16,6 +16,7 @@ import { NewsScreen } from '../screens/game/News.tsx';
 import { BikeScreen } from '../screens/game/BikeScreen.tsx';
 import { garageFocus } from '../screens/game/Garage.tsx';
 import { SponsorsScreen } from '../screens/game/Sponsors.tsx';
+import { PaddockScreen } from '../screens/game/Paddock.tsx';
 import { Tutorial } from '../tutorial/Tutorial.tsx';
 import { getPrefs, setPrefs } from '../prefs.ts';
 
@@ -31,7 +32,8 @@ export type Section =
   | 'championship'
   | 'news'
   | 'bike'
-  | 'sponsors';
+  | 'sponsors'
+  | 'paddock';
 
 const I = (d: string) => (
   <svg
@@ -59,6 +61,7 @@ const ICON: Record<Section, ReactNode> = {
   news: I('M4 5h13v14H6a2 2 0 0 1-2-2zM17 9h3v8a2 2 0 0 1-2 2M8 9h5M8 13h5'),
   bike: I('M5 17a3 3 0 1 0 0-.01M19 17a3 3 0 1 0 0-.01M5 17l4-7h5l3 7M9 10l-1-3h3M14 10l2-3h3'),
   sponsors: I('M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z'),
+  paddock: I('M3 21V10l5-3v14M8 21V7l8-4v18M16 21V10l5 3v8M3 21h18'),
 };
 
 /** Voci attive (collegate a dati reali). */
@@ -78,6 +81,7 @@ const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
     items: [
       { id: 'weekend', label: 'Weekend di gara' },
       { id: 'championship', label: 'Classifiche' },
+      { id: 'paddock', label: 'Squadre e piloti' },
       { id: 'calendar', label: 'Calendario' },
     ],
   },
@@ -302,6 +306,8 @@ export function Shell({
           <BikeScreen notify={notify} />
         ) : section === 'sponsors' ? (
           <SponsorsScreen notify={notify} />
+        ) : section === 'paddock' ? (
+          <PaddockScreen categoryId={s!.category!.id} myTeamId={team.id} />
         ) : null}
       </main>
       {guide && <Tutorial onClose={closeGuide} go={(sec) => go(sec)} />}

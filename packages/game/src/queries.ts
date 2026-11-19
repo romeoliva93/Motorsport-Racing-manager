@@ -3,6 +3,7 @@
  * applicando il filtro di conoscenza (ADR-0003): i valori nascosti — potenziale reale, data reale di
  * rientro da un infortunio — non escono mai dal motore; si espongono solo stime.
  */
+import { supplierOffers } from './suppliers.ts';
 import { GameCalendar, cyrb128 } from '@lean-angle/core';
 import {
   NAMES_CONTENT,
@@ -79,6 +80,7 @@ export interface TeamCard {
   colors: { primary: string; secondary: string; accent?: string };
   reputation: number;
   manufacturer: string;
+  manufacturerId: string;
   ownerName: string;
   balance: number | null;
   riders: {
@@ -134,6 +136,7 @@ export function teamCards(s: GameState, categoryId: string): TeamCard[] {
         colors: t.colors,
         reputation: t.reputation,
         manufacturer: s.tables.manufacturers[e.manufacturerId]!.name,
+        manufacturerId: e.manufacturerId,
         ownerName:
           t.owner.kind === 'manufacturer'
             ? s.tables.manufacturers[t.owner.manufacturerId]!.name
@@ -751,6 +754,7 @@ export const QUERIES = {
   sponsorView,
   riderProfile,
   dashboardView,
+  supplierOffers,
 } as const;
 export type QueryName = keyof typeof QUERIES;
 export type QueryArgs<N extends QueryName> = (typeof QUERIES)[N] extends (

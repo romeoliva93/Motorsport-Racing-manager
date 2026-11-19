@@ -59,6 +59,7 @@ import { addNews } from './news.ts';
 import { conditionsFor, weekendWeather, type SessionWeather } from './weather.ts';
 import { engineStatus } from './regulations.ts';
 import { upgradeBonus } from './upgrades.ts';
+import { supplierPerks } from './suppliers.ts';
 import { settleDeals } from './sponsors.ts';
 
 export interface Strategy {
@@ -154,9 +155,11 @@ export function bikeOf(
     team.type === 'factory' ? 0 : team.type === 'satellite' ? 1.5 : team.type === 'independent' ? 2.5 : 3.5;
   const score = m.engineeringStrength + (avg - 3) * 1.5 - satellitePenalty;
   const up = upgradeBonus(s, teamId);
+  // Accordo di fornitura del costruttore (solo squadre clienti).
+  const deal = supplierPerks(s, teamId, manufacturerId);
   return {
-    bike: Math.min(1, score / 100 + up.bike),
-    reliability: Math.min(0.995, (m.engineeringStrength + 8) / 100 + up.reliability),
+    bike: Math.min(1, score / 100 + up.bike + deal.bike),
+    reliability: Math.min(0.995, (m.engineeringStrength + 8) / 100 + up.reliability + deal.reliability),
   };
 }
 
@@ -236,7 +239,10 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, w
     aggression: unit(a.aggression),
     tyreManagement: Math.min(
       1,
-      (unit(a.tyreManagement) + upgradeBonus(s, e.teamId).tyreCare) * (pr?.longRun ? 1.04 : 1),
+      (unit(a.tyreManagement) +
+        upgradeBonus(s, e.teamId).tyreCare +
+        supplierPerks(s, e.teamId, e.manufacturerId).tyreCare) *
+        (pr?.longRun ? 1.04 : 1),
     ),
     fitness: unit(a.fitness),
     fuelManagement: unit(a.fuelManagement),

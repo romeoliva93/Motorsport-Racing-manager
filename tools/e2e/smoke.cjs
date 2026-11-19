@@ -58,7 +58,7 @@ async function waitForServer(url, ms = 20000) {
     await page.getByRole('button', { name: /Come si gioca/ }).click();
     await page.getByRole('dialog', { name: 'Guida al gioco' }).waitFor();
     await page.getByRole('button', { name: /^Avanti/ }).click();
-    await page.locator('.tut-body h2', { hasText: 'La Home' }).waitFor();
+    await page.locator('.tut-body h2', { hasText: 'Costruttori e squadre' }).waitFor();
     await shot('01-guida');
     await page.getByRole('button', { name: 'Salta la guida' }).click();
     await page.getByRole('dialog', { name: 'Guida al gioco' }).waitFor({ state: 'detached' });
@@ -69,12 +69,25 @@ async function waitForServer(url, ms = 20000) {
       throw new Error('Il campo "seme del mondo" non deve comparire');
     await page.getByLabel('Nome della carriera').fill('Carriera E2E');
     await page.getByRole('button', { name: /^MotoGP/ }).waitFor();
+    // Le squadre ufficiali non si possono scegliere.
+    await page.locator('.nc-team', { hasText: 'Ardena Corse' }).click();
+    await page.getByText('Le squadre ufficiali appartengono ai costruttori').waitFor();
+    if (await page.getByRole('button', { name: /Inizia la carriera/ }).isEnabled())
+      throw new Error('Una squadra ufficiale non deve essere selezionabile');
     const lupo = page.locator('.nc-team', { hasText: 'Scuderia Lupo Blu' });
     await lupo.waitFor();
     await lupo.click();
     await page.getByText('Teo Varriale').first().waitFor();
+    // Scelta del costruttore: 5 offerte con agevolazioni; si prova a cambiare e si torna ad Ardena.
+    const suppliers = page.locator('.nc-suppliers .choice');
+    await suppliers.first().waitFor();
+    if ((await suppliers.count()) !== 5) throw new Error('Mancano le offerte dei costruttori');
+    await suppliers.filter({ hasText: 'Hoshiro' }).click();
+    if ((await suppliers.filter({ hasText: 'Hoshiro' }).getAttribute('aria-pressed')) !== 'true')
+      throw new Error('Scelta del costruttore non registrata');
+    await suppliers.filter({ hasText: 'Ardena' }).click();
     await shot('02-nuova-carriera');
-    step('scelta squadra con dati del mondo generato');
+    step('scelta squadra cliente e costruttore con agevolazioni (ufficiali non selezionabili)');
 
     await page.getByRole('button', { name: /Inizia la carriera/ }).click();
     await page.locator('.topbar h2', { hasText: 'Home' }).waitFor();
@@ -82,7 +95,7 @@ async function waitForServer(url, ms = 20000) {
     await page.getByRole('dialog', { name: 'Guida al gioco' }).waitFor();
     const nSteps = await page.locator('.tut-index li').count();
     if (nSteps < 10) throw new Error(`Guida troppo corta: ${nSteps} passi`);
-    for (let k = 0; k < 2; k++) await page.getByRole('button', { name: /^Avanti/ }).click();
+    for (let k = 0; k < 3; k++) await page.getByRole('button', { name: /^Avanti/ }).click();
     await page.locator('.tut-body h2', { hasText: 'Lo sponsor' }).waitFor();
     await page.getByRole('button', { name: 'Mostrami' }).click();
     await page.locator('.topbar h2', { hasText: 'Sponsor' }).waitFor();
@@ -383,6 +396,18 @@ async function waitForServer(url, ms = 20000) {
     await page.getByText('Classifica piloti').waitFor();
     if ((await page.locator('table.std tbody tr').count()) < 10) throw new Error('Classifica vuota');
     await shot('14-classifiche');
+    await page.getByRole('tab', { name: 'Team', exact: true }).click();
+    await page.getByText('Classifica team', { exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'Scuderie (costruttori)' }).click();
+    await page.getByText('Classifica scuderie (costruttori)', { exact: true }).waitFor();
+    await page.locator('.nav button', { hasText: 'Squadre e piloti' }).click();
+    await page.locator('.pd-team').first().waitFor();
+    const nTeams = await page.locator('.pd-team').count();
+    if (nTeams < 10) throw new Error(`Squadre mancanti: ${nTeams}`);
+    await page.locator('.pd-team.factory .pd-head').first().click();
+    await page.locator('.pd-rider').first().waitFor();
+    await shot('14-squadre');
+    step(`squadre e piloti: ${nTeams} squadre per costruttore; classifiche team e scuderie`);
     await page.locator('.nav button', { hasText: 'Notizie' }).click();
     await page.getByText(/vince/).first().waitFor();
     await shot('15-notizie');

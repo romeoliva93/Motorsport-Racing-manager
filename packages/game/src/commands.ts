@@ -7,7 +7,12 @@ import type { ContractOffer, CustomTeamOptions, RiderId, TeamId } from '@lean-an
 
 export type Command =
   /** Il giocatore prende la guida di una squadra esistente (inizio carriera). */
-  | { type: 'SetPlayerTeam'; teamId: TeamId }
+  | {
+      type: 'SetPlayerTeam';
+      teamId: TeamId;
+      /** Costruttore che fornisce le moto (squadre clienti); assente = quello attuale. */
+      manufacturerId?: string;
+    }
   /** Il giocatore crea una squadra nuova e ne prende la guida (inizio carriera). */
   | { type: 'CreateTeam'; team: CustomTeamOptions }
   /** Avanza di un numero di giorni (1–60). */

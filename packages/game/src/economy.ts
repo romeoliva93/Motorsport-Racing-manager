@@ -5,6 +5,7 @@
  */
 import { GameCalendar, type IdFactory } from '@lean-angle/core';
 import { dealMonthly } from './sponsors.ts';
+import { supplyFeeYearly } from './suppliers.ts';
 import { RUNNING_COST_MONTHLY, SPONSOR_MONTHLY, rows, type GameState, type TeamId } from '@lean-angle/data';
 
 export function sponsorMonthly(s: GameState, teamId: TeamId): number {
@@ -39,6 +40,7 @@ export function monthlyFinance(s: GameState, ids: IdFactory): void {
       [spon, 'sponsor', 'Rata mensile degli sponsor'],
       [dealMonthly(s, acc.teamId), 'sponsor', 'Rata dello sponsor con obiettivo'],
       [-runningCostMonthly(s, acc.teamId), 'facilities', 'Costi di gestione (sede, officina, ricambi)'],
+      [-supplyMonthly(s, acc.teamId), 'supply', 'Canone di fornitura della moto'],
     ] as const) {
       if (amount === 0) continue;
       const id = ids.next('trx');
@@ -50,4 +52,9 @@ export function monthlyFinance(s: GameState, ids: IdFactory): void {
 export function runningCostMonthly(s: GameState, teamId: TeamId): number {
   const entry = rows(s, 'teamEntries').find((e) => e.teamId === teamId);
   return entry ? RUNNING_COST_MONTHLY[s.tables.categories[entry.categoryId]!.tier] : 0;
+}
+
+/** Rata mensile del canone di fornitura (squadre clienti). */
+export function supplyMonthly(s: GameState, teamId: TeamId): number {
+  return Math.round(supplyFeeYearly(s, teamId) / 12);
 }

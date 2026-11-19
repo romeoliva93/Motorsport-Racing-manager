@@ -26,8 +26,8 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
           onChange={setView}
           options={[
             { id: 'riders', label: 'Piloti' },
-            { id: 'teams', label: 'Squadre' },
-            { id: 'constructors', label: 'Costruttori' },
+            { id: 'teams', label: 'Team' },
+            { id: 'constructors', label: 'Scuderie (costruttori)' },
             { id: 'independent', label: 'Indipendenti' },
             { id: 'races', label: 'Gare' },
           ]}
@@ -41,8 +41,8 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
             {c.category} {c.year}: {c.racesDone} gare disputate su {c.racesTotal}. A ogni gara i primi 15
             prendono punti (25 al vincitore); in MotoGP anche la Sprint del sabato dà punti ai primi 9 (12 al
             vincitore). Vittorie e podi contano solo la gara della domenica. Chi ha più punti a fine anno è
-            campione. La classifica squadre somma i punti dei due piloti; quella costruttori conta solo il
-            miglior pilota di ogni marca in ogni gara.
+            campione. La classifica team somma i punti dei due piloti; quella delle scuderie (costruttori)
+            conta solo il miglior pilota di ogni marca in ogni gara.
           </Explain>
           {view === 'riders' && (
             <Card title="Classifica piloti">
@@ -91,7 +91,7 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
             </Card>
           )}
           {view === 'teams' && (
-            <Card title="Classifica squadre">
+            <Card title="Classifica team">
               <table className="std static">
                 <thead>
                   <tr>
@@ -123,7 +123,7 @@ export function ChampionshipScreen({ categoryId }: { categoryId: string }) {
             </Card>
           )}
           {view === 'constructors' && (
-            <Card title="Classifica costruttori">
+            <Card title="Classifica scuderie (costruttori)">
               <table className="std static">
                 <thead>
                   <tr>

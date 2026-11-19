@@ -26,6 +26,7 @@ import {
 import { addNews } from './news.ts';
 import { fitNewParts } from './garage.ts';
 import { CONCESSION_COST, teamConcession } from './regulations.ts';
+import { supplierPerks } from './suppliers.ts';
 
 export function partLevel(s: GameState, teamId: string, key: PartKey): number {
   return s.upgrades?.[teamId]?.[key] ?? 0;
@@ -49,7 +50,9 @@ export function factoryFactor(s: GameState, teamId: string): number {
 
 export function leadDays(s: GameState, teamId: string, key: PartKey, level: number): number {
   const conc = CONCESSION_COST[teamConcession(s, teamId) ?? 'A'];
-  return Math.round(UPGRADE_LEAD_DAYS[key][level - 1]! * factoryFactor(s, teamId) * conc);
+  return Math.round(
+    UPGRADE_LEAD_DAYS[key][level - 1]! * factoryFactor(s, teamId) * conc * supplierPerks(s, teamId).leadTime,
+  );
 }
 
 export function upgradeCost(s: GameState, teamId: string, key: PartKey): number | null {
@@ -60,7 +63,8 @@ export function upgradeCost(s: GameState, teamId: string, key: PartKey): number 
   if (!entry) return null;
   const base = UPGRADE_BASE_COST[s.tables.categories[entry.categoryId]!.tier];
   const conc = CONCESSION_COST[teamConcession(s, teamId) ?? 'A'];
-  return base > 0 ? Math.round((base * (lvl + 1) * conc) / 10_000) * 10_000 : null;
+  const deal = supplierPerks(s, teamId).upgradeCost;
+  return base > 0 ? Math.round((base * (lvl + 1) * conc * deal) / 10_000) * 10_000 : null;
 }
 
 /** Bonus complessivo degli upgrade montati. */

@@ -37,6 +37,12 @@ export function FinanceScreen() {
           <span className="muted">Gestione (sede, officina, ricambi)</span>
           <b>−{formatMoney(f.monthly.running)}</b>
         </div>
+        {f.monthly.supply > 0 && (
+          <div className="row">
+            <span className="muted">Canone di fornitura della moto</span>
+            <b>−{formatMoney(f.monthly.supply)}</b>
+          </div>
+        )}
         <div className="row">
           <span>Saldo mensile</span>
           <b className={f.monthly.net < 0 ? 'bad' : 'ok'}>

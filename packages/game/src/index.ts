@@ -15,3 +15,4 @@ export * from './regulations.ts';
 export * from './garage.ts';
 export * from './setup.ts';
 export * from './dashboard.ts';
+export * from './suppliers.ts';

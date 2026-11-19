@@ -233,3 +233,25 @@
     overflow: visible;
   }
 }
+
+/* Squadre ufficiali: visibili ma non selezionabili come squadra di partenza */
+.nc-team.factory {
+  opacity: 0.6;
+}
+.nc-suppliers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.nc-suppliers .choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  cursor: pointer;
+  color: var(--text-1);
+}
+.nc-suppliers .choice span {
+  font-size: 0.8rem;
+}

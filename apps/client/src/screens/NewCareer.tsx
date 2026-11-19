@@ -103,9 +103,14 @@ export function NewCareer({
       ) : mode === 'existing' ? (
         <ChooseTeam
           busy={busy}
-          onStart={(teamId) =>
+          onStart={(teamId, manufacturerId) =>
             startWith(
-              () => engine.dispatch({ type: 'SetPlayerTeam', teamId: teamId as `tem_${string}` }),
+              () =>
+                engine.dispatch({
+                  type: 'SetPlayerTeam',
+                  teamId: teamId as `tem_${string}`,
+                  ...(manufacturerId ? { manufacturerId } : {}),
+                }),
               'overview',
             )
           }
@@ -122,7 +127,13 @@ export function NewCareer({
 }
 
 // ---------------------------------------------------------------------------------------------
-function ChooseTeam({ busy, onStart }: { busy: boolean; onStart: (teamId: string) => void }) {
+function ChooseTeam({
+  busy,
+  onStart,
+}: {
+  busy: boolean;
+  onStart: (teamId: string, manufacturerId: string | null) => void;
+}) {
   const cats = useQuery('categories');
   const list: CategoryTab[] = cats.status === 'ready' ? cats.data : [];
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -163,7 +174,7 @@ function ChooseTeam({ busy, onStart }: { busy: boolean; onStart: (teamId: string
           categoryId={activeCat}
           teamId={teamId}
           busy={busy}
-          onStart={() => teamId && onStart(teamId)}
+          onStart={(mfr) => teamId && onStart(teamId, mfr)}
         />
       </div>
     </>
@@ -187,7 +198,7 @@ function TeamGrid({
       {q.data.map((t) => (
         <button
           key={t.id}
-          className={`nc-team ${t.id === selected ? 'sel' : ''}`}
+          className={`nc-team ${t.id === selected ? 'sel' : ''} ${t.type === 'factory' ? 'factory' : ''}`}
           onClick={() => onSelect(t.id)}
           style={{ ['--tc' as string]: t.colors.primary }}
         >
@@ -198,6 +209,7 @@ function TeamGrid({
               <b>{t.name}</b>
               <span className="muted">
                 {TEAM_TYPE[t.type]} · {t.manufacturer}
+                {t.type === 'factory' && ' · non selezionabile'}
               </span>
             </div>
           </div>
@@ -231,9 +243,11 @@ function SelectedTeam({
   categoryId: string | null;
   teamId: string | null;
   busy: boolean;
-  onStart: () => void;
+  onStart: (manufacturerId: string | null) => void;
 }) {
   const q = useQuery('teamCards', categoryId ?? '');
+  const offersQ = useQuery('supplierOffers', categoryId ?? '');
+  const [mfr, setMfr] = useState<string | null>(null);
   const team: TeamCard | undefined = useMemo(
     () => (q.status === 'ready' ? q.data.find((t) => t.id === teamId) : undefined),
     [q, teamId],
@@ -294,7 +308,52 @@ function SelectedTeam({
           </div>
         ))}
       </Card>
-      <button className="btn primary" disabled={busy} onClick={onStart}>
+      {team.type === 'factory' ? (
+        <Card title="Squadra ufficiale">
+          <p className="muted" style={{ fontSize: '.85rem', lineHeight: 1.5 }}>
+            Le squadre ufficiali appartengono ai costruttori: si parte da una squadra cliente (satellite,
+            indipendente o privata). Con buoni risultati la tua squadra crescerà.
+          </p>
+        </Card>
+      ) : (
+        <Card title="Costruttore della moto">
+          <p className="muted" style={{ fontSize: '.8rem', lineHeight: 1.45, marginTop: 0 }}>
+            Scegli chi ti fornisce le moto: ogni costruttore offre agevolazioni diverse e chiede un canone
+            annuo.
+          </p>
+          <div className="nc-suppliers">
+            {offersQ.status === 'ready' &&
+              offersQ.data.map((o) => {
+                const on = (mfr ?? team.manufacturerId) === o.manufacturerId;
+                return (
+                  <button
+                    key={o.manufacturerId}
+                    className={`choice ${on ? 'sel' : ''}`}
+                    aria-pressed={on}
+                    onClick={() => setMfr(o.manufacturerId)}
+                  >
+                    <b>
+                      {o.name} <span className="muted">· livello {o.strength}</span>
+                    </b>
+                    <span className="or">{o.headline}</span>
+                    {o.perks.map((p) => (
+                      <span key={p}>✓ {p}</span>
+                    ))}
+                    <span className="muted">
+                      Canone <Money value={o.feeYearly} />
+                      /anno{o.factoryTeam ? ` · ufficiale: ${o.factoryTeam}` : ''}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
+        </Card>
+      )}
+      <button
+        className="btn primary"
+        disabled={busy || team.type === 'factory'}
+        onClick={() => onStart(mfr && mfr !== team.manufacturerId ? mfr : null)}
+      >
         {busy ? 'Creazione…' : 'Inizia la carriera ▸'}
       </button>
     </div>

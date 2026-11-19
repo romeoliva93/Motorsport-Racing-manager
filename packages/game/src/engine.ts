@@ -22,6 +22,7 @@ import {
   validateCustomTeam,
   type ContractOffer,
   type GameState,
+  type ManufacturerId,
   type Negotiation,
   type NegotiationId,
   type Round,
@@ -55,6 +56,7 @@ import {
   tierOf as tierOfRound,
   tyresLeft,
 } from './weekend.ts';
+import { chooseSupplier } from './suppliers.ts';
 import { SESSION_SHORT, changeMinutes, practiceRider, workMinutesLeft } from './practice.ts';
 import { addNews } from './news.ts';
 import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
@@ -309,6 +311,14 @@ export class GameEngine {
         const team = s.tables.teams[cmd.teamId];
         if (!team) return err('Squadra inesistente');
         if (team.type === 'organizer') return err('La Rookies Cup non ha squadre gestibili');
+        if (team.type === 'factory' || team.type === 'newManufacturer')
+          return err('Si parte da una squadra cliente: le squadre ufficiali appartengono ai costruttori');
+        if (cmd.manufacturerId) {
+          const entry = rows(s, 'teamEntries').find((e) => e.teamId === cmd.teamId);
+          const m = s.tables.manufacturers[cmd.manufacturerId as keyof typeof s.tables.manufacturers];
+          if (!entry || !m || !m.categories.includes(entry.categoryId))
+            return err('Questo costruttore non fornisce moto nella categoria della squadra');
+        }
         return ok(true);
       }
       case 'CreateTeam': {
@@ -461,10 +471,12 @@ export class GameEngine {
   private apply(cmd: Command): void {
     const s = this.stateValue;
     switch (cmd.type) {
-      case 'SetPlayerTeam':
+      case 'SetPlayerTeam': {
         s.meta.playerTeamId = cmd.teamId;
+        if (cmd.manufacturerId) chooseSupplier(s, this.ids, cmd.teamId, cmd.manufacturerId as ManufacturerId);
         this.events.emit('PlayerTeamSet', s.meta.currentDay, { teamId: cmd.teamId });
         return;
+      }
       case 'CreateTeam': {
         const teamId = createCustomTeam(s, cmd.team, this.ids, this.streams.get('custom-team'));
         s.meta.playerTeamId = teamId;
