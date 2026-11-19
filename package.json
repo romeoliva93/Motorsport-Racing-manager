@@ -2,7 +2,7 @@
   "name": "lean-angle",
   "private": true,
   "version": "0.0.0",
-  "description": "LEAN ANGLE — Moto Racing Manager",
+  "description": "Motorcycle Racing Manager",
   "type": "module",
   "workspaces": [
     "packages/*",

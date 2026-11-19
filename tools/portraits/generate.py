@@ -1,5 +1,5 @@
 """
-Ritratti fotorealistici dei personaggi di LEAN ANGLE, generati in locale e gratis.
+Ritratti fotorealistici dei personaggi di Motorcycle Racing Manager, generati in locale e gratis.
 
 Modello: SDXL-Turbo (stabilityai/sdxl-turbo), 4 passi, 512x512, funziona anche senza scheda grafica.
 Licenza del modello: Stability AI Community License (gratuita sotto 1 milione di dollari di ricavi annui).

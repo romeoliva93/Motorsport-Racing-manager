@@ -5,7 +5,7 @@
 
 ## 1. Visione
 
-**Titolo provvisorio: LEAN ANGLE — Moto Racing Manager**
+**Titolo: Motorcycle Racing Manager** (in precedenza "LEAN ANGLE")
 (alternative: *Apex Paddock*, *Throttle Chief*).
 
 Il giocatore è il **Team Principal** di una scuderia nel motomondiale immaginario della

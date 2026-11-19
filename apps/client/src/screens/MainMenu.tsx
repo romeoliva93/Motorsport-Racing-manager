@@ -53,11 +53,11 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
       </svg>
       <div className="menu-left">
         <div className="brand">
-          <div className="kicker">Gioco manageriale di motociclismo</div>
+          <div className="kicker">Motorcycle · gioco manageriale di motociclismo</div>
           <h1>
-            Lean
+            Racing
             <br />
-            <span>Angle</span>
+            <span>Manager</span>
           </h1>
           <p>Guida una squadra nel mondiale: scegli i piloti, prepara la gara, fai quadrare i conti.</p>
         </div>

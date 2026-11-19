@@ -385,7 +385,7 @@ export default function Race3D(props: Race3DProps) {
     world.add(trunk, crown);
 
     // ---- Pubblicità a bordo pista (pannelli originali, nessun marchio reale) ----
-    const adWords = ['LEAN ANGLE', sc.name.toUpperCase(), 'GRAN PREMIO', 'PADDOCK', 'RACE CONTROL'];
+    const adWords = ['RACING MANAGER', sc.name.toUpperCase(), 'GRAN PREMIO', 'PADDOCK', 'RACE CONTROL'];
     const adMats = adWords.map((w, i) => {
       const c = document.createElement('canvas');
       c.width = 512;

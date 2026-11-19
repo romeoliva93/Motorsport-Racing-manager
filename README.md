@@ -1,12 +1,12 @@
 # motorcycle-manager
 
-**LEAN ANGLE — Moto Racing Manager**: gioco manageriale di motociclismo nel browser, in un universo originale
+**Motorcycle Racing Manager**: gioco manageriale di motociclismo nel browser, in un universo originale
 (squadre, piloti, costruttori e marchi inventati). Il giocatore guida una scuderia in uno dei quattro campionati
 (Premier, Intermediate, Lightweight, Velocity Rookies Cup): piloti, staff, mercato, sponsor, finanze, sviluppo e
 garage della moto, weekend di gara con prove, qualifiche, Sprint e gara simulate in modo deterministico, viste in
 2D (principale) o 3D (sperimentale).
 
-Stato dettagliato: [docs/report/REPORT-LEAN-ANGLE.md](docs/report/REPORT-LEAN-ANGLE.md) ·
+Stato dettagliato: [docs/report/REPORT.md](docs/report/REPORT.md) ·
 priorità: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 **Versione online** (privata, condivisibile dal menu della pagina): https://claude.ai/artifact/Hm8aBjMgYxqp3obqHN2Bag

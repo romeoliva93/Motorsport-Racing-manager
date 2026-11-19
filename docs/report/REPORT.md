@@ -1,4 +1,4 @@
-# LEAN ANGLE — Report di stato
+# Motorcycle Racing Manager — Report di stato
 
 *3 novembre 2026 · ramo `m2/pulizia-garage-simulazione` · **non unito a `main`** (serve la tua autorizzazione).*
 
