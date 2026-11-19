@@ -67,6 +67,8 @@ export function createEngineHost(opts: EngineHostOptions) {
         return engine ? engine.availableCommands() : [];
       case 'replay':
         return engine?.lastReplay ?? null;
+      case 'timing':
+        return engine?.lastTiming ?? null;
       case 'liveStatus':
         return engine?.liveRace ?? null;
       case 'liveAdvance': {

@@ -302,6 +302,64 @@ export interface QualifyingRow {
   riderId: string;
   best: number;
   position: number;
+  /** Programma della sessione: giri di lancio, giri lanciati e rientri, con i tempi dei mini-settori. */
+  laps: TimedLap[];
+}
+
+/** Un giro di una sessione a tempo: partenza (s dall'inizio sessione), tempi dei segmenti, tipo. */
+export interface TimedLap {
+  start: number;
+  /** Tempo di ogni settore (4; somma = tempo del giro). */
+  seg: number[];
+  type: 'out' | 'push' | 'in';
+}
+
+/** Opzioni del programma della sessione (solo per la visualizzazione dei tempi). */
+export interface SessionPlan {
+  /** Frazioni del giro in cui finiscono S1, S2 e S3 (il quarto finisce sul traguardo). */
+  sectors: [number, number, number];
+  /** Durata nominale della sessione (s). */
+  length: number;
+}
+
+/**
+ * Programma "da box" di un pilota: uscita, giri lanciati, rientro; pausa; seconda uscita. Usa un generatore
+ * separato: i tempi migliori (e quindi classifiche e griglie) non cambiano.
+ */
+function sessionLaps(rng: Rng, attempts: number[], plan: SessionPlan, segShare: number[]): TimedLap[] {
+  const split = (time: number): number[] => {
+    const raw = segShare.map((w) => w * (1 + rng.normal(0, 0.006)));
+    const tot = raw.reduce((a, b) => a + b, 0);
+    const seg = raw.map((w) => Math.round((w / tot) * time * 1000) / 1000);
+    seg[seg.length - 1] = Math.round((time - seg.slice(0, -1).reduce((a, b) => a + b, 0)) * 1000) / 1000;
+    return seg;
+  };
+  const runs: { type: TimedLap['type']; time: number }[][] = [
+    [
+      { type: 'out', time: attempts[0]! * rng.range(1.08, 1.14) },
+      { type: 'push', time: attempts[0]! },
+      { type: 'push', time: attempts[1]! },
+      { type: 'in', time: attempts[1]! * rng.range(1.1, 1.16) },
+    ],
+    [
+      { type: 'out', time: attempts[2]! * rng.range(1.08, 1.14) },
+      { type: 'push', time: attempts[2]! },
+      { type: 'in', time: attempts[2]! * rng.range(1.1, 1.16) },
+    ],
+  ];
+  const dur = (r: { time: number }[]) => r.reduce((a, b) => a + b.time, 0);
+  const pause = plan.length >= 1800 ? rng.range(300, 600) : rng.range(90, 180);
+  const room = Math.max(0, plan.length - dur(runs[0]!) - dur(runs[1]!) - pause - 30);
+  let t = rng.range(0, 0.55) * room;
+  const out: TimedLap[] = [];
+  runs.forEach((run, k) => {
+    if (k === 1) t += pause + rng.range(0, 0.35) * room;
+    for (const l of run) {
+      out.push({ start: Math.round(t * 1000) / 1000, seg: split(l.time), type: l.type });
+      t += l.time;
+    }
+  });
+  return out;
 }
 
 /** Sessione a tempo: tre giri lanciati per pilota con la gomma scelta (`compound`), vale il migliore. */
@@ -310,16 +368,29 @@ export function runQualifying(
   refLap: number,
   riders: RaceRider[],
   cond: Conditions = DRY,
+  /** Settori e durata della sessione, per il programma dei giri (non cambia i tempi migliori). */
+  plan?: SessionPlan,
 ): QualifyingRow[] {
   const rng = Rng.fromSeed(`${seed}::quali`);
+  const trng = Rng.fromSeed(`${seed}::timing`);
+  const p: SessionPlan = plan ?? { sectors: [0.25, 0.5, 0.75], length: 2700 };
+  const bounds = [0, ...p.sectors, 1];
+  const segShare = [0, 1, 2, 3].map((k) => bounds[k + 1]! - bounds[k]!);
   const times = riders.map((r) => {
     const base = baseLap(refLap, r) * (1 + tyreModel(r.compound, cond).base + rng.normal(0, 0.0035));
     let best = Infinity;
+    const attempts: number[] = [];
     for (let i = 0; i < 3; i++) {
       const err = rng.chance(0.08 * (1.3 - r.consistency)) ? rng.range(0.004, 0.02) : 0;
-      best = Math.min(best, base * (1 + rng.normal(0, 0.0028 * (1.2 - r.consistency)) + err));
+      const lap = base * (1 + rng.normal(0, 0.0028 * (1.2 - r.consistency)) + err);
+      attempts.push(Math.round(lap * 1000) / 1000);
+      best = Math.min(best, lap);
     }
-    return { riderId: r.id, best: Math.round(best * 1000) / 1000 };
+    return {
+      riderId: r.id,
+      best: Math.round(best * 1000) / 1000,
+      laps: sessionLaps(trng, attempts, p, segShare),
+    };
   });
   return times.sort((a, b) => a.best - b.best).map((x, i) => ({ ...x, position: i + 1 }));
 }
@@ -593,7 +664,8 @@ export class RaceSim {
         fatigue: Math.round(s.fatigue),
         lap: s.lap,
         lastLap: s.lapTimes.length > 1 ? s.lapTimes.at(-1)! : null,
-        bestLap: Number.isFinite(s.best) && s.best < INF && s.lap > 1 ? Math.round(s.best * 1000) / 1000 : null,
+        bestLap:
+          Number.isFinite(s.best) && s.best < INF && s.lap > 1 ? Math.round(s.best * 1000) / 1000 : null,
         out: s.out,
         finished: s.finished,
       };

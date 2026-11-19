@@ -103,10 +103,14 @@ export interface ResultRowView {
   position: number | null;
   riderId: string;
   name: string;
+  firstName: string;
+  lastName: string;
   nationality: string;
   number: number;
   team: string;
   color: string;
+  /** Costruttore della moto. */
+  bike: string;
   mine: boolean;
   time: number | null;
   gap: number | null;
@@ -130,10 +134,13 @@ function resultView(s: GameState, res: SessionResult | undefined): ResultRowView
       position: r.position,
       riderId: r.riderId,
       name: `${rider.firstName} ${rider.lastName}`,
+      firstName: rider.firstName,
+      lastName: rider.lastName,
       nationality: rider.nationality,
       number: numbers.get(r.riderId) ?? 0,
       team: team.name,
       color: team.colors.primary,
+      bike: s.tables.manufacturers[r.manufacturerId]?.name ?? '',
       mine: r.teamId === s.meta.playerTeamId,
       time: r.time,
       gap: r.gap,

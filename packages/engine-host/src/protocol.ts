@@ -10,6 +10,7 @@ export type Request =
   | { id: number; op: 'query'; name: QueryName; args: unknown[] }
   | { id: number; op: 'availableCommands' }
   | { id: number; op: 'replay' }
+  | { id: number; op: 'timing' }
   | { id: number; op: 'liveStatus' }
   | {
       id: number;

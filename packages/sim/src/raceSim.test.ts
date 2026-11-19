@@ -125,3 +125,31 @@ describe('simulazione incrementale', () => {
     expect(fuelOut / 120).toBeLessThan(0.1);
   });
 });
+
+describe('sessioni a tempo: programma dei giri', () => {
+  it('il giro migliore coincide con il miglior giro lanciato e i giri di un pilota non si sovrappongono', async () => {
+    const { runQualifying } = await import('./race.ts');
+    const riders = Array.from({ length: 12 }, (_, i) => rider(`r${i}`, 0.6 + i * 0.02));
+    const q = runQualifying('seme-tempi', 100, riders as never, undefined, {
+      sectors: [0.3, 0.55, 0.8],
+      length: 2700,
+    });
+    for (const row of q) {
+      const push = row.laps.filter((l) => l.type === 'push').map((l) => l.seg.reduce((a, b) => a + b, 0));
+      expect(Math.min(...push)).toBeCloseTo(row.best, 2);
+      row.laps.forEach((l, k) => {
+        expect(l.seg).toHaveLength(4);
+        if (k > 0) {
+          const p = row.laps[k - 1]!;
+          expect(l.start).toBeGreaterThanOrEqual(p.start + p.seg.reduce((a, b) => a + b, 0) - 0.002);
+        }
+      });
+    }
+    // I tempi migliori non dipendono dal programma (stesso generatore di prima).
+    const q2 = runQualifying('seme-tempi', 100, riders as never, undefined, {
+      sectors: [0.25, 0.5, 0.75],
+      length: 900,
+    });
+    expect(q2.map((x) => [x.riderId, x.best])).toEqual(q.map((x) => [x.riderId, x.best]));
+  });
+});

@@ -178,6 +178,27 @@ async function waitForServer(url, ms = 20000) {
     // Prove libere 1 con programma "Assetto", poi riunione tecnica con il capotecnico.
     await page.getByRole('button', { name: 'Programma Assetto' }).first().click();
     await page.getByRole('button', { name: 'Corri Prove libere 1', exact: true }).click();
+    // Schermata tempi delle prove: l'orologio scorre, le celle dei settori si riempiono e si colorano.
+    await page.getByText('Tempo rimanente').waitFor();
+    await page.getByRole('button', { name: '64×' }).click();
+    await page.waitForFunction(
+      () => document.querySelectorAll('.tt-s.done.best, .tt-s.done.pb').length >= 3,
+      null,
+      { timeout: 60000 },
+    );
+    const ttRows = await page.locator('.tt tbody tr').count();
+    if (ttRows < 15) throw new Error(`Schermata tempi incompleta: ${ttRows} righe`);
+    const colored = await page.locator('.tt-s.done.best, .tt-s.done.pb').count();
+    if (colored === 0) throw new Error('Nessun settore colorato (rosso/arancio)');
+    await shot('11-tempi-prove');
+    await page.getByRole('button', { name: 'Salta alla fine' }).click();
+    await page.getByText('Sessione finita').waitFor();
+    // A fine sessione tutti hanno un giro migliore (4ª colonna) e il primo non ha distacco.
+    const bests = await page.locator('.tt tbody tr td:nth-child(4)').allInnerTexts();
+    if (bests.some((b) => !/\d'\d\d\.\d{3}/.test(b)))
+      throw new Error('A fine sessione manca il giro migliore di qualche pilota');
+    await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
+    step(`schermata tempi delle prove: ${ttRows} piloti, settori colorati, salto alla fine`);
     await page.locator('.wk-sess.done', { hasText: 'Prove libere 1' }).first().waitFor();
     await page.getByText('Riunione tecnica').waitFor();
     await page.getByText('Confidenza col circuito').waitFor();
@@ -191,6 +212,8 @@ async function waitForServer(url, ms = 20000) {
     await shot('11-briefing');
     for (const name of ['Prove', 'Prove libere 2', 'Qualifiche 1', 'Qualifiche 2']) {
       await page.getByRole('button', { name: `Corri ${name}`, exact: true }).click();
+      await page.getByRole('button', { name: 'Salta alla fine' }).click();
+      await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
       await page.locator('.wk-sess.done', { hasText: name }).first().waitFor();
     }
     await page.getByText('Griglia di partenza').waitFor();
@@ -258,6 +281,22 @@ async function waitForServer(url, ms = 20000) {
         `10 cambi senza perdite (memoria JS ${Math.round(h0 / 1e6)} → ${Math.round(h1 / 1e6)} MB)`,
     );
     if ((await page.locator('.rv-rider').count()) !== 2) throw new Error('Pannelli piloti mancanti');
+    // Schermata tempi della gara, sullo stesso orologio.
+    await page.getByRole('button', { name: 'Tempi', exact: true }).click();
+    await page.locator('.rv-stage .tt tbody tr').first().waitFor();
+    const raceRows = await page.locator('.rv-stage .tt tbody tr').count();
+    if (raceRows < 15) throw new Error(`Tempi della gara incompleti: ${raceRows}`);
+    await page
+      .waitForFunction(() => document.querySelectorAll('.rv-stage .tt-s.done').length > 0, null, {
+        timeout: 30000,
+      })
+      .catch(() => {
+        throw new Error('Tempi della gara: nessun settore registrato');
+      });
+    await shot('12-gara-tempi');
+    await page.getByRole('button', { name: '2D', exact: true }).click();
+    await page.locator('.rv-canvas').waitFor();
+    step(`schermata tempi in gara: ${raceRows} piloti, stesso istante della 2D`);
     step('Sprint in 2D: giro ' + (await page.locator('.rv-lap b').innerText()) + ', 2 pannelli piloti');
 
     // --- Strategia in diretta: il cambio arriva al motore e vale per il resto della gara ---
@@ -299,6 +338,8 @@ async function waitForServer(url, ms = 20000) {
     );
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
     await page.getByRole('button', { name: 'Corri Warm Up', exact: true }).click();
+    await page.getByRole('button', { name: 'Salta alla fine' }).click();
+    await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
     await page.getByRole('button', { name: 'Via alla gara!' }).click();
     await page.locator('.rv-canvas').waitFor();
     await page.getByRole('button', { name: 'Salta alla fine' }).click();

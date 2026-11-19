@@ -11,6 +11,8 @@ import { buildScene, drawDynamic, drawStatic, fitView, type View } from '../../r
 import { INTRO, duration, lastDistances, raceFrame, teamsOf } from '../../race/raceState.ts';
 import { usePrefs, webglAvailable } from '../../prefs.ts';
 import type { Cam3D } from '../../race/Race3D.tsx';
+import { RaceTiming } from '../../race/timing.ts';
+import { TimingTower } from '../../race/TimingTower.tsx';
 
 const SPEEDS = [0, 1, 2, 4, 8, 16] as const;
 /** Vista 3D caricata solo quando richiesta (Three.js). */
@@ -103,6 +105,9 @@ export function RaceViewer({
   const [cam3d, setCam3d] = useState<Cam3D>('auto');
   const [no3d, setNo3d] = useState(() => !webglAvailable());
   const [mode3d, setMode3d] = useState(() => prefs.raceView === '3d' && webglAvailable());
+  /** Schermata tempi al posto della pista (stesso istante di gara). */
+  const [timingView, setTimingView] = useState(false);
+  const rtRef = useRef<RaceTiming | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(
     () => data.riders.find((r) => r.mine)?.id ?? null,
   );
@@ -214,6 +219,21 @@ export function RaceViewer({
   const f = raceFrame(vd, scene, teams, lastDist, t, selectedId);
   const { racing, dists, order, lap, avgSpeed, finished, phase, bikes, crashes, rain } = f;
   const leader = order[0]!;
+  // Cronometraggio ai checkpoint, aggiornato con i fotogrammi arrivati (anche in diretta).
+  if (!rtRef.current) rtRef.current = new RaceTiming(data);
+  const rt = rtRef.current.update(vd.frames);
+  const towerRows = timingView
+    ? rt.rows(
+        t,
+        order.map((o) => o.i),
+        new Set(order.filter((o) => racing && o.d < 0).map((o) => o.i)),
+        new Set(
+          vd.results
+            .filter((x) => x.status === 'finished' && x.time !== null && t >= x.time)
+            .map((x) => vd.riders.findIndex((r) => r.id === x.riderId)),
+        ),
+      )
+    : [];
 
   // Autodromo disegnato una volta in alta risoluzione (fuori schermo): ogni fotogramma ne inquadra una parte.
   useEffect(() => {
@@ -515,8 +535,16 @@ export function RaceViewer({
       </aside>
 
       <div className="rv-center">
-        <div className="rv-stage">
-          {mode3d ? (
+        <div className={`rv-stage ${timingView ? 'timing' : ''}`}>
+          {timingView ? (
+            <TimingTower
+              rows={towerRows}
+              mode="race"
+              totalLaps={data.laps}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          ) : mode3d ? (
             <Fallback3D
               onFail={() => {
                 setMode3d(false);
@@ -577,16 +605,28 @@ export function RaceViewer({
             ))}
           </div>
           <div className="rv-speeds" role="group" aria-label="Vista">
-            <button className={!mode3d ? 'on' : ''} onClick={() => setMode3d(false)}>
+            <button
+              className={!mode3d && !timingView ? 'on' : ''}
+              onClick={() => {
+                setMode3d(false);
+                setTimingView(false);
+              }}
+            >
               2D
             </button>
             <button
-              className={mode3d ? 'on' : ''}
+              className={mode3d && !timingView ? 'on' : ''}
               disabled={no3d}
               title={no3d ? 'Il 3D non è disponibile su questo dispositivo: resta la vista 2D' : undefined}
-              onClick={() => setMode3d(true)}
+              onClick={() => {
+                setMode3d(true);
+                setTimingView(false);
+              }}
             >
               3D
+            </button>
+            <button className={timingView ? 'on' : ''} onClick={() => setTimingView(true)}>
+              Tempi
             </button>
           </div>
           <div className="rv-speeds" role="group" aria-label="Inquadratura">

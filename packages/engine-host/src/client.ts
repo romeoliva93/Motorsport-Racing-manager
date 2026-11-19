@@ -9,6 +9,7 @@ import type {
   QueryName,
   QueryResult,
   ReplayData,
+  SessionTiming,
 } from '@lean-angle/game';
 import type { SaveMeta } from '@lean-angle/persistence';
 import type { HostMessage, Request, Transport } from './protocol.ts';
@@ -80,6 +81,10 @@ export class EngineClient {
   /** Dati per rivedere l'ultima gara del giocatore (null se non disponibile). */
   replay() {
     return this.request<ReplayData | null>({ op: 'replay' });
+  }
+  /** Ultima sessione a tempo del giocatore, per la schermata tempi (null se nessuna). */
+  timing() {
+    return this.request<SessionTiming | null>({ op: 'timing' });
   }
   /** Gara in diretta in corso (null se nessuna). */
   liveStatus() {

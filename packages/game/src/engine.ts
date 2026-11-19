@@ -43,6 +43,7 @@ import { monthlyFinance } from './economy.ts';
 import {
   type RacePrep,
   type ReplayData,
+  type SessionTiming,
   completeLiveRace,
   finishOtherRounds,
   nextSession,
@@ -113,6 +114,8 @@ export class GameEngine {
   version = 0;
   /** Dati per rivedere l'ultima gara del giocatore (solo in memoria, non salvati). */
   lastReplay: ReplayData | null = null;
+  /** Ultima sessione a tempo del giocatore (schermata tempi); non si salva. */
+  lastTiming: SessionTiming | null = null;
   /** Gara in diretta (simulazione incrementale). Fotografata in `state.liveSession` prima di salvare. */
   private live: { sim: RaceSim; prep: RacePrep } | null = null;
 
@@ -518,8 +521,10 @@ export class GameEngine {
             return;
           }
         }
-        const rep = runNextSession(s, this.ids, rng, round, cmd.strategies ?? {});
+        const sink: { timing?: SessionTiming } = {};
+        const rep = runNextSession(s, this.ids, rng, round, cmd.strategies ?? {}, sink);
         if (rep) this.lastReplay = rep;
+        this.lastTiming = sink.timing ?? null;
         if (!nextSession(s, round)) finishOtherRounds(s, this.ids, rng);
         this.events.emit('SessionDone', s.meta.currentDay, { roundId: round.id, session });
         return;

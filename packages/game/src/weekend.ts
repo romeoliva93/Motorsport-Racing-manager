@@ -44,6 +44,7 @@ import {
   compoundForecast,
   generateTrack,
   runQualifying,
+  type TimedLap,
   runRace,
   unit,
   type Compound,
@@ -364,8 +365,11 @@ function timedSession(
   kind: SessionKind,
   list: Entrant[],
   strategies: Record<string, Strategy>,
+  sink?: { timing?: SessionTiming },
 ): ResultRow[] {
   const cond = condOf(s, round, kind);
+  const sectors = timingSectors(trackFor(s, round));
+  const length = SESSION_LENGTH[kind] ?? 1800;
   const tyre = new Map(
     list.map((e) => [
       e.rider.id,
@@ -379,7 +383,29 @@ function timedSession(
       toRaceRider(s, e, { compound: tyre.get(e.rider.id)!, mode: 'normal' }, round, cond.grip !== 'dry'),
     ),
     cond,
+    { sectors, length },
   );
+  // Sessione del weekend del giocatore (anche se i suoi piloti non corrono): dati per la schermata tempi.
+  if (sink) {
+    const circuit = s.tables.circuits[round.circuitId]!;
+    const fmt = WEEKEND_FORMAT[tierOf(s, round)];
+    sink.timing = {
+      roundId: round.id,
+      kind,
+      circuit: circuit.name,
+      lengthM: circuit.lengthM,
+      length: Math.max(
+        length,
+        ...q.flatMap((x) => x.laps.map((l) => l.start + l.seg.reduce((a, b) => a + b, 0) + 20)),
+      ),
+      sectors,
+      q2Cut: kind === 'practice' ? fmt.toQ2 : 0,
+      riders: q.map((x) => {
+        const e = list.find((y) => y.rider.id === x.riderId)!;
+        return { ...timingRider(s, e, tyre.get(e.rider.id)!), laps: x.laps };
+      }),
+    };
+  }
   const out = q.map((x) => {
     const e = list.find((y) => y.rider.id === x.riderId)!;
     return {
@@ -423,12 +449,13 @@ function qualifyingSessions(
   round: Round,
   kind: SessionKind,
   strategies: Record<string, Strategy>,
+  sink?: { timing?: SessionTiming },
 ): void {
   const list = entrants(s, round);
   const fmt = WEEKEND_FORMAT[tierOf(s, round)];
   const byId = (id: string) => list.find((e) => e.rider.id === id)!;
   if (kind === 'qualifying') {
-    timedSession(s, ids, round, 'qualifying', list, strategies);
+    timedSession(s, ids, round, 'qualifying', list, strategies, sink);
     round.status = 'qualified';
     return;
   }
@@ -442,13 +469,14 @@ function qualifyingSessions(
       'q1',
       list.filter((e) => !direct.has(e.rider.id)),
       strategies,
+      sink,
     );
     return;
   }
   // Q2 e griglia ufficiale.
   const q1 = resultOf(s, round, 'q1')?.rows ?? [];
   const promoted = q1.slice(0, fmt.fromQ1).map((r) => r.riderId);
-  const q2 = timedSession(s, ids, round, 'q2', [...direct, ...promoted].map(byId), strategies);
+  const q2 = timedSession(s, ids, round, 'q2', [...direct, ...promoted].map(byId), strategies, sink);
   const rest = q1.slice(fmt.fromQ1);
   const pole = q2[0]?.time ?? 0;
   const grid: ResultRow[] = [...q2, ...rest].map((r, i) => ({
@@ -493,6 +521,8 @@ export interface ReplayData {
   lengthM: number;
   /** Tracciato: punti normalizzati e indici dei due confini di settore (S1|S2|S3). */
   track: { points: [number, number][]; sectors: [number, number]; longLap: number };
+  /** Settori di cronometraggio (fine di S1, S2, S3) per la schermata tempi. */
+  timingSectors: [number, number, number];
   /** Meteo della sessione. */
   weather: { sky: string; grip: string; airTemp: number; trackTemp: number };
   riders: {
@@ -505,6 +535,10 @@ export interface ReplayData {
     color: string;
     color2: string;
     mine: boolean;
+    firstName: string;
+    lastName: string;
+    /** Costruttore della moto. */
+    bike: string;
     /** Ritratto (chiave e volto di riserva). */
     portrait: { key: string; pool: string };
     /** Strategia e moto: gomma, ritmo, affidabilità (0–100), giri per giro tempi e usura gomma. */
@@ -520,6 +554,73 @@ export interface ReplayData {
   frameEvery: number;
   events: RaceOutcome['events'];
   results: RaceOutcome['results'];
+}
+
+/** Settori di cronometraggio (frazioni del giro): i due confini del tracciato e la metà dell'ultimo tratto. */
+export function timingSectors(track: {
+  points: unknown[];
+  sectors: [number, number];
+}): [number, number, number] {
+  const n = track.points.length;
+  const a = track.sectors[0] / n,
+    b = track.sectors[1] / n;
+  return [a, b, (b + 1) / 2];
+}
+
+/** Pilota nella schermata tempi. */
+export interface TimingRider {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nationality: string;
+  number: number;
+  team: string;
+  color: string;
+  color2: string;
+  mine: boolean;
+  bike: string;
+  compound: string;
+}
+
+/** Sessione a tempo (prove, qualifiche, Warm Up) per la schermata tempi: giri e settori di ogni pilota. */
+export interface SessionTiming {
+  roundId: string;
+  kind: SessionKind;
+  circuit: string;
+  lengthM: number;
+  /** Durata della sessione (s). */
+  length: number;
+  sectors: [number, number, number];
+  /** Prove del venerdì: i primi N vanno direttamente in Q2 (0 = nessuno). */
+  q2Cut: number;
+  riders: (TimingRider & { laps: TimedLap[] })[];
+}
+
+const SESSION_LENGTH: Partial<Record<SessionKind, number>> = {
+  fp1: 2700,
+  fp2: 2700,
+  practice: 3600,
+  q1: 900,
+  q2: 900,
+  qualifying: 1200,
+  warmup: 600,
+};
+
+function timingRider(s: GameState, e: Entrant, compound: string): TimingRider {
+  const t = s.tables.teams[e.teamId]!;
+  return {
+    id: e.rider.id,
+    firstName: e.rider.firstName,
+    lastName: e.rider.lastName,
+    nationality: e.rider.nationality,
+    number: e.number,
+    team: t.name,
+    color: t.colors.primary,
+    color2: t.colors.secondary,
+    mine: e.teamId === s.meta.playerTeamId,
+    bike: s.tables.manufacturers[e.manufacturerId]?.name ?? '',
+    compound,
+  };
 }
 
 /** Sprint o gara. Restituisce i dati per rivederla se è la gara del giocatore. */
@@ -594,6 +695,7 @@ export function prepareRace(
         lengthM: circuit.lengthM,
         country: circuit.country,
         track: { points: track.points, sectors: track.sectors, longLap: track.longLap },
+        timingSectors: timingSectors(track),
         weather: (() => {
           const w = weatherOf(s, round).find((x) => x.kind === kind);
           return w
@@ -612,6 +714,9 @@ export function prepareRace(
             color: t.colors.primary,
             color2: t.colors.secondary,
             mine: e.teamId === playerTeam,
+            firstName: e.rider.firstName,
+            lastName: e.rider.lastName,
+            bike: s.tables.manufacturers[e.manufacturerId]?.name ?? '',
             portrait: (() => {
               const key = portraitKey(e.rider);
               return { key, pool: poolPortraitKey(key, cal.ageOn(e.rider.birthDay, s.meta.currentDay)) };
@@ -849,15 +954,17 @@ export function runNextSession(
   rng: Rng,
   round: Round,
   strategies: Record<string, Strategy>,
+  /** Riceve i dati della schermata tempi delle sessioni a tempo. */
+  sink?: { timing?: SessionTiming },
 ): ReplayData | null {
   const kind = nextSession(s, round);
   if (!kind) return null;
   beforeSession(s, ids, round);
   let replay: ReplayData | null = null;
   if (kind === 'fp1' || kind === 'fp2' || kind === 'practice' || kind === 'warmup')
-    timedSession(s, ids, round, kind, entrants(s, round), strategies);
+    timedSession(s, ids, round, kind, entrants(s, round), strategies, sink);
   else if (kind === 'q1' || kind === 'q2' || kind === 'qualifying')
-    qualifyingSessions(s, ids, round, kind, strategies);
+    qualifyingSessions(s, ids, round, kind, strategies, sink);
   else replay = raceSession(s, ids, rng, round, kind, strategies);
   afterSession(s, round, kind);
   return replay;

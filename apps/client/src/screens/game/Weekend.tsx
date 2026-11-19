@@ -1,13 +1,15 @@
 import { Flag, FlagName } from '../../design-system/Flag.tsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ReplayData, ResultRowView, WeekendView } from '@lean-angle/game';
+import type { ReplayData, ResultRowView, SessionTiming, WeekendView } from '@lean-angle/game';
 import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
 import { Card, Explain, Help, Pos, Tabs, lapTime, raceTime } from '../../design-system/components.tsx';
 import { WeatherIcon, SKY_LABEL } from '../../design-system/WeatherIcon.tsx';
 
 import { RaceViewer } from './RaceViewer.tsx';
+import { SessionViewer } from '../../race/SessionViewer.tsx';
 import './weekend.css';
+import '../../race/timing.css';
 
 type Compound = 'soft' | 'medium' | 'hard' | 'wet';
 type Mode = 'conservative' | 'normal' | 'attack';
@@ -93,6 +95,9 @@ export function WeekendScreen({
   const [liveFrom, setLiveFrom] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<string | null>(null);
+  /** Schermata tempi dell'ultima sessione a tempo (prove, qualifiche, Warm Up). */
+  const [timing, setTiming] = useState<SessionTiming | null>(null);
+  const [timingOpen, setTimingOpen] = useState(false);
 
   const roundId = q.status === 'ready' ? q.data.round?.id : undefined;
   useEffect(() => {
@@ -141,6 +146,19 @@ export function WeekendScreen({
   if (w.state === 'seasonOver' || (w.seasonFinished && showSeasonEnd && !watching))
     return <SeasonEnd notify={notify} goMarket={goMarket} />;
   if (!w.round) return <div className="loading">Nessun evento in calendario.</div>;
+
+  if (timingOpen && timing)
+    return (
+      <SessionViewer
+        timing={timing}
+        title={w.sessions.find((x) => x.kind === timing.kind)?.name ?? 'Sessione'}
+        onClose={() => {
+          setTimingOpen(false);
+          setTab(timing.kind === 'q2' ? 'qualifying' : timing.kind);
+          window.scrollTo(0, 0);
+        }}
+      />
+    );
 
   if (watching && replay)
     return (
@@ -260,7 +278,15 @@ export function WeekendScreen({
                 ...(raceKind ? { live: true } : {}),
               });
               if (raceKind) await afterRace(nextS.kind);
-              else setTab(nextS.kind === 'q2' ? 'qualifying' : nextS.kind);
+              else {
+                setTab(nextS.kind === 'q2' ? 'qualifying' : nextS.kind);
+                // Sessione a tempo: si guarda nella schermata tempi.
+                const tm = await engine.timing();
+                if (tm) {
+                  setTiming(tm);
+                  setTimingOpen(true);
+                }
+              }
             })
           }
           onSimulate={(plan) =>
@@ -318,6 +344,11 @@ export function WeekendScreen({
               }
             />
           ) : null}
+          {timing && shown && timing.roundId === r.id && timing.kind === shown.kind && (
+            <button className="btn" onClick={() => setTimingOpen(true)}>
+              Rivedi i tempi di {shown.name}
+            </button>
+          )}
           {replay && shown && replay.kind === shown.kind && (
             <button className="btn" onClick={() => setWatching(true)}>
               Rivedi {shown.kind === 'sprint' ? 'la Sprint' : 'la gara'}
@@ -730,50 +761,57 @@ export function ResultTable({
         )
       }
     >
-      <div style={{ overflowX: 'auto' }}>
-        <table className="std static">
+      <div className="tt-wrap">
+        <table className="tt tt-results">
           <thead>
             <tr>
-              <th>Pos.</th>
-              <th>Pilota</th>
-              <th>Squadra</th>
-              <th>Gomma</th>
-              <th className="r">{kind === 'race' ? 'Tempo / distacco' : 'Tempo'}</th>
-              {kind === 'race' && <th className="r">Giro migliore</th>}
-              {kind === 'race' && <th className="r">Punti</th>}
+              <th className="tt-p">P</th>
+              <th className="tt-rider">Pilota</th>
+              <th className="tt-num">#</th>
+              <th className="tt-team">Squadra</th>
+              <th className="tt-tyre">Gomma</th>
+              <th>{kind === 'race' ? 'Tempo / distacco' : 'Miglior giro'}</th>
+              {kind === 'quali' && <th>Gap</th>}
+              {kind === 'race' && <th>Giro migliore</th>}
+              {kind === 'race' && <th>Punti</th>}
+              <th className="tt-bike">Moto</th>
             </tr>
           </thead>
           <tbody>
             {shown.map((r, i) => (
               <tr
                 key={r.riderId}
-                className={`${r.mine ? 'mine' : ''} ${cut && r.position === cut ? 'cut' : ''}`}
+                className={`${r.mine ? 'mine' : ''} ${cut && r.position === cut ? 'cut' : ''} ${r.status === 'dnf' ? 'out' : ''}`}
               >
-                <td>
-                  <Pos value={r.position} />
+                <td className="tt-p">{r.position ?? '–'}</td>
+                <td className="tt-rider" style={{ ['--c' as string]: r.color }}>
+                  <Flag code={r.nationality} size={0.8} /> <span className="tt-first">{r.firstName}</span>{' '}
+                  <b>{r.lastName.toUpperCase()}</b>
                 </td>
-                <td>
-                  <span className="swatch" style={{ background: r.color }} />
-                  <Flag code={r.nationality} size={0.85} /> <b>{r.name}</b>{' '}
-                  <span className="muted">#{r.number}</span>
+                <td className="tt-num" style={{ background: r.color, color: inkOn(r.color) }}>
+                  {r.number}
                 </td>
-                <td className="t2">{r.team}</td>
-                <td>
+                <td className="tt-team">{r.team}</td>
+                <td className="tt-tyre">
                   {r.compound ? (
-                    <span className="tyre-tag">
-                      <i className={`tyre ${r.compound}`} />
-                      {TYRES.find((t) => t.id === r.compound)!.label}
-                    </span>
+                    <i
+                      className={`tt-chip ${r.compound}`}
+                      title={TYRES.find((t) => t.id === r.compound)!.label}
+                    >
+                      {{ soft: 'S', medium: 'M', hard: 'H', wet: 'W' }[r.compound]}
+                    </i>
                   ) : (
-                    '—'
+                    ''
                   )}
                 </td>
-                <td className="r">
+                <td className="tt-t">
                   {r.penalty && <Penalty p={r.penalty} />}
                   {r.status === 'dnf'
                     ? r.reason === 'mechanical'
                       ? 'Guasto'
-                      : 'Caduta'
+                      : r.reason === 'fuel'
+                        ? 'Senza benzina'
+                        : 'Caduta'
                     : kind === 'quali'
                       ? lapTime(r.time)
                       : i === 0
@@ -782,8 +820,12 @@ export function ResultTable({
                           ? 'doppiato'
                           : `+${r.gap.toFixed(3)}`}
                 </td>
-                {kind === 'race' && <td className="r t2">{lapTime(r.bestLap)}</td>}
-                {kind === 'race' && <td className="r">{r.points ? <b>{r.points}</b> : '—'}</td>}
+                {kind === 'quali' && (
+                  <td className="tt-t">{i === 0 || r.gap === null ? '' : r.gap.toFixed(3)}</td>
+                )}
+                {kind === 'race' && <td className="tt-t">{lapTime(r.bestLap)}</td>}
+                {kind === 'race' && <td className="tt-t tt-pts">{r.points ? r.points : ''}</td>}
+                <td className="tt-bike">{r.bike}</td>
               </tr>
             ))}
           </tbody>
@@ -796,6 +838,13 @@ export function ResultTable({
       ) : null}
     </Card>
   );
+}
+
+/** Testo leggibile sul colore della squadra. */
+function inkOn(hex: string): string {
+  const n = parseInt(hex.replace('#', '').padEnd(6, '0').slice(0, 6), 16);
+  const l = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return l > 0.6 ? '#111' : '#fff';
 }
 
 function LastRace({ last }: { last: NonNullable<WeekendView['last']> }) {
