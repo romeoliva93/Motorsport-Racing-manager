@@ -126,6 +126,17 @@ async function waitForServer(url, ms = 20000) {
       step(`schermata ${label}`);
     }
 
+    // Calendario: la scheda del circuito con tracciato, caratteristiche, pole e vincitore dell'anno prima.
+    await page.locator('.nav').getByRole('button', { name: 'Calendario', exact: true }).click();
+    await page.locator('.cal-link').first().click();
+    await page.getByRole('dialog').getByText('Albo d’oro').waitFor();
+    await page.getByRole('dialog').locator('.circ-map').waitFor();
+    const pole = await page.getByRole('dialog').locator('.hist-row').first().innerText();
+    if (!/Pole position\s*\S+/i.test(pole)) throw new Error(`Pole dell'anno prima mancante: ${pole}`);
+    await shot('07-circuito');
+    await page.getByRole('button', { name: 'Chiudi', exact: true }).click();
+    step(`scheda circuito: tracciato, caratteristiche e albo d’oro (${pole.replace(/\s+/g, ' ').slice(0, 60)})`);
+
     // Scheda piloti: switch fra i titolari e schede.
     await page.locator('.nav').getByRole('button', { name: 'Piloti', exact: true }).click();
     const cards = page.locator('.rs-card');

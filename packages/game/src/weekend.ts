@@ -1325,3 +1325,65 @@ export function standings(s: GameState, seasonId: string): StandingsView {
     racesDone: races.filter((r) => r.kind === 'race').length,
   };
 }
+
+// ---------------------------------------------------------------------------------------------
+/** Pole, vittoria e giro più veloce di un Gran Premio. */
+export interface PastResult {
+  year: number;
+  /** true = stagione giocata nella carriera; false = stagione prima dell'inizio della carriera (simulata). */
+  played: boolean;
+  pole: { riderId: string; time: number } | null;
+  winner: { riderId: string; time: number | null } | null;
+  fastestLap: { riderId: string; time: number } | null;
+}
+
+/**
+ * Risultati di un circuito in una stagione della categoria. Le stagioni giocate usano i risultati veri; per
+ * l'anno prima dell'inizio della carriera il Gran Premio viene simulato (in modo fisso) con le squadre attuali:
+ * qualifica con gomma morbida e passo gara con gomma media.
+ */
+export function pastResult(s: GameState, round: Round, year: number): PastResult | null {
+  const season = s.tables.seasons[round.seasonId]!;
+  const old = rows(s, 'seasons').find((x) => x.categoryId === season.categoryId && x.year === year);
+  if (old) {
+    const r = old.roundIds.map((id) => s.tables.rounds[id]!).find((x) => x.circuitId === round.circuitId);
+    if (!r) return null;
+    const quali = resultOf(s, r, 'qualifying');
+    const race = resultOf(s, r, 'race');
+    if (!quali && !race) return null;
+    const p = quali?.rows.find((x) => x.position === 1);
+    const w = race?.rows.find((x) => x.position === 1);
+    return {
+      year,
+      played: true,
+      pole: p ? { riderId: p.riderId, time: p.bestLap ?? p.time ?? 0 } : null,
+      winner: w ? { riderId: w.riderId, time: w.time ?? null } : null,
+      fastestLap: race?.fastestLap ?? null,
+    };
+  }
+  const startYear = Math.min(...rows(s, 'seasons').map((x) => x.year));
+  if (year !== startYear - 1) return null;
+  const list = entrants(s, { ...round, stage: 0 });
+  const ref = refLapOf(s, round);
+  const sim = (compound: Compound, tag: string) =>
+    runQualifying(
+      `${s.meta.seed}::storia::${round.circuitId}::${year}::${tag}`,
+      ref,
+      list.map((e) => toRaceRider(s, e, { compound, mode: 'normal' })),
+      conditionsFor(undefined),
+    );
+  const q = sim('soft', 'q');
+  const race = sim('medium', 'r');
+  const laps = RACE_FORMAT[tierOf(s, round)].laps;
+  return {
+    year,
+    played: false,
+    pole: q[0] ? { riderId: q[0].riderId, time: q[0].best } : null,
+    winner: race[0]
+      ? { riderId: race[0].riderId, time: Math.round(race[0].best * 1.012 * laps * 1000) / 1000 }
+      : null,
+    fastestLap: race[0]
+      ? { riderId: race[0].riderId, time: Math.round(race[0].best * 1.004 * 1000) / 1000 }
+      : null,
+  };
+}
