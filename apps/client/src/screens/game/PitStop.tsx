@@ -99,7 +99,7 @@ function PitRider({
           </div>
         </div>
       </div>
-      <blockquote className={`pit-quote ${d.mood}`}>
+      <blockquote className={`pit-quote m-${d.mood}`}>
         <span aria-hidden>{MOOD[d.mood]}</span> «{d.quote}»
       </blockquote>
       <div className="pit-sub">

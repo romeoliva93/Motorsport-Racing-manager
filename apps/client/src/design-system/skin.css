@@ -1,217 +1,232 @@
 /*
- * Motorcycle Racing Manager — tema "Paddock Night" (reskin completo, v4).
+ * Motorcycle Racing Manager — tema "Pit Wall" (v5).
  *
- * Stesso sistema di colori funzionali (arancio = azione, blu = informazione, verde/giallo/rosso = stato) su una
- * base più profonda e "da box": blu-nero, linee di velocità, pannelli con angolo tagliato, titoli condensati in
- * corsivo, pulsanti e chip a parallelogramma. Caricato dopo app.css; le regole sui componenti delle singole
- * schermate usano il prefisso `body` per avere la precedenza sui loro fogli.
+ * Più semplice e leggibile, lontano dal solito look da manageriale: niente corsivi maiuscoli, angoli tagliati o
+ * pulsanti a parallelogramma. Base blu ardesia (non nera), pannelli morbidi e arrotondati, testi più grandi,
+ * titoli in minuscolo, un solo colore forte per le azioni (il rosso del logo). Caricato dopo app.css; le regole
+ * sui componenti delle singole schermate usano il prefisso `body` per avere la precedenza sui loro fogli.
  */
 :root {
-  --bg-0: #080a0f;
-  --bg-1: #0e1117;
-  --bg-2: #151922;
-  --bg-3: #1f2430;
-  --glass: rgba(17, 20, 28, 0.94);
-  --line: #252b37;
-  --line-strong: #3a4252;
-  --text-1: #eef1f6;
-  --text-2: #aab3c1;
-  --text-3: #707a8a;
-  --r-1: 3px;
-  --r-2: 5px;
-  --r-3: 8px;
-  --cut: 14px;
-  --shadow-1: 0 14px 40px rgba(0, 0, 0, 0.5);
-  --panel: linear-gradient(180deg, rgba(30, 35, 46, 0.96) 0%, rgba(17, 20, 28, 0.96) 100%);
+  --bg-0: #0d121c;
+  --bg-1: #131a27;
+  --bg-2: #1a2232;
+  --bg-3: #242e41;
+  --glass: rgba(22, 29, 43, 0.96);
+  --line: #273145;
+  --line-strong: #37445c;
+  --text-1: #f3f6fb;
+  --text-2: #b3bdcf;
+  --text-3: #7f8aa0;
+  --r-1: 8px;
+  --r-2: 12px;
+  --r-3: 18px;
+  --cut: 0px;
+  --shadow-1: 0 12px 32px rgba(3, 6, 12, 0.45);
+  --panel: #161e2d;
+  --panel-2: #1b2435;
+  --fill-1: rgba(255, 255, 255, 0.035);
+  --fill-2: rgba(255, 255, 255, 0.07);
+  --fill-3: rgba(255, 255, 255, 0.12);
 }
-
-/* Sfondo: vignettatura, bagliore del colore squadra, linee di velocità diagonali. */
+html {
+  font-size: 16.5px;
+}
 body {
   background:
     radial-gradient(
-      1200px 700px at 85% -10%,
-      color-mix(in srgb, var(--team) 18%, transparent),
+      1100px 600px at 90% -10%,
+      color-mix(in srgb, var(--team) 12%, transparent),
       transparent 60%
     ),
-    radial-gradient(900px 600px at -10% 110%, rgba(227, 18, 11, 0.07), transparent 60%),
-    repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0.018) 0 2px, transparent 2px 46px), var(--bg-0);
+    var(--bg-0);
   background-attachment: fixed;
-  letter-spacing: 0.005em;
+  letter-spacing: 0;
 }
 ::selection {
   background: rgba(227, 18, 11, 0.35);
 }
 * {
   scrollbar-width: thin;
-  scrollbar-color: #343b49 transparent;
+  scrollbar-color: #33405a transparent;
 }
 
-/* Titoli: condensati, corsivi, maiuscoli. */
+/* Titoli: puliti, in minuscolo, niente corsivo. */
 h1,
 h2,
 h3,
 .display,
 .big {
-  font-stretch: 78%;
-  font-style: italic;
-  letter-spacing: 0.01em;
+  font-style: normal;
+  font-stretch: 100%;
+  letter-spacing: -0.01em;
+  text-transform: none;
 }
 h1,
 h2 {
-  text-transform: uppercase;
-  font-weight: 900;
+  font-weight: 800;
 }
 
-/* Pannelli con angolo tagliato e filo arancio. */
+/* Pannelli: arrotondati, ombra leggera, nessun angolo tagliato. */
 .card {
   position: relative;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--r-2);
-  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: var(--r-3);
+  clip-path: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 8px 24px rgba(3, 6, 12, 0.25);
   backdrop-filter: none;
-}
-.card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 2.6rem;
-  height: 3px;
-  background: var(--signal);
+  padding: 1.25rem 1.35rem;
 }
 .card.accent {
   background:
-    linear-gradient(120deg, color-mix(in srgb, var(--team) 22%, transparent), transparent 55%), var(--panel);
-  border-color: color-mix(in srgb, var(--team) 45%, var(--line));
-}
-.card.accent::before {
-  background: var(--team);
-  width: 100%;
-  opacity: 0.85;
+    linear-gradient(135deg, color-mix(in srgb, var(--team) 16%, transparent), transparent 60%), var(--panel);
+  border-color: color-mix(in srgb, var(--team) 40%, var(--line));
 }
 .card > h3,
 .section-title {
-  text-transform: uppercase;
-  font-size: 1.12rem;
-  font-weight: 900;
-  font-stretch: 78%;
-  font-style: italic;
-  letter-spacing: 0.03em;
+  text-transform: none;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-style: normal;
+  font-stretch: 100%;
+  letter-spacing: -0.005em;
+  gap: 0.55rem;
 }
 .card > h3::before,
 .section-title::before {
   content: '';
   display: inline-block;
-  width: 0.5rem;
-  height: 0.95rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
   background: var(--signal);
-  transform: skewX(-18deg);
-  margin-right: 0.15rem;
   align-self: center;
+  flex: none;
+}
+.card.accent > h3::before {
+  background: var(--team);
+}
+.card > h3 small {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.82rem;
 }
 
-/* Pulsanti a parallelogramma. */
+/* Pulsanti: arrotondati, chiari; l'azione principale è rossa e ben visibile. */
 .btn {
-  border-radius: 0;
-  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-  padding: 0.62rem 1.25rem;
-  background: linear-gradient(180deg, #262c38, #1c212b);
-  border: 0;
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-  font-weight: 700;
-  font-stretch: 92%;
-  letter-spacing: 0.02em;
+  border-radius: 999px;
+  clip-path: none;
+  padding: 0.6rem 1.15rem;
+  background: var(--bg-3);
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+  font-weight: 650;
+  font-stretch: 100%;
+  letter-spacing: 0;
+  text-transform: none;
+  font-style: normal;
 }
 .btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #303746, #232a36);
+  background: #2d3950;
 }
 .btn.primary {
-  background: linear-gradient(180deg, #ff3b2f 0%, #e3120b 55%, #b80d07 100%);
-  box-shadow: none;
+  background: var(--signal);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(227, 18, 11, 0.32);
   color: #ffffff;
-  text-transform: uppercase;
-  font-weight: 900;
-  font-style: italic;
-  font-stretch: 85%;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  font-weight: 800;
+  font-style: normal;
+  letter-spacing: 0;
 }
 .btn.primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #ff5a4f 0%, #f0261d 60%, #c8120b 100%);
+  background: #f2251d;
+  box-shadow: 0 8px 22px rgba(227, 18, 11, 0.42);
+}
+.btn.big-cta {
+  padding: 0.85rem 1.6rem;
+  font-size: 1.02rem;
 }
 .btn.ghost {
   background: transparent;
+  border-color: transparent;
   box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
 }
 
-/* Chip, schede e selettori a segmenti. */
+/* Chip, schede e selettori a segmenti: pillole morbide. */
 .pill {
-  border-radius: 0;
-  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
-  padding: 0.14rem 0.7rem;
-  text-transform: uppercase;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  border-radius: 999px;
+  clip-path: none;
+  padding: 0.16rem 0.65rem;
+  text-transform: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 .tabs,
 body .rv-speeds {
-  border-radius: 0;
-  background: rgba(8, 10, 15, 0.6);
+  border-radius: 999px;
+  background: var(--bg-1);
   border: 1px solid var(--line);
-  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-  padding: 0.22rem 0.7rem;
+  clip-path: none;
+  padding: 0.25rem;
 }
 .tabs button,
 body .rv-speeds button {
-  border-radius: 0;
-  font-weight: 800;
-  font-stretch: 88%;
-  text-transform: uppercase;
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
-  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  border-radius: 999px;
+  font-weight: 700;
+  font-stretch: 100%;
+  text-transform: none;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  clip-path: none;
 }
-.tabs button.on {
+.tabs button.on,
+body .rv-speeds button.on {
   background: var(--signal);
   color: var(--signal-ink);
   box-shadow: none;
 }
-body .rv-speeds button.on {
-  background: var(--signal);
-  color: var(--signal-ink);
-}
 
-/* Barra laterale: nera, striscia del colore squadra, voce attiva con barra arancio. */
+/* Barra laterale: chiara da leggere, voce attiva a pillola. */
 .sidebar {
-  background: linear-gradient(180deg, #06080c, #0b0e14);
-  border-right: 0;
-  box-shadow: inset -3px 0 0 color-mix(in srgb, var(--team) 70%, transparent);
+  background: var(--bg-1);
+  border-right: 1px solid var(--line);
+  box-shadow: none;
 }
 .sidebar .team {
-  background: linear-gradient(110deg, color-mix(in srgb, var(--team) 30%, transparent), transparent 70%);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--team) 22%, transparent), transparent 75%);
   border-bottom: 1px solid var(--line);
 }
 .sidebar .team b {
-  font-style: italic;
-  font-stretch: 80%;
-  text-transform: uppercase;
-  font-size: 1.08rem;
+  font-style: normal;
+  font-stretch: 100%;
+  text-transform: none;
+  font-size: 1.02rem;
 }
 .nav .grp {
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.66rem;
-  color: #5f6878;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-3);
+  padding: 1rem 0.75rem 0.35rem;
 }
 .nav button {
-  border-radius: 0;
+  border-radius: 12px;
   font-weight: 600;
+  font-size: 0.97rem;
+  padding: 0.6rem 0.8rem;
+  margin: 1px 0;
 }
 .nav button.on {
-  background: linear-gradient(90deg, rgba(227, 18, 11, 0.2), transparent 85%);
-  box-shadow: inset 4px 0 0 var(--signal);
+  background: color-mix(in srgb, var(--signal) 16%, transparent);
+  box-shadow: none;
   color: #fff;
 }
 .nav button.on svg {
@@ -219,121 +234,130 @@ body .rv-speeds button.on {
   opacity: 1;
 }
 
-/* Barra superiore: titolo grande, filo colore squadra → arancio. */
+/* Barra superiore: titolo e una riga che spiega la schermata. */
 .topbar {
-  background: linear-gradient(180deg, rgba(10, 12, 17, 0.96), rgba(10, 12, 17, 0.88));
-  border-bottom: 0;
-  box-shadow: 0 2px 0 0 transparent;
+  background: rgba(13, 18, 28, 0.88);
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
   position: relative;
 }
 .topbar::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--team), var(--signal) 45%, transparent 85%);
+  display: none;
 }
 .topbar h2 {
-  font-size: 1.75rem;
-  font-weight: 900;
-  font-stretch: 75%;
-  letter-spacing: 0.02em;
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-stretch: 100%;
+  letter-spacing: -0.01em;
+  font-style: normal;
+  text-transform: none;
+}
+.topbar .page-what {
+  display: block;
+  color: var(--text-3);
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 28rem;
 }
 .kpi small,
 body .gar-kpi small,
 body .gauge small {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.64rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.75rem;
 }
 .kpi b {
   font-variant-numeric: tabular-nums;
 }
 
-/* Tabelle: intestazioni piccole e spaziate, righe alternate, evidenziazione al passaggio. */
+/* Tabelle: righe alte e leggibili. */
 table.std thead th {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.66rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--text-3);
   border-bottom: 1px solid var(--line-strong);
 }
+table.std td {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
 table.std tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.018);
+  background: var(--fill-1);
 }
 table.std tbody tr:hover {
-  background: rgba(61, 155, 255, 0.07);
+  background: rgba(61, 155, 255, 0.08);
 }
 
-/* Barre di avanzamento più sottili e luminose. */
 .bar {
-  height: 0.38rem;
-  border-radius: 0;
-  background: #0b0d12;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--bg-0);
   box-shadow: inset 0 0 0 1px var(--line);
+}
+.bar > span {
+  border-radius: 999px;
 }
 
 /* Avvisi e notifiche. */
 .toast {
-  border-radius: 0;
-  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-  padding-left: 1.6rem;
-  background: linear-gradient(180deg, #232935, #181c25);
+  border-radius: 14px;
+  clip-path: none;
+  padding-left: 1.2rem;
+  background: var(--panel-2);
+  box-shadow: var(--shadow-1);
 }
 .explain {
-  border-radius: 0;
-  border-left: 3px solid var(--info);
+  border-radius: 12px;
+  border-left: 0;
+  background: color-mix(in srgb, var(--info) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--info) 25%, transparent);
 }
 .nextstep {
-  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  clip-path: none;
+  border-radius: var(--r-3);
+}
+.tile {
+  border-radius: 14px;
 }
 
-/* Schermate di gioco con pannelli propri: stessa grammatica (angolo tagliato, filo arancio). */
+/* Schermate di gioco con pannelli propri: stessa grammatica arrotondata. */
 body .gx-head,
 body .gx-detail,
 body .gx-setup,
 body .rv-rider,
 body .rv-left-head,
 body .rv-bar,
-body .rv-board {
-  border-radius: var(--r-2);
-  background: var(--panel);
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
-}
+body .rv-board,
 body .gx-card {
-  border-radius: var(--r-2);
+  border-radius: 14px;
   background: var(--panel);
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  clip-path: none;
 }
 body .gx-main {
-  border-radius: var(--r-2);
+  border-radius: 14px;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.07) 0%, transparent 55%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 64px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 64px),
-    linear-gradient(180deg, #161a22, #0c0e13);
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 55%),
+    linear-gradient(180deg, #182133, #0f1522);
 }
 body .gx-lvl,
 body .rv-lap b {
-  font-stretch: 75%;
+  font-stretch: 100%;
 }
-body .gx-tabs > button {
-  text-transform: uppercase;
-  font-style: italic;
-  font-stretch: 80%;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-}
+body .gx-tabs > button,
 body .rv-rider-name b,
 body .gx-team b,
 body .gx-name,
 body .gx-detail h3 {
-  font-stretch: 82%;
-  font-style: italic;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  text-transform: none;
+  font-style: normal;
+  font-stretch: 100%;
+  letter-spacing: 0;
 }
 
 /* Moto della squadra (foto o illustrazione) con tabella del numero */
@@ -493,4 +517,28 @@ body .gx-detail h3 {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ---- Tema Pit Wall: niente corsivi condensati anche nei componenti delle schermate ---- */
+body .dash-gp-name,
+body .team-bike-plate b,
+body .team-bike-plate span {
+  font-style: normal;
+  font-stretch: 100%;
+  text-transform: none;
+}
+body .team-bike img {
+  clip-path: none;
+  border-radius: 14px;
+}
+body .team-bike-plate {
+  clip-path: none;
+  border-radius: 10px;
+}
+body .dash-tasks button {
+  border-radius: 10px;
+  background: var(--fill-1);
+}
+body .dash-tasks button:hover {
+  background: var(--fill-2);
 }

@@ -455,7 +455,7 @@ table.std tbody tr.cut td {
 }
 .rv-left-head small {
   color: var(--signal);
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.08em;
   font-weight: 800;
   font-size: 0.72rem;
@@ -477,7 +477,6 @@ table.std tbody tr.cut td {
 .rv2 .rv-board .num {
   font-family: var(--font-display, inherit);
   font-weight: 900;
-  font-style: italic;
   font-size: 1rem;
   text-align: center;
 }
@@ -548,7 +547,7 @@ table.std tbody tr.cut td {
   padding: 0.3rem 0.7rem;
   border-radius: var(--r-1);
   font-size: 1rem;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.06em;
 }
 .rv-direction {
@@ -583,14 +582,13 @@ table.std tbody tr.cut td {
 }
 .rv-lap small {
   color: var(--text-3);
-  text-transform: uppercase;
+  text-transform: none;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
 }
 .rv-lap b {
   font-size: 1.9rem;
   font-weight: 900;
-  font-style: italic;
   font-variant-numeric: tabular-nums;
 }
 .rv-lap b span {
@@ -624,7 +622,7 @@ table.std tbody tr.cut td {
 .rv-rider-name b {
   display: block;
   font-size: 1.05rem;
-  text-transform: uppercase;
+  text-transform: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -636,13 +634,12 @@ table.std tbody tr.cut td {
 .rv-rider-pos small {
   color: var(--text-3);
   font-size: 0.65rem;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .rv-rider-pos b {
   display: block;
   font-size: 1.8rem;
   font-weight: 900;
-  font-style: italic;
   color: var(--signal);
 }
 .rv-gauges {
@@ -838,7 +835,7 @@ b.bad {
 .gx-team small {
   color: var(--signal);
   font-weight: 800;
-  text-transform: uppercase;
+  text-transform: none;
   font-size: 0.7rem;
   letter-spacing: 0.06em;
 }
@@ -944,12 +941,11 @@ b.bad {
 .gx-lvl small {
   font-size: 0.6rem;
   font-weight: 800;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .gx-lvl b {
   font-size: 1.3rem;
   font-weight: 900;
-  font-style: italic;
 }
 .gx-name {
   font-weight: 800;
@@ -968,7 +964,7 @@ b.bad {
 .gx-stats small {
   color: var(--text-3);
   font-size: 0.65rem;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .gx-stats b {
   font-variant-numeric: tabular-nums;
@@ -1065,7 +1061,6 @@ b.bad {
   text-align: center;
 }
 .gx-fb {
-  font-style: italic;
   color: var(--text-2);
   font-size: 0.88rem;
 }
@@ -1105,12 +1100,12 @@ b.bad {
   border: 1px solid var(--line);
   border-left: 3px solid var(--signal);
   padding: 0.35rem 0.5rem 0.2rem;
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  border-radius: 12px;
   backdrop-filter: blur(4px);
 }
 .gx-schema small {
   display: block;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.08em;
   font-size: 0.62rem;
   color: var(--text-3);
@@ -1151,7 +1146,7 @@ b.bad {
   display: block;
   color: var(--text-3);
   font-size: 0.62rem;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.08em;
   margin-bottom: 0.1rem;
 }
@@ -1379,15 +1374,14 @@ button.prog-row:hover {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.06);
   border-left: 4px solid #8a93a6;
-  font-style: italic;
 }
-.pit-quote.good {
+.pit-quote.m-good {
   border-left-color: #39d98a;
 }
-.pit-quote.ok {
+.pit-quote.m-ok {
   border-left-color: #f2b33d;
 }
-.pit-quote.bad {
+.pit-quote.m-bad {
   border-left-color: #ff5a5f;
 }
 .pit-sub {
@@ -1419,7 +1413,7 @@ button.prog-row:hover {
   margin-top: 0.15rem;
   accent-color: var(--accent, #e3262f);
 }
-.pit-list span {
+.pit-list label > span {
   display: grid;
   gap: 0.15rem;
 }

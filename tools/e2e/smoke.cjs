@@ -135,7 +135,9 @@ async function waitForServer(url, ms = 20000) {
     if (!/Pole position\s*\S+/i.test(pole)) throw new Error(`Pole dell'anno prima mancante: ${pole}`);
     await shot('07-circuito');
     await page.getByRole('button', { name: 'Chiudi', exact: true }).click();
-    step(`scheda circuito: tracciato, caratteristiche e albo d’oro (${pole.replace(/\s+/g, ' ').slice(0, 60)})`);
+    step(
+      `scheda circuito: tracciato, caratteristiche e albo d’oro (${pole.replace(/\s+/g, ' ').slice(0, 60)})`,
+    );
 
     // Scheda piloti: switch fra i titolari e schede.
     await page.locator('.nav').getByRole('button', { name: 'Piloti', exact: true }).click();
