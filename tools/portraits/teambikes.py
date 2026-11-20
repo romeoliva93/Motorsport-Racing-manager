@@ -30,15 +30,20 @@ OUT = os.path.join(ROOT, 'apps', 'client', 'src', 'assets', 'teambikes')
 def prompt(t):
     c1, c2 = color_name(t['primary']), color_name(t['secondary'])
     paint = 'blue white and red' if t['tier'] == 'rookies' else (c1 if c1 == c2 else f'{c1} and {c2}')
-    return (f'photorealistic studio photo of a {TIERS[t["tier"]]}, side view, glossy {paint} paint, '
-            'carbon fibre details, slick tyres, brake discs, golden fork, smooth clean bodywork, dark studio, '
-            'soft reflections, sharp')
+    # Prosa (soggetto, inquadratura, luce) con le esclusioni in fondo, entro i 77 token del modello
+    # (guida del plugin image-generation): meno scritte inventate sulle carene.
+    return (f'A photorealistic studio photograph of a {TIERS[t["tier"]]}, seen exactly from the side. '
+            f'Glossy {paint} paint, slick tyres, steel brake discs and a gold fork. '
+            'Lit by large softboxes against a dark charcoal backdrop, soft reflections, sharp focus. '
+            'Clean unmarked bodywork, no text, no logos.')
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--install', action='store_true')
     ap.add_argument('--variants', type=int, default=2)
+    ap.add_argument('--keys', help='solo queste squadre (separate da virgola)')
+    ap.add_argument('--first', type=int, default=0, help='numero della prima variante (per non sovrascrivere)')
     a = ap.parse_args()
     teams = json.load(open(os.path.join(HERE, 'teams.json')))
     if a.install:
@@ -52,7 +57,9 @@ def main():
         print('installate', len([t for t in teams if choice.get(t['key']) is not None]))
         return
     os.makedirs(TMP, exist_ok=True)
-    todo = [(t, v) for t in teams for v in range(a.variants) if not os.path.exists(os.path.join(TMP, f'{t["key"]}-v{v}.webp'))]
+    keys = set(a.keys.split(',')) if a.keys else None
+    todo = [(t, v) for t in teams for v in range(a.first, a.first + a.variants)
+            if (keys is None or t['key'] in keys) and not os.path.exists(os.path.join(TMP, f'{t["key"]}-v{v}.webp'))]
     if not todo:
         print('Niente da generare.')
         return

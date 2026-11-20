@@ -362,9 +362,18 @@ export function materialsFor(look: BikeLook, wet: boolean) {
     metal = 0,
     extra: THREE.MeshStandardMaterialParameters = {},
   ) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, ...extra });
+  // Vernice lucida con trasparente (clearcoat): la carena riflette cielo e luce come una moto vera.
+  const paint = (color: THREE.ColorRepresentation) =>
+    new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: 0.38,
+      metalness: 0.1,
+      clearcoat: 1,
+      clearcoatRoughness: wet ? 0.05 : 0.12,
+    });
   return {
-    body: std(look.color, 0.32, 0.25),
-    accent: std(look.color2, 0.38, 0.2),
+    body: paint(look.color),
+    accent: paint(look.color2),
     dark: std(0x17181b, 0.55, 0.3),
     metal: std(0xb7bcc4, 0.28, 0.85),
     gold: std(0xc99a2e, 0.3, 0.8),
@@ -372,7 +381,7 @@ export function materialsFor(look: BikeLook, wet: boolean) {
     glass: std(0x1d2a33, 0.05, 0.1, { transparent: true, opacity: 0.55 }),
     suit: std(look.color, 0.6, 0.05),
     suit2: std(look.color2, 0.6, 0.05),
-    helmet: std(look.mine ? 0xe3120b : 0xf3f1ec, 0.2, 0.3),
+    helmet: paint(look.mine ? 0xe3120b : 0xf3f1ec),
     visor: std(0x0c0e12, 0.05, 0.6),
   } satisfies Record<MatKey, THREE.Material>;
 }

@@ -26,9 +26,9 @@ export interface Race3DProps {
 }
 
 const QUALITY = {
-  low: { dpr: 1, aa: false, shadows: false, lod: 60, crowd: 0.35, animCrowd: false },
-  medium: { dpr: 1.5, aa: true, shadows: false, lod: 140, crowd: 0.7, animCrowd: true },
-  high: { dpr: 2, aa: true, shadows: true, lod: 320, crowd: 1, animCrowd: true },
+  low: { dpr: 1, aa: false, shadows: false, shadowMap: 0, lod: 60, crowd: 0.35, animCrowd: false },
+  medium: { dpr: 1.5, aa: true, shadows: true, shadowMap: 1024, lod: 140, crowd: 0.7, animCrowd: true },
+  high: { dpr: 2, aa: true, shadows: true, shadowMap: 2048, lod: 320, crowd: 1, animCrowd: true },
 } as const;
 
 /** Texture di rumore (grana di asfalto, erba, ghiaia) generata in codice. */
@@ -39,9 +39,24 @@ function noiseTexture(base: string | number, amount: number, size = 256): THREE.
   const col = new THREE.Color(base);
   const img = x.createImageData(size, size);
   let seed = 1234567;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // Macchie grandi (griglia 8×8 interpolata) sommate alla grana fine: da lontano la superficie non si appiattisce.
+  const G = 8;
+  const grid = Array.from({ length: G * G }, () => rnd() * 2 - 1);
+  const coarse = (px: number, py: number) => {
+    const gx = (px / size) * G,
+      gy = (py / size) * G;
+    const x0 = Math.floor(gx),
+      y0 = Math.floor(gy);
+    const fx = gx - x0,
+      fy = gy - y0;
+    const v = (i: number, j: number) => grid[((j % G) * G + (i % G)) % (G * G)]!;
+    const a = v(x0, y0) * (1 - fx) + v(x0 + 1, y0) * fx;
+    const b = v(x0, y0 + 1) * (1 - fx) + v(x0 + 1, y0 + 1) * fx;
+    return a * (1 - fy) + b * fy;
+  };
   for (let i = 0; i < size * size; i++) {
-    seed = (seed * 16807) % 2147483647;
-    const n = 1 + ((seed / 2147483647) * 2 - 1) * amount;
+    const n = 1 + (rnd() * 2 - 1) * amount * 0.6 + coarse(i % size, Math.floor(i / size)) * amount;
     img.data[i * 4] = Math.min(255, col.r * 255 * n);
     img.data[i * 4 + 1] = Math.min(255, col.g * 255 * n);
     img.data[i * 4 + 2] = Math.min(255, col.b * 255 * n);
@@ -66,7 +81,13 @@ export default function Race3D(props: Race3DProps) {
     const q = QUALITY[props.quality];
     const qset = q; // `q` più sotto indica anche i quadrilateri delle tribune
     const rain = props.frame.rain;
-    const renderer = new THREE.WebGLRenderer({ antialias: q.aa, powerPreference: 'high-performance' });
+    // Profondità logaritmica: erba, ghiaia e asfalto sono a pochi centimetri l'una dall'altra e da lontano
+    // tremolerebbero a strisce (z-fighting).
+    const renderer = new THREE.WebGLRenderer({
+      antialias: q.aa,
+      powerPreference: 'high-performance',
+      logarithmicDepthBuffer: true,
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q.dpr));
     renderer.setSize(el.clientWidth, el.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -74,17 +95,63 @@ export default function Race3D(props: Race3DProps) {
     renderer.shadowMap.enabled = q.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     el.appendChild(renderer.domElement);
+    // Cielo: cupola sfumata (zenit → orizzonte), nebbia del colore dell'orizzonte.
+    const zenith = new THREE.Color(rain > 0 ? 0x5c6672 : 0x2d6fc4);
+    const horizon = new THREE.Color(rain > 0 ? 0x9aa3ad : 0xa9cdee);
+    const skyGeo = new THREE.SphereGeometry(4000, 32, 16);
+    {
+      const pos = skyGeo.attributes.position!;
+      const cols = new Float32Array(pos.count * 3);
+      const c = new THREE.Color();
+      for (let i = 0; i < pos.count; i++) {
+        const t = Math.max(0, pos.getY(i) / 4000);
+        c.copy(horizon).lerp(zenith, Math.pow(t, 0.35));
+        c.toArray(cols, i * 3);
+      }
+      skyGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    }
+    const skyDome = new THREE.Mesh(
+      skyGeo,
+      new THREE.MeshBasicMaterial({
+        vertexColors: true,
+        side: THREE.BackSide,
+        fog: false,
+        depthWrite: false,
+      }),
+    );
+    // Riflessi: mappa d'ambiente ricavata dal cielo (con un "sole" luminoso), per carene e metalli.
+    // Si calcola prima di creare la scena della gara (gli strumenti di analisi seguono l'ultima scena creata).
+    const envMap: THREE.Texture = (() => {
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const envScene = new THREE.Scene();
+      envScene.add(new THREE.Mesh(skyDome.geometry, skyDome.material));
+      const sunGlow = new THREE.Mesh(
+        new THREE.SphereGeometry(300, 16, 8),
+        new THREE.MeshBasicMaterial({ color: rain > 0 ? 0xb8c0c8 : 0xfff2d6 }),
+      );
+      sunGlow.position.set(1600, 2600, 1200);
+      envScene.add(sunGlow);
+      const t = pmrem.fromScene(envScene, 0.02).texture;
+      sunGlow.geometry.dispose();
+      (sunGlow.material as THREE.Material).dispose();
+      envScene.clear();
+      pmrem.dispose();
+      return t;
+    })();
     const world = new THREE.Scene();
-    const sky = rain > 0 ? 0x7d8794 : 0x9cc6ea;
-    world.background = new THREE.Color(sky);
-    world.fog = new THREE.Fog(sky, 300, rain > 0 ? 900 : 1800);
+    world.environment = envMap;
+    world.environmentIntensity = rain > 0 ? 0.45 : 0.7;
+    world.add(skyDome);
+    world.fog = new THREE.Fog(horizon, 300, rain > 0 ? 900 : 1800);
     const camera = new THREE.PerspectiveCamera(50, el.clientWidth / el.clientHeight, 0.3, 5000);
     world.add(new THREE.HemisphereLight(0xdfeeff, 0x4b5b3a, rain > 0 ? 0.9 : 1.1));
     const sun = new THREE.DirectionalLight(0xfff4e0, rain > 0 ? 0.7 : 2.2);
     sun.position.set(400, 800, 300);
     sun.castShadow = q.shadows;
     if (q.shadows) {
-      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.mapSize.set(q.shadowMap, q.shadowMap);
+      sun.shadow.bias = -0.0004;
+      sun.shadow.normalBias = 0.02;
       const sc2 = sun.shadow.camera;
       sc2.left = sc2.bottom = -60;
       sc2.right = sc2.top = 60;
@@ -145,19 +212,17 @@ export default function Race3D(props: Race3DProps) {
     const bw = (sc.bounds.x1 - sc.bounds.x0) * K,
       bh = (sc.bounds.y1 - sc.bounds.y0) * K;
     const groundTex = noiseTexture(pal.ground, 0.1, 512);
-    groundTex.repeat.set((bw * 3) / 40, (bh * 3) / 40);
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(bw * 3, bh * 3),
-      mat(pal.ground, { map: groundTex }),
-    );
+    // Terreno molto più grande del circuito: il bordo resta oltre la nebbia, mai visibile all'orizzonte.
+    groundTex.repeat.set((bw * 8) / 40, (bh * 8) / 40);
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(bw * 8, bh * 8), mat(0xffffff, { map: groundTex }));
     ground.receiveShadow = true;
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(((sc.bounds.x0 + sc.bounds.x1) / 2) * K, 0, ((sc.bounds.y0 + sc.bounds.y1) / 2) * K);
     world.add(ground);
     if (sc.sea) {
-      const sea = new THREE.Mesh(new THREE.PlaneGeometry(bw * 3, 2000), mat(0x2f7ea8));
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(bw * 8, 4000), mat(0x2f7ea8));
       sea.rotation.x = -Math.PI / 2;
-      sea.position.set(ground.position.x, 0.2, sc.sea[0][1] * K + 1000);
+      sea.position.set(ground.position.x, 0.2, sc.sea[0][1] * K + 2000);
       world.add(sea);
     }
     const w2 = sc.width / 2;
@@ -168,7 +233,8 @@ export default function Race3D(props: Race3DProps) {
       () => -w2 - 0.035,
       () => w2 + 0.035,
       0.05,
-      mat(pal.verge, { ...twoSided, map: noiseTexture(pal.verge, 0.12) }),
+      // Materiale bianco: il colore lo dà la texture (altrimenti il colore si moltiplica due volte).
+      mat(0xffffff, { ...twoSided, map: noiseTexture(pal.verge, 0.12) }),
     );
     for (const g of sc.gravel) {
       ribbon(
@@ -181,7 +247,7 @@ export default function Race3D(props: Race3DProps) {
           return (w2 + 0.006 + g.depth * Math.max(0, t)) * g.side;
         },
         0.1,
-        mat(0xd6c18f, { ...twoSided, map: noiseTexture('#d6c18f', 0.22) }),
+        mat(0xffffff, { ...twoSided, map: noiseTexture('#d6c18f', 0.22) }),
       );
     }
     ribbon(
@@ -311,10 +377,15 @@ export default function Race3D(props: Race3DProps) {
       world.add(box);
     }
     // Tribune a gradoni con il pubblico (istanze colorate).
-    const crowdGeo = new THREE.BoxGeometry(0.7, 1.1, 0.7);
-    const crowdMat = new THREE.MeshStandardMaterial({ roughness: 0.9 });
-    const COLORS = [0xe5484d, 0xffd21f, 0xf3f1ec, 0x3d7bfd, 0x2b2d31, 0xf07c1f, 0x2fbf71, 0xc9ccd2];
-    const people: { x: number; y: number; z: number }[] = [];
+    // Persone stilizzate (capsula: busto e testa), non cubi; abiti per lo più scuri e neutri come in una
+    // tribuna vera, con qualche maglia colorata dei tifosi.
+    const crowdGeo = new THREE.CapsuleGeometry(0.26, 0.55, 1, 5);
+    const crowdMat = new THREE.MeshStandardMaterial({ roughness: 0.95 });
+    const COLORS = [
+      0x2b2d31, 0x3a3f4a, 0x22252b, 0x4a4f58, 0x5d6470, 0x1f2a44, 0x2e3b55, 0x6b7280, 0xd9d6cf, 0xe8e6e1,
+      0xb9b4aa, 0x8a6f52, 0xc8322d, 0xd9a82b, 0x2f5fb8, 0x2f8f5b,
+    ];
+    const people: { x: number; y: number; z: number; s: number }[] = [];
     for (const st of sc.stands) {
       const [p0, p1, , p3] = st.quad;
       const rows = 6;
@@ -337,7 +408,15 @@ export default function Race3D(props: Race3DProps) {
             tm = (t0 + t1) / 2;
           const x = p0[0] + (p1[0] - p0[0]) * u + (p3[0] - p0[0]) * tm;
           const z = p0[1] + (p1[1] - p0[1]) * u + (p3[1] - p0[1]) * tm;
-          people.push({ x: x * K, y: 1.5 + r * 1.5 + 0.55, z: z * K });
+          // Piccole variazioni di posizione e altezza: niente file perfettamente allineate.
+          const i = people.length;
+          const h = ((i * 2654435761) >>> 0) / 4294967296;
+          people.push({
+            x: x * K + (h - 0.5) * 0.5,
+            y: 1.5 + r * 1.5 + 0.45 + h * 0.15,
+            z: z * K + (((i * 40503) % 97) / 97 - 0.5) * 0.3,
+            s: 0.9 + h * 0.2,
+          });
         }
       }
       // Tetto.
@@ -357,6 +436,7 @@ export default function Race3D(props: Race3DProps) {
     const dummy = new THREE.Object3D();
     people.forEach((p, i) => {
       dummy.position.set(p.x, p.y, p.z);
+      dummy.scale.setScalar(p.s);
       dummy.updateMatrix();
       crowd.setMatrixAt(i, dummy.matrix);
       crowd.setColorAt(i, new THREE.Color(COLORS[(i * 7919) % COLORS.length]!));
@@ -451,7 +531,8 @@ export default function Race3D(props: Race3DProps) {
           new THREE.MeshBasicMaterial({
             color: 0x000000,
             transparent: true,
-            opacity: 0.28,
+            // Con le ombre vere resta solo un leggero contatto con l'asfalto.
+            opacity: q.shadows ? 0.14 : 0.28,
             depthWrite: false,
           }),
         );
@@ -631,6 +712,7 @@ export default function Race3D(props: Race3DProps) {
           const pp = people[i]!;
           const jump = Math.max(0, Math.sin(tt * 9 + i * 1.7)) * hype * 0.5;
           dummy.position.set(pp.x, pp.y + jump, pp.z);
+          dummy.scale.setScalar(pp.s);
           dummy.updateMatrix();
           crowd.setMatrixAt(i, dummy.matrix);
         }
@@ -752,6 +834,7 @@ export default function Race3D(props: Race3DProps) {
         }
       });
       textures.forEach((t) => t.dispose());
+      envMap.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       el.removeChild(renderer.domElement);
