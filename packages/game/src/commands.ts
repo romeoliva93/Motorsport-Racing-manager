@@ -30,6 +30,8 @@ export type Command =
       type: 'RunSession';
       /** Sprint/gara in diretta: la simulazione avanza a passi e le strategie si cambiano in corsa. */
       live?: boolean;
+      /** Prove: corre solo la prossima uscita (poi il pilota rientra ai box per le modifiche). */
+      stint?: boolean;
       strategies?: Record<
         string,
         {
@@ -54,7 +56,7 @@ export type Command =
   /** Chiude la stagione conclusa e apre la successiva. */
   | { type: 'StartNextSeason' }
   /** Compra il livello successivo di un componente della moto. */
-  | { type: 'BuyUpgrade'; part: PartKey }
+  | { type: 'BuyUpgrade'; part: PartKey; riderId: string }
   | { type: 'ServiceParts'; bikeId: string; parts: GarageKey[] }
   /** Strategia in corsa di un proprio pilota (gara in diretta): ritmo, mappa carburante, gestione gomme. */
   | {
@@ -73,7 +75,12 @@ export type Command =
   /** Ingaggia un tecnico svincolato (capotecnico/ingegnere: assegnato a un pilota). */
   | { type: 'HireStaff'; staffId: string; years: number; riderId?: string; replaceStaffId?: string }
   /** Giornata di test pre-stagionale: programma di lavoro per ciascun pilota. */
-  | { type: 'RunTestDay'; programs: Record<string, 'track' | 'setup' | 'longRun' | 'development'> }
+  | {
+      type: 'RunTestDay';
+      programs: Record<string, 'track' | 'setup' | 'longRun' | 'development'>;
+      /** Tutte le uscite rimaste in una volta (senza rientri ai box). */
+      all?: boolean;
+    }
   /** Il manager paga un corso con i suoi soldi. */
   | { type: 'ManagerCourse'; skill: 'negotiation' | 'commercial' | 'technical' }
   /** Il manager mette soldi propri nella squadra. */
@@ -104,7 +111,7 @@ export type GameEvents = {
   SessionDone: { roundId: string; session: string };
   RaceDone: { roundId: string; summary: string };
   SeasonStarted: { year: number };
-  UpgradeBought: { part: string; level: number };
+  UpgradeBought: { part: string; riderId: string; level: number };
   PartsServiced: { bikeId: string; parts: string[]; cost: number };
   GarageModeSet: { mode: string };
   LiveRaceStarted: { roundId: string; kind: string };

@@ -149,13 +149,16 @@ export function Garage({ b, notify }: { b: BikeView; notify: (t: string, err?: b
           <small>Chilometri</small>
           <b>{bike.km.toLocaleString('it-IT')}</b>
         </div>
-        <div className="gar-kpi" title="Qualità della moto (costruttore + sviluppo) e media delle avversarie">
+        <div
+          className="gar-kpi"
+          title="Qualità della moto di questo pilota (costruttore + upgrade montati) e media delle avversarie"
+        >
           <small>Qualità</small>
           <b>
-            {b.rating}{' '}
-            <span className={b.rating >= b.rivalsAvg ? 'ok' : 'bad'} style={{ fontSize: '.8rem' }}>
-              ({b.rating - b.rivalsAvg >= 0 ? '+' : ''}
-              {b.rating - b.rivalsAvg})
+            {g.rating}{' '}
+            <span className={g.rating >= b.rivalsAvg ? 'ok' : 'bad'} style={{ fontSize: '.8rem' }}>
+              ({g.rating - b.rivalsAvg >= 0 ? '+' : ''}
+              {g.rating - b.rivalsAvg})
             </span>
           </b>
         </div>
@@ -398,12 +401,13 @@ export function Garage({ b, notify }: { b: BikeView; notify: (t: string, err?: b
                   title={group.next.affordable ? undefined : 'Non hai abbastanza soldi in cassa'}
                   onClick={() =>
                     run(
-                      { type: 'BuyUpgrade', part: group.next!.partKey as never },
-                      `${group.next!.part} livello ${group.next!.level} ordinato alla fabbrica.`,
+                      { type: 'BuyUpgrade', part: group.next!.partKey as never, riderId: g.riderId },
+                      `${group.next!.part} livello ${group.next!.level} ordinato per la moto di ${g.rider}.`,
                     )
                   }
                 >
-                  Sviluppa: ordina livello {group.next.level} · {formatMoney(group.next.cost ?? 0)}
+                  Sviluppa per {g.rider.split(' ').slice(-1)[0]}: livello {group.next.level} ·{' '}
+                  {formatMoney(group.next.cost ?? 0)}
                 </button>
               )}
             </div>
@@ -411,8 +415,8 @@ export function Garage({ b, notify }: { b: BikeView; notify: (t: string, err?: b
               <b>Prestazione</b>: indice da costruttore e sviluppo (non cambia con l'usura). <b>Condizione</b>
               : stato del pezzo più consumato. <b>Affidabilità</b>: resta piena fino a metà vita, poi scende e
               in gara aumenta il rischio di guasto. La revisione si paga subito; il ricambio si compra prima e
-              si monta quando serve. Gli aggiornamenti arrivano dalla fabbrica e si montano nuovi alla
-              consegna.
+              si monta quando serve. Gli aggiornamenti si ordinano per un pilota alla volta: arrivano dalla
+              fabbrica e si montano solo sulle sue moto.
             </Explain>
           </div>
         </>

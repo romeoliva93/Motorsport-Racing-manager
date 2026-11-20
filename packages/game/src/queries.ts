@@ -7,7 +7,10 @@ import { supplierOffers } from './suppliers.ts';
 import { nextTestDay, preseasonTests, preseasonView, testToday } from './preseason.ts';
 
 /** Test pre-stagionali della squadra del giocatore. */
-export const preseasonInfo = (s: GameState) => preseasonView(s, (d) => cal(s).format(d));
+export const preseasonInfo = (s: GameState) => {
+  const v = preseasonView(s, (d) => cal(s).format(d));
+  return v ? { ...v, stint: s.stint?.kind === 'test' ? stintView(s, undefined) : null } : null;
+};
 import { staffMarket } from './staffMarket.ts';
 import { managerView } from './manager.ts';
 import { GameCalendar, cyrb128 } from '@lean-angle/core';
@@ -40,6 +43,7 @@ import {
   riderProfile,
   sponsorView,
   weekendView,
+  stintView,
 } from './views.ts';
 import { dashboardView } from './dashboard.ts';
 import { activeRiderContract, askingSalary, buyoutFor, ineligibility, marketOpen } from './market.ts';

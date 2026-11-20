@@ -184,7 +184,7 @@ export function dashboardView(s: GameState): DashboardView | null {
           inProduction: b.parts
             .filter((p) => p.inProduction)
             .map((p) => ({
-              part: p.name,
+              part: `${p.name} (${p.rider.split(' ').slice(-1)[0]})`,
               level: p.inProduction!.level,
               ready: p.inProduction!.ready,
               daysLeft: p.inProduction!.daysLeft,

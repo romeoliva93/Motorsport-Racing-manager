@@ -159,11 +159,16 @@ async function waitForServer(url, ms = 20000) {
 
     await page.locator('.nav').getByRole('button', { name: 'Moto e upgrade' }).click();
     await page.locator('.gx-card', { hasText: 'Motore e trasmissione' }).click();
-    await page.getByRole('button', { name: /^Sviluppa: ordina livello 1/ }).click();
-    await page.getByText(/ordinato alla fabbrica/).waitFor();
+    await page.getByRole('button', { name: /^Sviluppa per .+: livello 1/ }).click();
+    await page.getByText(/ordinato per la moto di/).waitFor();
     await page.getByText('In produzione').first().waitFor();
     await shot('17-moto');
-    step('upgrade ordinato alla fabbrica');
+    // L'upgrade è solo per quel pilota: il compagno di squadra può ancora ordinarlo per la sua moto.
+    await page.locator('[aria-label="Pilota"] button').nth(1).click();
+    await page.locator('.gx-card', { hasText: 'Motore e trasmissione' }).click();
+    await page.getByRole('button', { name: /^Sviluppa per .+: livello 1/ }).waitFor();
+    await page.locator('[aria-label="Pilota"] button').nth(0).click();
+    step('upgrade ordinato per un solo pilota; il compagno non lo riceve');
 
     await page.locator('.nav').getByRole('button', { name: 'Mercato', exact: true }).click();
     await page.getByText('Contratto attuale').waitFor();
@@ -198,15 +203,35 @@ async function waitForServer(url, ms = 20000) {
       .click();
     await page.getByRole('button', { name: /^Corri la giornata 1/ }).waitFor();
     await shot('10-test');
-    await page.locator('.preseason .choice').first().getByRole('button', { name: 'Sviluppo' }).click();
+    // Percentuali dei programmi: il programma scelto mostra il boost della giornata.
+    await page
+      .locator('.preseason .prog-bars')
+      .first()
+      .getByRole('radio', { name: /Sviluppo/ })
+      .click();
+    const boost = await page.locator('.preseason .prog-row.on .prog-val small').first().innerText();
+    if (!/\+\d/.test(boost)) throw new Error(`Boost del programma non mostrato: «${boost}»`);
     await page.getByRole('button', { name: /^Corri la giornata 1/ }).click();
     await page.getByText('Tempo rimanente').waitFor();
     await page.getByRole('button', { name: '64×' }).click();
     await page.waitForFunction(() => document.querySelectorAll('.tt-s.done').length >= 6, null, {
       timeout: 60000,
     });
+    await page.getByRole('button', { name: 'Salta alla fine' }).click();
     await page
-      .getByRole('button', { name: /Chiudi|Torna/ })
+      .getByRole('button', { name: /Chiudi/ })
+      .first()
+      .click();
+    // Rientro ai box dopo la prima uscita: commenti del pilota e proposte del capotecnico.
+    await page
+      .getByText(/Rientro ai box/)
+      .first()
+      .waitFor();
+    await page.locator('.pit-quote').first().waitFor();
+    await shot('10-test-box');
+    await page.getByRole('button', { name: 'Finisci la sessione senza fermarti' }).click();
+    await page
+      .getByRole('button', { name: /Chiudi/ })
       .first()
       .click();
     await page.getByRole('button', { name: /^Corri la giornata 2/ }).waitFor();
@@ -215,7 +240,7 @@ async function waitForServer(url, ms = 20000) {
     step('test pre-stagionale: giornata 1 corsa, tempi e diario');
     // Salta il resto dei test fino al primo Gran Premio.
     for (let i = 0; i < 6; i++) {
-      if (await page.getByRole('button', { name: 'Corri Prove libere 1' }).count()) break;
+      if (await page.getByRole('button', { name: /^Corri Prove libere 1/ }).count()) break;
       const skipBtn = page.getByRole('button', { name: 'Salta il resto del test' });
       const bar = page.locator('.topbar');
       if (await skipBtn.count()) await skipBtn.click();
@@ -223,7 +248,7 @@ async function waitForServer(url, ms = 20000) {
         await bar.getByRole('button', { name: /Vai al (test|Gran Premio|weekend)/ }).click();
       await page.waitForTimeout(500);
     }
-    await page.getByRole('button', { name: 'Corri Prove libere 1' }).waitFor();
+    await page.getByRole('button', { name: /^Corri Prove libere 1/ }).waitFor();
     const dateAfter = await today();
     if (dateAfter === dateBefore) throw new Error('La data non è avanzata');
     step(`avanzamento al Gran Premio: ${dateBefore} → ${dateAfter}`);
@@ -231,7 +256,7 @@ async function waitForServer(url, ms = 20000) {
     await shot('11-weekend');
     // Prove libere 1 con programma "Assetto", poi riunione tecnica con il capotecnico.
     await page.getByRole('button', { name: 'Programma Assetto' }).first().click();
-    await page.getByRole('button', { name: 'Corri Prove libere 1', exact: true }).click();
+    await page.getByRole('button', { name: /^Corri Prove libere 1/ }).click();
     // Schermata tempi delle prove: l'orologio scorre, le celle dei settori si riempiono e si colorano.
     await page.getByText('Tempo rimanente').waitFor();
     await page.getByRole('button', { name: '64×' }).click();
@@ -253,9 +278,33 @@ async function waitForServer(url, ms = 20000) {
       throw new Error('A fine sessione manca il giro migliore di qualche pilota');
     await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
     step(`schermata tempi delle prove: ${ttRows} piloti, settori colorati, salto alla fine`);
+    // Rientro ai box a fine uscita: il manager sceglie una proposta del capotecnico e la applica.
+    await page
+      .getByText(/Rientro ai box/)
+      .first()
+      .waitFor();
+    const quotes = await page.locator('.pit-quote').count();
+    if (quotes < 2) throw new Error(`Rientro ai box: ${quotes} piloti`);
+    const box = page.locator('.pit-rider').first();
+    const proposals = await box.locator('.pit-list input:not([disabled])').count();
+    if (proposals > 0) {
+      await box.locator('.pit-list input:not([disabled])').first().check();
+      const doBtn = box.getByRole('button', { name: /^Fai la modifica/ });
+      if (await doBtn.isEnabled()) {
+        await doBtn.click();
+        await box.locator('.pit-list label.done').first().waitFor();
+      }
+    }
+    await shot('11-box');
+    await page.getByRole('button', { name: /^Torna in pista · uscita 2/ }).click();
+    await page.getByRole('button', { name: 'Salta alla fine' }).click();
+    await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
+    await page.getByRole('button', { name: /^Torna in pista · uscita 3/ }).waitFor();
+    await page.getByRole('button', { name: 'Finisci la sessione senza fermarti' }).click();
+    step(`rientro ai box: ${quotes} piloti, ${proposals} proposte, modifica applicata, uscite 2 e 3`);
     await page.locator('.wk-sess.done', { hasText: 'Prove libere 1' }).first().waitFor();
     await page.getByText('Riunione tecnica').waitFor();
-    await page.getByText('Confidenza col circuito').waitFor();
+    await page.getByText('Confidenza col circuito', { exact: true }).waitFor();
     const logBefore = await page.locator('.brief-log li').count();
     const applyBtn = page.getByRole('button', { name: /^Applica: / });
     if ((await applyBtn.count()) > 0 && (await applyBtn.isEnabled())) {
@@ -265,9 +314,13 @@ async function waitForServer(url, ms = 20000) {
     } else step('riunione tecnica: nessuna modifica consigliata');
     await shot('11-briefing');
     for (const name of ['Prove', 'Prove libere 2', 'Qualifiche 1', 'Qualifiche 2']) {
-      await page.getByRole('button', { name: `Corri ${name}`, exact: true }).click();
+      const practice = name.startsWith('Prove');
+      await page
+        .getByRole('button', { name: practice ? `Corri ${name} · uscita 1` : `Corri ${name}`, exact: true })
+        .click();
       await page.getByRole('button', { name: 'Salta alla fine' }).click();
       await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
+      if (practice) await page.getByRole('button', { name: 'Finisci la sessione senza fermarti' }).click();
       await page.locator('.wk-sess.done', { hasText: name }).first().waitFor();
     }
     await page.getByText('Griglia di partenza').waitFor();
@@ -391,7 +444,10 @@ async function waitForServer(url, ms = 20000) {
       `gara in diretta: strategia cambiata, salvata a metà (giro ${lapBefore}) e ripresa (giro ${lapAfter})`,
     );
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
-    await page.getByRole('button', { name: 'Corri Warm Up', exact: true }).click();
+    await page.getByRole('button', { name: 'Corri Warm Up · uscita 1', exact: true }).click();
+    await page.getByRole('button', { name: 'Salta alla fine' }).click();
+    await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
+    await page.getByRole('button', { name: /^Torna in pista · uscita 2 di 2/ }).click();
     await page.getByRole('button', { name: 'Salta alla fine' }).click();
     await page.getByRole('button', { name: 'Chiudi i tempi' }).click();
     await page.getByRole('button', { name: 'Via alla gara!' }).click();

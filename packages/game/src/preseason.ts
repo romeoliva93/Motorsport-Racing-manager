@@ -18,8 +18,19 @@ import {
   type TestProgram,
   type TransactionId,
 } from '@lean-angle/data';
-import { BIKE_BASE_MAX, activePreseason, bikeBase, devFactor } from './preseasonEffects.ts';
-import { simulateTestDay, type SessionTiming } from './weekend.ts';
+import {
+  PROGRAM_KEYS,
+  activePreseason,
+  baseProgramLevels,
+  bikeBase,
+  boosted,
+  longRunFactor,
+  trackBonus,
+  devFactor,
+  programLevels,
+  type ProgramLevels,
+} from './preseasonEffects.ts';
+import { runStint, type SessionTiming } from './weekend.ts';
 
 /** Calendario dei test per categoria: giorni prima del primo GP, durata, circuito (indice del round). */
 const PLAN: Record<CategoryTier, { offset: number; days: number; roundIdx: number }[]> = {
@@ -39,30 +50,32 @@ const DAY_COST: Record<CategoryTier, number> = {
   rookies: 0,
 };
 
-export const TEST_PROGRAMS: { id: TestProgram; label: string; text: string }[] = [
+export const TEST_PROGRAMS: { id: TestProgram; label: string; text: string; effect: string }[] = [
   {
     id: 'track',
     label: 'Circuito',
-    text: 'Tanti giri: il pilota prende ritmo. Confidenza con la moto un po’ più alta per tutta la stagione.',
+    text: 'Tanti giri per prendere ritmo e punti di riferimento.',
+    effect: 'In ogni weekend parte con più confidenza col circuito.',
   },
   {
     id: 'setup',
     label: 'Assetto',
-    text: 'Si cerca la base d’assetto: la confidenza con la moto cresce di più, per tutta la stagione.',
+    text: 'Si cerca la base d’assetto della moto.',
+    effect: 'In ogni weekend parte con più confidenza con la moto.',
   },
   {
     id: 'longRun',
     label: 'Passo gara',
-    text: 'Simulazione di gara con gomme dure: confidenza con la moto in crescita, ritmo costante.',
+    text: 'Simulazioni di gara con gomme usate.',
+    effect: 'In gara gestisce meglio le gomme.',
   },
   {
     id: 'development',
     label: 'Sviluppo',
-    text: 'Si provano componenti nuovi: in stagione upgrade più rapidi (−5% per giornata) ed economici (−3%).',
+    text: 'Si provano componenti nuovi per la fabbrica.',
+    effect: 'Gli upgrade della sua moto costano meno e arrivano prima.',
   },
 ];
-
-const GAIN: Record<TestProgram, number> = { track: 0.1, setup: 0.25, longRun: 0.12, development: 0.05 };
 
 function playerSeason(s: GameState) {
   const e = rows(s, 'teamEntries').find((x) => x.teamId === s.meta.playerTeamId);
@@ -137,8 +150,7 @@ function ensure(s: GameState): PreseasonState {
     seasonId: ps.season.id,
     done: {},
     skipped: [],
-    bikeBase: {},
-    devDays: 0,
+    levels: {},
     log: [],
     lastDay: null,
   };
@@ -167,26 +179,33 @@ export function runTestDay(
   s: GameState,
   ids: IdFactory,
   programs: Record<string, TestProgram>,
-): SessionTiming {
+  /** Corre tutte le uscite rimaste della giornata (senza fermarsi ai box). */
+  all = false,
+): { timing: SessionTiming; finished: boolean } {
   const t = testToday(s)!;
   const p = ensure(s);
   const ps = playerSeason(s)!;
   const day = t.done + 1;
-  const { rows: out, timing } = simulateTestDay(s, t.round, programs, `${t.id}-${day}`);
+  const go = () => runStint(s, ids, t.round, 'test', {}, { testId: `${t.id}-${day}`, programs });
+  let res = go();
+  while (all && !res.finished) res = go();
+  if (!res.finished) return { timing: res.timing, finished: false };
+  const { rows: out, timing } = res;
+  // Programmi della giornata: quelli scelti alla prima uscita.
+  programs = { ...programs, ...(res.programs as Record<string, TestProgram>) };
   const mine = ps.entry.seats.map((x) => x.riderId).filter((x): x is NonNullable<typeof x> => !!x);
   for (const id of mine) {
     const r = s.tables.riders[id]!;
     const prog: TestProgram = programs[id] ?? 'setup';
-    const before = bikeBase(s, id, true);
-    const after = Math.round((before + (BIKE_BASE_MAX - before) * GAIN[prog]) * 10) / 10;
-    p.bikeBase[id] = after;
-    if (prog === 'development') p.devDays += 0.5;
+    const before = programLevels(s, id, true);
+    const after = boosted(before, prog);
+    (p.levels ??= {})[id] = after;
     const best = out.find((x) => x.riderId === id)?.best;
     const pos = out.findIndex((x) => x.riderId === id) + 1;
     p.log.push({
       testId: t.id,
       day,
-      text: `${r.firstName} ${r.lastName}: programma ${TEST_PROGRAMS.find((x) => x.id === prog)!.label.toLowerCase()}, ${pos}° tempo${best ? ` (${fmt(best)})` : ''}; confidenza con la moto ${Math.round(before)} → ${Math.round(after)}.`,
+      text: `${r.firstName} ${r.lastName}: programma ${TEST_PROGRAMS.find((x) => x.id === prog)!.label.toLowerCase()}, ${pos}° tempo${best ? ` (${fmt(best)})` : ''}; ${TEST_PROGRAMS.find((x) => x.id === prog)!.label} ${Math.round(before[prog])}% → ${Math.round(after[prog])}%.`,
     });
   }
   p.done[t.id] = day;
@@ -203,7 +222,7 @@ export function runTestDay(
       note: `${t.name}, giorno ${day} (${t.circuit})`,
     };
   }
-  return timing;
+  return { timing, finished: true };
 }
 
 const fmt = (sec: number) => {
@@ -212,6 +231,20 @@ const fmt = (sec: number) => {
 };
 
 // ---------------------------------------------------------------------------------------------
+/** Un pilota del giocatore con le percentuali dei programmi. */
+export interface PreseasonRider {
+  id: string;
+  name: string;
+  number: number;
+  /** Percentuali attuali (0–100) e di inizio stagione, per programma. */
+  levels: ProgramLevels;
+  start: ProgramLevels;
+  /** Boost di una giornata per ogni programma, se fosse quello scelto: quanto sale ciascuna percentuale. */
+  boost: Record<TestProgram, ProgramLevels>;
+  /** Effetti in stagione, già calcolati. */
+  effects: { bikeConf: number; trackConf: number; tyres: number; upgradeCost: number; upgradeTime: number };
+}
+
 export interface PreseasonView {
   tests: {
     id: string;
@@ -230,12 +263,10 @@ export interface PreseasonView {
     day: number;
     days: number;
     cost: number;
-    riders: { id: string; name: string; number: number; bikeBase: number }[];
+    riders: PreseasonRider[];
   } | null;
   programs: typeof TEST_PROGRAMS;
-  devDays: number;
-  devEffect: string;
-  riders: { id: string; name: string; bikeBase: number }[];
+  riders: PreseasonRider[];
   log: PreseasonState['log'];
   lastDay: {
     title: string;
@@ -266,19 +297,35 @@ export function preseasonView(s: GameState, formatDay: (d: number) => string): P
         nums.set(seat.riderId, seat.number);
         teamOf.set(seat.riderId, e.teamId);
       }
-  const mine = ps.entry.seats
+  const mine: PreseasonRider[] = ps.entry.seats
     .map((x) => x.riderId)
     .filter((x): x is NonNullable<typeof x> => !!x)
     .map((id) => {
       const r = s.tables.riders[id]!;
+      const levels = programLevels(s, id, true);
+      const f = devFactor(s, ps.entry.teamId, id);
+      const r1 = (x: number) => Math.round(x * 10) / 10;
       return {
         id,
         name: `${r.firstName} ${r.lastName}`,
         number: nums.get(id) ?? 0,
-        bikeBase: Math.round(bikeBase(s, id, true)),
+        levels: Object.fromEntries(PROGRAM_KEYS.map((k) => [k, r1(levels[k])])) as ProgramLevels,
+        start: baseProgramLevels(s, id),
+        boost: Object.fromEntries(
+          PROGRAM_KEYS.map((p) => {
+            const after = boosted(levels, p);
+            return [p, Object.fromEntries(PROGRAM_KEYS.map((k) => [k, r1(after[k] - levels[k])]))];
+          }),
+        ) as Record<TestProgram, ProgramLevels>,
+        effects: {
+          bikeConf: Math.round(bikeBase(s, id, true)),
+          trackConf: trackBonus(s, id, true),
+          tyres: Math.round((longRunFactor(s, id, true) - 1) * 1000) / 10,
+          upgradeCost: Math.round((1 - f.cost) * 100),
+          upgradeTime: Math.round((1 - f.lead) * 100),
+        },
       };
     });
-  const f = devFactor(s, s.meta.playerTeamId!);
   const last = p?.lastDay;
   const lastTest = last ? tests.find((t) => t.id === last.testId) : undefined;
   return {
@@ -312,12 +359,7 @@ export function preseasonView(s: GameState, formatDay: (d: number) => string): P
         }
       : null,
     programs: TEST_PROGRAMS,
-    devDays: p?.devDays ?? 0,
-    devEffect:
-      (p?.devDays ?? 0) > 0
-        ? `upgrade ${Math.round((1 - f.lead) * 100)}% più rapidi e ${Math.round((1 - f.cost) * 100)}% più economici`
-        : 'nessuno',
-    riders: mine.map(({ id, name, bikeBase: b }) => ({ id, name, bikeBase: b })),
+    riders: mine,
     log: p?.log ?? [],
     lastDay:
       last && lastTest

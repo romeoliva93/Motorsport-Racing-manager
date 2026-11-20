@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { rows, teamBalance, type TeamId } from '@lean-angle/data';
 import { GameEngine } from './engine.ts';
 import { nextTestDay, preseasonTests, testToday } from './preseason.ts';
-import { bikeBase, devFactor } from './preseasonEffects.ts';
+import { baseProgramLevels, bikeBase, devFactor, programLevels } from './preseasonEffects.ts';
+import { preseasonInfo } from './queries.ts';
 import { leadDays, upgradeCost } from './upgrades.ts';
 import { careerSummary } from './queries.ts';
 
@@ -34,12 +35,25 @@ describe('test pre-stagionali', () => {
     const [a, b] = mine(e) as [string, string];
     const day0 = e.state.meta.currentDay;
     const bal0 = teamBalance(e.state, e.state.meta.playerTeamId!);
-    expect(bikeBase(e.state, a, true)).toBe(50);
-    expect(e.dispatch({ type: 'RunTestDay', programs: { [a]: 'setup', [b]: 'development' } }).ok).toBe(true);
+    const la = programLevels(e.state, a, true);
+    const lb = programLevels(e.state, b, true);
+    const bike0 = bikeBase(e.state, a, true);
+    // Ogni pilota parte da percentuali sue (diverse fra loro).
+    expect(la).not.toEqual(lb);
+    const view = preseasonInfo(e.state)!.today!.riders.find((x) => x.id === a)!;
+    expect(view.boost.setup.setup).toBeGreaterThan(view.boost.setup.track);
+    expect(
+      e.dispatch({ type: 'RunTestDay', programs: { [a]: 'setup', [b]: 'development' }, all: true }).ok,
+    ).toBe(true);
     expect(e.lastTiming?.kind).toBe('test');
     expect(e.lastTiming!.riders.length).toBeGreaterThan(15);
-    expect(bikeBase(e.state, a, true)).toBeGreaterThan(bikeBase(e.state, b, true));
-    expect(e.state.preseason!.devDays).toBe(0.5);
+    const la2 = programLevels(e.state, a, true);
+    const lb2 = programLevels(e.state, b, true);
+    // Il programma scelto ha il boost più grande (quello mostrato in anteprima).
+    expect(la2.setup - la.setup).toBeCloseTo(view.boost.setup.setup, 0);
+    expect(la2.setup - la.setup).toBeGreaterThan(la2.track - la.track);
+    expect(lb2.development - lb.development).toBeGreaterThan(lb2.setup - lb.setup);
+    expect(bikeBase(e.state, a, true)).toBeGreaterThan(bike0);
     expect(teamBalance(e.state, e.state.meta.playerTeamId!)).toBeLessThan(bal0);
     expect(e.state.meta.currentDay).toBe(day0 + 1);
     expect(testToday(e.state)?.done).toBe(1);
@@ -48,34 +62,34 @@ describe('test pre-stagionali', () => {
   it('test completi: base di confidenza alta e sviluppo che accelera e sconta gli upgrade', () => {
     const e = career('pre-3');
     const team = e.state.meta.playerTeamId!;
-    const cost0 = upgradeCost(e.state, team, 'engine')!;
-    const lead0 = leadDays(e.state, team, 'engine', 1);
     e.dispatch({ type: 'ContinueToNextEvent' });
     const [a, b] = mine(e) as [string, string];
+    const cost0 = upgradeCost(e.state, team, 'engine', b)!;
+    const lead0 = leadDays(e.state, team, 'engine', 1, b);
     let n = 0;
     while (testToday(e.state) && n < 10) {
-      e.dispatch({ type: 'RunTestDay', programs: { [a]: 'setup', [b]: 'development' } });
+      e.dispatch({ type: 'RunTestDay', programs: { [a]: 'setup', [b]: 'development' }, all: true });
       if (!testToday(e.state)) e.dispatch({ type: 'ContinueToNextEvent' });
       n++;
     }
     expect(n).toBe(5); // 3 + 2 giornate
-    expect(bikeBase(e.state, a, true)).toBeGreaterThan(70);
-    expect(devFactor(e.state, team).lead).toBeLessThan(1);
-    expect(upgradeCost(e.state, team, 'engine')!).toBeLessThan(cost0);
-    expect(leadDays(e.state, team, 'engine', 1)).toBeLessThan(lead0);
+    expect(bikeBase(e.state, a, true)).toBeGreaterThan(65);
+    expect(devFactor(e.state, team, b).lead).toBeLessThan(devFactor(e.state, team, a).lead);
+    expect(upgradeCost(e.state, team, 'engine', b)!).toBeLessThan(cost0);
+    expect(leadDays(e.state, team, 'engine', 1, b)).toBeLessThan(lead0);
     // Ora si va al primo GP.
     expect(nextTestDay(e.state)).toBeNull();
   });
 
-  it('chi salta i test resta a 50 (le IA partono da 60)', () => {
+  it('chi salta i test resta ai valori di partenza; le IA i test li fanno sempre', () => {
     const e = career('pre-4');
     e.dispatch({ type: 'ContinueToNextEvent' });
     e.dispatch({ type: 'ContinueToNextEvent' }); // salta il primo test
     expect(e.state.preseason!.skipped.length).toBe(1);
     e.dispatch({ type: 'ContinueToNextEvent' }); // salta il secondo
     const [a] = mine(e) as [string];
-    expect(bikeBase(e.state, a, true)).toBe(50);
-    expect(bikeBase(e.state, a, false)).toBe(60);
+    expect(programLevels(e.state, a, true)).toEqual(baseProgramLevels(e.state, a));
+    expect(bikeBase(e.state, a, false)).toBeGreaterThan(bikeBase(e.state, a, true));
     expect(careerSummary(e.state).nextTest).toBeNull();
   });
 });

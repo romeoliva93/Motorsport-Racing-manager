@@ -1274,3 +1274,155 @@ b.bad {
   display: grid;
   gap: 0.3rem;
 }
+
+/* Percentuali dei programmi (test e prove) */
+.prog-bars {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+.prog-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr 5.5rem;
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+button.prog-row {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+}
+button.prog-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.prog-row.on {
+  border-color: var(--accent, #e3262f);
+  background: rgba(227, 38, 47, 0.12);
+}
+.prog-name {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.prog-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0.6;
+}
+.prog-row.on .prog-dot {
+  background: var(--accent, #e3262f);
+  border-color: var(--accent, #e3262f);
+  opacity: 1;
+}
+.prog-bar {
+  position: relative;
+  height: 0.6rem;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+.prog-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent, #e3262f);
+  border-radius: 99px;
+}
+.prog-bar em {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #39d98a;
+  opacity: 0.85;
+}
+.prog-row:not(.on) .prog-bar em {
+  background: rgba(255, 255, 255, 0.35);
+}
+.prog-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.prog-fx {
+  grid-column: 2 / 4;
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+@media (max-width: 640px) {
+  .prog-row {
+    grid-template-columns: 6rem 1fr 4.5rem;
+  }
+}
+
+/* Rientro ai box */
+.pit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.pit-rider {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+.pit-quote {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 4px solid #8a93a6;
+  font-style: italic;
+}
+.pit-quote.good {
+  border-left-color: #39d98a;
+}
+.pit-quote.ok {
+  border-left-color: #f2b33d;
+}
+.pit-quote.bad {
+  border-left-color: #ff5a5f;
+}
+.pit-sub {
+  font-size: 0.9rem;
+}
+.pit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.pit-list label {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+}
+.pit-list label.done {
+  opacity: 0.6;
+  cursor: default;
+}
+.pit-list input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  accent-color: var(--accent, #e3262f);
+}
+.pit-list span {
+  display: grid;
+  gap: 0.15rem;
+}
+.pit-list small {
+  opacity: 0.8;
+}

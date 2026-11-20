@@ -88,7 +88,7 @@ describe('ricambi e sostituzioni', () => {
     e.dispatch({ type: 'RunRace', strategies: {} });
     const bike = rows(e.state, 'bikes').find((x) => x.teamId === team && x.slot === 'A' && x.riderId)!;
     expect(partWear(bike, 'frontBrake')).toBeGreaterThan(0);
-    e.dispatch({ type: 'BuyUpgrade', part: 'brakes' });
+    e.dispatch({ type: 'BuyUpgrade', part: 'brakes', riderId: bike.riderId! });
     const order = rows(e.state, 'upgradeOrders').find((o) => o.teamId === team && o.part === 'brakes')!;
     e.dispatch({ type: 'AdvanceDays', days: order.readyDay - e.state.meta.currentDay });
     expect(partWear(bike, 'frontBrake')).toBe(0);

@@ -62,6 +62,11 @@ export interface GameState {
   /** Livello degli upgrade montati sulle moto di ogni squadra. */
   upgrades: Record<string, Partial<Record<PartKey, number>>>;
   /**
+   * Upgrade montati sulla moto del singolo pilota (squadra → pilota → livelli). Se un pilota non ha voce valgono
+   * i livelli di squadra in `upgrades` (salvataggi vecchi, piloti appena arrivati).
+   */
+  riderUpgrades?: Record<string, Record<string, Partial<Record<PartKey, number>>>>;
+  /**
    * Manutenzione per squadra: 'auto' = il capotecnico revisiona da solo; 'assisted' = avvisa e propone;
    * 'manual' = decide tutto il manager. Assente = 'auto'.
    */
@@ -81,6 +86,11 @@ export interface GameState {
    * modifiche d'assetto fra una sessione e l'altra, cronologia di uscite e modifiche. Si azzera a ogni weekend.
    */
   practice?: PracticeState;
+  /**
+   * Sessione di prove (o giornata di test) in corso, giocata a uscite: dopo ogni uscita il pilota rientra ai box,
+   * parla con il capotecnico e il giocatore decide le modifiche prima dell'uscita successiva.
+   */
+  stint?: StintState;
   /** Il manager (il giocatore): reputazione, stipendio, soldi personali, corsi, offerte di lavoro. */
   manager?: ManagerState;
   /** Test pre-stagionali della stagione in corso (squadra del giocatore). */
@@ -197,11 +207,59 @@ export interface PreseasonState {
   done: Record<string, number>;
   /** Test saltati. */
   skipped: string[];
-  /** Confidenza con la moto con cui ogni pilota inizia i weekend (0–100). */
-  bikeBase: Record<string, number>;
-  /** Giornate di sviluppo (componenti provati in pista): upgrade più rapidi ed economici in stagione. */
-  devDays: number;
+  /** Percentuali dei programmi di ogni pilota del giocatore dopo i test fatti (assente = valori di partenza). */
+  levels: Record<string, Record<TestProgram, number>>;
+  /** Vecchi salvataggi (non più usati). */
+  bikeBase?: Record<string, number>;
+  devDays?: number;
   log: { testId: string; day: number; text: string }[];
   /** Ultima giornata: miglior giro di ciascuno (per la classifica dei tempi). */
   lastDay: { testId: string; day: number; rows: { riderId: string; best: number }[] } | null;
+}
+
+/** Una modifica proposta al rientro ai box. */
+export interface DebriefSuggestion {
+  key: string;
+  name: string;
+  from: number;
+  to: number;
+  /** Minuti di lavoro dei meccanici. */
+  minutes: number;
+  /** Cosa dice il pilota su questa regolazione. */
+  rider: string;
+  /** Proposta del capotecnico. */
+  chief: string;
+  /** Il capotecnico è sicuro della proposta o va a sensazione. */
+  sure: boolean;
+}
+
+/** Rientro ai box di un pilota a fine uscita. */
+export interface Debrief {
+  riderId: string;
+  run: number;
+  runs: number;
+  best: number | null;
+  /** Posizione nei tempi della sessione finora. */
+  position: number;
+  /** Intesa con l'assetto in % (nascosta se il pilota non dà indicazioni chiare). */
+  match: number | null;
+  quote: string;
+  mood: 'good' | 'ok' | 'bad';
+  chiefName: string;
+  suggestions: DebriefSuggestion[];
+}
+
+export interface StintState {
+  roundId: string;
+  /** Sessione del weekend o 'test'. */
+  kind: string;
+  /** Solo test: test e giornata. */
+  testId?: string;
+  done: number;
+  runs: number;
+  /** Miglior giro finora di ogni pilota in pista. */
+  best: Record<string, number>;
+  tyre: Record<string, string>;
+  programs: Record<string, string>;
+  debrief: Record<string, Debrief>;
 }
