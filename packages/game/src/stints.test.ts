@@ -5,6 +5,7 @@ import { skipPreseason } from './preseason.ts';
 import { nextSession, playerRoundToday } from './weekend.ts';
 import { weekendView } from './views.ts';
 import { PIT_MINUTES } from './practice.ts';
+import { idealSetup, turnsOf } from './setup.ts';
 import { preseasonInfo } from './queries.ts';
 
 function career(seed: string, skip = true) {
@@ -92,5 +93,29 @@ describe('prove a uscite: rientro ai box', () => {
     expect(v3.riders.find((r) => r.id === a)!.levels.setup).toBeGreaterThan(
       v0.riders.find((r) => r.id === a)!.levels.setup,
     );
+  });
+
+  it('il pilota non è sempre contento: assetto sbagliato = si lamenta, assetto giusto = gli piace', () => {
+    const e = career('stint-mood');
+    const round = playerRoundToday(e.state)!;
+    const ids = weekendView(e.state).myRiders.map((r) => r.id);
+    const [a, b] = ids as [string, string];
+    const ra = e.state.tables.riders[a as never]!;
+    const ideal = idealSetup(ra, turnsOf(e.state, round), false);
+    const keys = weekendView(e.state).myRiders.length ? Object.keys(ideal) : [];
+    // Pilota A: assetto ideale. Pilota B: tutto all'opposto.
+    const set = (id: string, values: Record<string, number>) =>
+      expect(e.dispatch({ type: 'SetSetup', riderId: id, condition: 'dry', values }).ok).toBe(true);
+    set(a, Object.fromEntries(keys.map((k) => [k, ideal[k] ?? 0])));
+    set(b, Object.fromEntries(keys.map((k) => [k, (ideal[k] ?? 0) >= 0 ? -5 : 5])));
+    e.dispatch({ type: 'RunSession', stint: true });
+    const d = weekendView(e.state).stint!.debrief;
+    const da = d.find((x) => x.riderId === a)!;
+    const db = d.find((x) => x.riderId === b)!;
+    expect(da.wet).toBe(false);
+    expect(da.mood).toBe('good');
+    expect(db.mood).toBe('bad');
+    expect(db.quote).not.toMatch(/mi piace,/);
+    expect(db.suggestions.length).toBeGreaterThan(0);
   });
 });

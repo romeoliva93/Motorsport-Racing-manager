@@ -243,6 +243,63 @@ export const RUNS_PER_SESSION: Record<string, number> = { fp1: 3, fp2: 3, practi
 /** Minuti di lavoro a ogni rientro ai box durante una sessione. */
 export const PIT_MINUTES = 15;
 
+/** Soglie dell'umore (punteggio dei problemi: più alto = peggio). */
+const MOOD_GOOD = 4;
+const MOOD_OK = 7.5;
+/** Frasi d'apertura del pilota al rientro ai box, per umore. */
+const OPENERS: Record<Debrief['mood'], string[]> = {
+  good: [
+    'La moto mi piace, riesco a spingere.',
+    'Buone sensazioni, la moto fa quello che le chiedo.',
+    'Siamo sulla strada giusta, mi sento a mio agio.',
+  ],
+  ok: [
+    'Va abbastanza bene, ma perdo qualcosa.',
+    'Non è male, però non riesco a spingere come vorrei.',
+    'Così così: in alcuni punti va, in altri no.',
+    'Ci manca ancora qualcosa per essere veloci.',
+  ],
+  bad: [
+    'Questa moto non mi piace per niente.',
+    'Faccio fatica, la moto non mi segue.',
+    'Non ho fiducia, così non posso spingere.',
+    'È difficilissima da guidare, così perdiamo tanto.',
+    'Non ci siamo: ogni giro è una lotta con la moto.',
+  ],
+};
+/** Lamentela per regolazione: [quando andrebbe abbassata, quando andrebbe alzata]. */
+const COMPLAINT: Record<string, [string, string]> = {
+  forkPreload: [
+    'L’anteriore è troppo rigido, in ingresso curva non sento la gomma.',
+    'In frenata l’anteriore affonda troppo e la moto si scompone.',
+  ],
+  shock: [
+    'Il posteriore è troppo duro, in uscita la gomma scivola.',
+    'Il posteriore è troppo morbido, la moto si siede in accelerazione.',
+  ],
+  rideHeight: [
+    'In uscita di curva pattino, mi serve più trazione.',
+    'Nei cambi di direzione la moto è pigra, mi serve più agilità.',
+  ],
+  gearing: [
+    'I rapporti sono troppo lunghi, in uscita dalle curve lente non spinge.',
+    'I rapporti sono troppo corti, sul dritto vado subito in limitatore.',
+  ],
+  engineBrake: [
+    'Troppo freno motore, in staccata il posteriore saltella.',
+    'Poco freno motore, in ingresso la moto non si ferma.',
+  ],
+  traction: [
+    'Il controllo di trazione interviene troppo, mi taglia la potenza.',
+    'Il controllo di trazione è troppo basso, il posteriore parte in uscita.',
+  ],
+};
+const VAGUE = [
+  'Qualcosa non mi convince, ma non saprei dire cosa.',
+  'Non riesco a capire dove perdo, forse dietro.',
+  'Sento che qualcosa non va, ma non so spiegarlo bene.',
+];
+
 /** Numero da 0 a 1 fisso per una stringa (per scelte deterministiche senza consumare il generatore). */
 function unitHash(text: string): number {
   let h = 2166136261;
@@ -304,16 +361,22 @@ export function debriefFor(
       sure,
     };
   });
-  const mood: Debrief['mood'] = match >= 82 ? 'good' : match >= 60 ? 'ok' : 'bad';
-  const opener =
-    mood === 'good'
-      ? 'La moto mi piace, riesco a spingere.'
-      : mood === 'ok'
-        ? 'Va abbastanza bene, ma perdo qualcosa.'
-        : 'Faccio fatica, la moto non mi segue.';
-  const detail = suggestions[0]
-    ? ` ${suggestions[0].name}: ${suggestions[0].rider.charAt(0).toLowerCase()}${suggestions[0].rider.slice(1)}`
-    : ' Non toccherei niente.';
+  // Umore del pilota: conta il problema più grosso, quante regolazioni sono lontane e la sua confidenza.
+  const worstGap = Math.abs(worst[0]?.d ?? 0);
+  const far = gaps.filter((g) => Math.abs(g.d) >= 2).length;
+  const bikeConf = pr?.bikeConf ?? 50;
+  const score = worstGap * 1.4 + far * 0.9 + (bikeConf < 55 ? 1.2 : bikeConf > 72 ? -0.8 : 0);
+  const mood: Debrief['mood'] = score <= MOOD_GOOD ? 'good' : score <= MOOD_OK ? 'ok' : 'bad';
+  const pick = (list: string[], salt: string) =>
+    list[Math.floor(unitHash(`${s.meta.seed}:${info.tag}:${r.id}:${salt}`) * list.length)]!;
+  const opener = pick(OPENERS[mood], 'o');
+  // Lamentela concreta sul punto peggiore (chiara solo se il pilota sa spiegarsi).
+  const w = worst[0];
+  const detail = !w
+    ? ' Non toccherei niente.'
+    : clear
+      ? ` ${COMPLAINT[w.k.key]?.[w.d > 0 ? 1 : 0] ?? `${w.k.name}: vorrei ${w.d > 0 ? w.k.high : w.k.low}.`}`
+      : ` ${pick(VAGUE, 'v')}`;
   return {
     riderId: r.id,
     run: info.run,
