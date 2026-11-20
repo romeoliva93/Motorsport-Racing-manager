@@ -70,6 +70,15 @@ export type Command =
   | { type: 'BuySpare'; group: string }
   | { type: 'ReplaceGroup'; bikeId: string; group: string }
   | { type: 'SetSetup'; riderId: string; condition: 'dry' | 'wet'; values: Record<string, number> }
+  /** Ingaggia un tecnico svincolato (capotecnico/ingegnere: assegnato a un pilota). */
+  | { type: 'HireStaff'; staffId: string; years: number; riderId?: string; replaceStaffId?: string }
+  /** Il manager paga un corso con i suoi soldi. */
+  | { type: 'ManagerCourse'; skill: 'negotiation' | 'commercial' | 'technical' }
+  /** Il manager mette soldi propri nella squadra. */
+  | { type: 'InvestInTeam'; amount: number }
+  /** Trattativa sullo stipendio di un'offerta di lavoro. */
+  | { type: 'NegotiateJobOffer'; offerId: string; salary: number }
+  | { type: 'AcceptJobOffer'; offerId: string }
   /** Firma l'offerta dello sponsor con obiettivo stagionale. */
   | { type: 'SignSponsorDeal'; risk: SponsorRisk };
 
@@ -102,4 +111,9 @@ export type GameEvents = {
   GroupReplaced: { bikeId: string; group: string };
   SetupChanged: { riderId: string; condition: string };
   SponsorSigned: { risk: string };
+  StaffHired: { staffId: string; role: string };
+  ManagerCourseTaken: { skill: string; level: number };
+  ManagerInvested: { amount: number };
+  JobOfferAnswered: { offerId: string; answer: string; offer: number };
+  JobAccepted: { teamId: string };
 };

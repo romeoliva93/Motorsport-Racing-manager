@@ -57,6 +57,20 @@ import {
   tyresLeft,
 } from './weekend.ts';
 import { chooseSupplier } from './suppliers.ts';
+import { hireStaff, validateHire } from './staffMarket.ts';
+import {
+  acceptJobOffer,
+  closeOffers,
+  ensureManager,
+  investInTeam,
+  negotiateOffer,
+  seasonReviewForManager,
+  takeCourse,
+  validateAcceptJob,
+  validateCourse,
+  validateInvest,
+  validateNegotiate,
+} from './manager.ts';
 import { SESSION_SHORT, changeMinutes, practiceRider, workMinutesLeft } from './practice.ts';
 import { addNews } from './news.ts';
 import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
@@ -244,14 +258,21 @@ export class GameEngine {
     if (marketOpen(s)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
     out.push('BuyUpgrade', 'ServiceParts', 'SetGarageMode', 'BuySpare', 'ReplaceGroup', 'SetSetup');
     if (dealWindowOpen(s)) out.push('SignSponsorDeal');
+    out.push('HireStaff', 'ManagerCourse', 'InvestInTeam');
+    if (s.manager?.offers.some((o) => o.status === 'open')) out.push('NegotiateJobOffer', 'AcceptJobOffer');
     return out;
   }
 
   dispatch(cmd: Command): Result<DomainEvent[], string> {
     const before = this.events.lastSeq;
+    // Carriere salvate prima del manager: lo si crea al primo comando.
+    if (this.stateValue.meta.playerTeamId && !this.stateValue.manager) ensureManager(this.stateValue);
     const check = this.validate(cmd);
     if (!check.ok) return check;
     this.apply(cmd);
+    // Fine campionato: reputazione del manager e offerte di lavoro (una volta per stagione).
+    if (this.stateValue.manager && seasonFinished(this.stateValue))
+      seasonReviewForManager(this.stateValue, this.ids);
     // Stato del generatore casuale e dei contatori sempre salvati con lo stato.
     this.stateValue.idCounters = this.ids.snapshot();
     this.stateValue.rng = this.streams.snapshot();
@@ -270,9 +291,11 @@ export class GameEngine {
   private validateOffer(riderId: string, offer: ContractOffer): Result<true, string> {
     const s = this.stateValue;
     const teamId = s.meta.playerTeamId!;
-    if (!marketOpen(s)) return err('Il mercato è chiuso: si riapre a fine stagione');
     const r = s.tables.riders[riderId as `rdr_${string}`];
     if (!r) return err('Pilota inesistente');
+    // Gli svincolati (senza contratto) si possono ingaggiare in ogni momento; gli altri solo a mercato aperto.
+    if (!marketOpen(s) && activeRiderContract(s, r.id))
+      return err('Il mercato è chiuso per i piloti sotto contratto: si riapre a fine stagione');
     const closed = rows(s, 'negotiations').find(
       (n) => n.riderId === riderId && n.teamId === teamId && n.status === 'rejected',
     );
@@ -391,6 +414,29 @@ export class GameEngine {
       }
       case 'StartNextSeason':
         return seasonFinished(s) ? ok(true) : err('La stagione non è ancora finita');
+      case 'HireStaff': {
+        if (!s.meta.playerTeamId) return err('Scegli prima una squadra');
+        const why = validateHire(s, s.meta.playerTeamId, cmd);
+        return why ? err(why) : ok(true);
+      }
+      case 'ManagerCourse': {
+        const why = validateCourse(s, cmd.skill);
+        return why ? err(why) : ok(true);
+      }
+      case 'InvestInTeam': {
+        const why = validateInvest(s, cmd.amount);
+        return why ? err(why) : ok(true);
+      }
+      case 'NegotiateJobOffer': {
+        if (!seasonFinished(s)) return err('Le offerte si valutano a fine stagione');
+        const why = validateNegotiate(s, cmd.offerId, cmd.salary);
+        return why ? err(why) : ok(true);
+      }
+      case 'AcceptJobOffer': {
+        if (!seasonFinished(s)) return err('Le offerte si valutano a fine stagione');
+        const why = validateAcceptJob(s, cmd.offerId);
+        return why ? err(why) : ok(true);
+      }
       case 'BuyUpgrade': {
         const teamId = s.meta.playerTeamId;
         if (!teamId) return err('Scegli prima una squadra');
@@ -474,12 +520,14 @@ export class GameEngine {
       case 'SetPlayerTeam': {
         s.meta.playerTeamId = cmd.teamId;
         if (cmd.manufacturerId) chooseSupplier(s, this.ids, cmd.teamId, cmd.manufacturerId as ManufacturerId);
+        ensureManager(s);
         this.events.emit('PlayerTeamSet', s.meta.currentDay, { teamId: cmd.teamId });
         return;
       }
       case 'CreateTeam': {
         const teamId = createCustomTeam(s, cmd.team, this.ids, this.streams.get('custom-team'));
         s.meta.playerTeamId = teamId;
+        ensureManager(s);
         this.events.emit('TeamCreated', s.meta.currentDay, { teamId, name: cmd.team.name.trim() });
         this.events.emit('PlayerTeamSet', s.meta.currentDay, { teamId });
         return;
@@ -550,7 +598,39 @@ export class GameEngine {
         this.events.emit('RaceDone', s.meta.currentDay, { roundId: round.id, summary: '' });
         return;
       }
+      case 'HireStaff': {
+        hireStaff(s, this.ids, s.meta.playerTeamId!, cmd);
+        const m = s.tables.staff[cmd.staffId as keyof typeof s.tables.staff]!;
+        this.events.emit('StaffHired', s.meta.currentDay, { staffId: cmd.staffId, role: m.role });
+        return;
+      }
+      case 'ManagerCourse':
+        takeCourse(s, cmd.skill);
+        this.events.emit('ManagerCourseTaken', s.meta.currentDay, {
+          skill: cmd.skill,
+          level: s.manager!.skills[cmd.skill],
+        });
+        return;
+      case 'InvestInTeam':
+        investInTeam(s, this.ids, cmd.amount);
+        this.events.emit('ManagerInvested', s.meta.currentDay, { amount: cmd.amount });
+        return;
+      case 'NegotiateJobOffer': {
+        const r = negotiateOffer(s, cmd.offerId, cmd.salary);
+        this.events.emit('JobOfferAnswered', s.meta.currentDay, {
+          offerId: cmd.offerId,
+          answer: r.answer,
+          offer: r.offer,
+        });
+        return;
+      }
+      case 'AcceptJobOffer': {
+        acceptJobOffer(s, this.ids, this.streams.get('jobs'), cmd.offerId);
+        this.events.emit('JobAccepted', s.meta.currentDay, { teamId: s.meta.playerTeamId! });
+        return;
+      }
       case 'StartNextSeason': {
+        closeOffers(s);
         const year = startNextSeason(s, this.ids, this.streams.get('season'));
         this.events.emit('SeasonStarted', s.meta.currentDay, { year });
         return;

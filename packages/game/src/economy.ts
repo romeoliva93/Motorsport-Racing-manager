@@ -6,6 +6,8 @@
 import { GameCalendar, type IdFactory } from '@lean-angle/core';
 import { dealMonthly } from './sponsors.ts';
 import { supplyFeeYearly } from './suppliers.ts';
+import { managerSkill } from './managerSkills.ts';
+import { payManager } from './manager.ts';
 import { RUNNING_COST_MONTHLY, SPONSOR_MONTHLY, rows, type GameState, type TeamId } from '@lean-angle/data';
 
 export function sponsorMonthly(s: GameState, teamId: TeamId): number {
@@ -13,7 +15,9 @@ export function sponsorMonthly(s: GameState, teamId: TeamId): number {
   if (!entry) return 0;
   const tier = s.tables.categories[entry.categoryId]!.tier;
   const rep = s.tables.teams[teamId]!.reputation;
-  return Math.round((SPONSOR_MONTHLY[tier] * (rep / 70)) / 1000) * 1000;
+  // Corso di rapporti commerciali del manager: +4% per livello (solo la squadra del giocatore).
+  const skill = teamId === s.meta.playerTeamId ? 1 + 0.04 * managerSkill(s, 'commercial') : 1;
+  return Math.round((SPONSOR_MONTHLY[tier] * (rep / 70) * skill) / 1000) * 1000;
 }
 
 export function payrollMonthly(s: GameState, teamId: string): number {
@@ -32,6 +36,7 @@ export function payrollMonthly(s: GameState, teamId: string): number {
 export function monthlyFinance(s: GameState, ids: IdFactory): void {
   const d = new GameCalendar(s.meta.startYear).toDate(s.meta.currentDay);
   if (d.day !== 1) return;
+  payManager(s, ids);
   for (const acc of s.accounts) {
     const pay = payrollMonthly(s, acc.teamId);
     const spon = sponsorMonthly(s, acc.teamId);

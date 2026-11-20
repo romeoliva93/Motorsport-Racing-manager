@@ -88,7 +88,8 @@ export const TUTORIAL: TutorialStep[] = [
       'Fai un’offerta: stipendio annuo e anni di contratto. Il manager del pilota accetta, rifiuta o fa una controproposta.',
       'Puoi accettare la controproposta, rilanciare o chiudere la trattativa.',
       'Un nuovo pilota prende il posto di uno dei tuoi: scegli chi lasciare.',
-      'Il mercato è aperto fino al primo Gran Premio e si riapre a fine stagione; quando è chiuso la schermata lo dice.',
+      'I piloti sotto contratto si trattano fino al primo Gran Premio e a fine stagione; gli svincolati (filtro «Svincolati») si ingaggiano in ogni momento.',
+      'Nella scheda «Personale tecnico» trovi capotecnici, ingegneri, meccanici e dirigenti svincolati: il capotecnico si assegna a un pilota, più meccanici rendono più rapide le modifiche fra le sessioni.',
     ],
     tip: 'Uno stipendio alto pesa su ogni mese: controlla le Finanze prima di firmare.',
   },
@@ -192,6 +193,19 @@ export const TUTORIAL: TutorialStep[] = [
       'Entrate: sponsor (ogni mese), premi per i punti.',
       'Uscite: stipendi di piloti e personale, gestione, canone di fornitura del costruttore, trasferte, ricambi, revisioni e upgrade.',
       'La Home mostra entrate e uscite del mese: se le uscite superano le entrate, rimedia prima che la cassa finisca.',
+    ],
+  },
+  {
+    id: 'manager',
+    title: 'Il manager: stipendio e carriera',
+    section: 'manager',
+    intro:
+      'Anche tu hai un contratto: la squadra ti paga uno stipendio ogni mese, che finisce nei tuoi soldi personali.',
+    points: [
+      'Con i tuoi soldi puoi fare corsi: Negoziazione (piloti e tecnici chiedono meno), Rapporti commerciali (sponsor più ricchi), Gestione tecnica (modifiche d’assetto più rapide).',
+      'Oppure puoi investirli nella squadra, per upgrade e ingaggi.',
+      'La reputazione cresce se la squadra fa meglio delle attese. A fine stagione chi fa bene riceve offerte: la squadra forte paga di più, quella media offre meno ma porta un pilota di punta, quella debole garantisce la moto migliore ma ha piloti modesti.',
+      'Lo stipendio si tratta: la squadra accetta, rilancia o al terzo rifiuto si ritira. Firmando passi subito alla nuova squadra.',
     ],
   },
   {

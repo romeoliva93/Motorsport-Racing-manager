@@ -77,3 +77,11 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.mk-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.mk-wrap > .tabs {
+  align-self: flex-start;
+}

@@ -4,6 +4,8 @@
  * rientro da un infortunio — non escono mai dal motore; si espongono solo stime.
  */
 import { supplierOffers } from './suppliers.ts';
+import { staffMarket } from './staffMarket.ts';
+import { managerView } from './manager.ts';
 import { GameCalendar, cyrb128 } from '@lean-angle/core';
 import {
   NAMES_CONTENT,
@@ -656,7 +658,8 @@ export function negotiationView(s: GameState, riderId: string): NegotiationView 
   return {
     rider: row,
     open: neg?.status === 'open',
-    marketOpen: marketOpen(s),
+    // Gli svincolati si possono ingaggiare anche a mercato chiuso.
+    marketOpen: marketOpen(s) || !k,
     kind: k?.employerId === teamId ? 'renewal' : 'transfer',
     balance: teamBalance(s, teamId),
     currentContract: k
@@ -755,6 +758,8 @@ export const QUERIES = {
   riderProfile,
   dashboardView,
   supplierOffers,
+  staffMarket,
+  managerView,
 } as const;
 export type QueryName = keyof typeof QUERIES;
 export type QueryArgs<N extends QueryName> = (typeof QUERIES)[N] extends (

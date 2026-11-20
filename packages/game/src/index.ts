@@ -16,3 +16,5 @@ export * from './garage.ts';
 export * from './setup.ts';
 export * from './dashboard.ts';
 export * from './suppliers.ts';
+export * from './staffMarket.ts';
+export * from './manager.ts';

@@ -7,13 +7,14 @@ import type { MarketFilter, NegotiationView } from '@lean-angle/game';
 import type { RiderId } from '@lean-angle/data';
 import { engine } from '../../engine/engine.ts';
 import { useQuery } from '../../engine/hooks.ts';
-import { Card, Money, Row, ratingTone } from '../../design-system/components.tsx';
+import { Card, Money, Row, Tabs, ratingTone } from '../../design-system/components.tsx';
+import { StaffMarket } from './StaffMarket.tsx';
 import { RIDER_ROLE } from '../../i18n/it.ts';
 import './market.css';
 
 const FILTERS: { id: MarketFilter; label: string }[] = [
   { id: 'all', label: 'Tutti' },
-  { id: 'free', label: 'Senza contratto' },
+  { id: 'free', label: 'Svincolati' },
   { id: 'premier', label: 'MotoGP' },
   { id: 'intermediate', label: 'Moto2' },
   { id: 'lightweight', label: 'Moto3' },
@@ -28,6 +29,23 @@ const NEG_LABEL: Record<string, { text: string; cls: string }> = {
 };
 
 export function MarketScreen({ notify }: { notify: (text: string, err?: boolean) => void }) {
+  const [tab, setTab] = useState<'riders' | 'staff'>('riders');
+  return (
+    <div className="mk-wrap">
+      <Tabs
+        value={tab}
+        onChange={(v) => setTab(v as 'riders' | 'staff')}
+        options={[
+          { id: 'riders', label: 'Piloti' },
+          { id: 'staff', label: 'Personale tecnico' },
+        ]}
+      />
+      {tab === 'riders' ? <RiderMarket notify={notify} /> : <StaffMarket notify={notify} />}
+    </div>
+  );
+}
+
+function RiderMarket({ notify }: { notify: (text: string, err?: boolean) => void }) {
   const [filter, setFilter] = useState<MarketFilter>('all');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
@@ -272,7 +290,12 @@ function NegotiationForm({
         title={v.kind === 'renewal' ? 'Proposta di rinnovo' : 'La tua offerta'}
         aside={`Saldo: ${formatMoney(v.balance)}`}
       >
-        {!v.marketOpen && <p className="bad">Il mercato è chiuso: si riapre a fine stagione.</p>}
+        {!v.marketOpen && (
+          <p className="bad">
+            Il mercato è chiuso per i piloti sotto contratto: si riapre a fine stagione. Gli svincolati si
+            possono ingaggiare sempre.
+          </p>
+        )}
         {!r.eligible && <p className="warn">Non idoneo: {r.ineligibleReason}</p>}
         {v.status === 'signed' && <p className="ok">Trattativa conclusa: contratto firmato.</p>}
         {v.status === 'rejected' && (

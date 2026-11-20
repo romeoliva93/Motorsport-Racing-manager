@@ -22,6 +22,8 @@ import type {
   StaffMember,
 } from '@lean-angle/data';
 import { SETUP_KEYS, idealSetup } from './setup.ts';
+import { mechanicsFactor } from './staffMarket.ts';
+import { managerSkill } from './managerSkills.ts';
 
 export const PRACTICE_KINDS = ['fp1', 'fp2', 'practice', 'warmup'] as const;
 export const PRACTICE_LAPS: Record<string, number> = { fp1: 16, fp2: 16, practice: 18, warmup: 6 };
@@ -172,7 +174,11 @@ export function changeMinutes(
   );
   const cc = crewChiefOf(s, riderId);
   const speed = (sk(cc, 'timeManagement') + sk(cc, 'mechanicsCoordination')) / 200;
-  return Math.ceil(steps * (1.25 - 0.5 * speed));
+  // Meccanici in squadra e corso di gestione tecnica del manager (−8% per livello).
+  const teamId = s.staffAssignments.find((x) => x.riderId === riderId)?.teamId;
+  const crew = teamId ? mechanicsFactor(s, teamId) : 1;
+  const mgr = teamId === s.meta.playerTeamId ? 1 - 0.08 * managerSkill(s, 'technical') : 1;
+  return Math.ceil(steps * (1.25 - 0.5 * speed) * crew * mgr);
 }
 
 /**

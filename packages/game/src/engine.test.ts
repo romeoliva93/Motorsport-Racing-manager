@@ -36,6 +36,9 @@ describe('GameEngine', () => {
       'ReplaceGroup',
       'SetSetup',
       'SignSponsorDeal',
+      'HireStaff',
+      'ManagerCourse',
+      'InvestInTeam',
     ]);
   });
 

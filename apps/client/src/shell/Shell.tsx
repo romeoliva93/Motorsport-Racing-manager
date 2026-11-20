@@ -17,6 +17,7 @@ import { BikeScreen } from '../screens/game/BikeScreen.tsx';
 import { garageFocus } from '../screens/game/Garage.tsx';
 import { SponsorsScreen } from '../screens/game/Sponsors.tsx';
 import { PaddockScreen } from '../screens/game/Paddock.tsx';
+import { ManagerScreen } from '../screens/game/Manager.tsx';
 import { Tutorial } from '../tutorial/Tutorial.tsx';
 import { getPrefs, setPrefs } from '../prefs.ts';
 
@@ -33,7 +34,8 @@ export type Section =
   | 'news'
   | 'bike'
   | 'sponsors'
-  | 'paddock';
+  | 'paddock'
+  | 'manager';
 
 const I = (d: string) => (
   <svg
@@ -62,6 +64,9 @@ const ICON: Record<Section, ReactNode> = {
   bike: I('M5 17a3 3 0 1 0 0-.01M19 17a3 3 0 1 0 0-.01M5 17l4-7h5l3 7M9 10l-1-3h3M14 10l2-3h3'),
   sponsors: I('M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z'),
   paddock: I('M3 21V10l5-3v14M8 21V7l8-4v18M16 21V10l5 3v8M3 21h18'),
+  manager: I(
+    'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1M12 14l-1.5 3 1.5 4 1.5-4z',
+  ),
 };
 
 /** Voci attive (collegate a dati reali). */
@@ -74,6 +79,7 @@ const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
       { id: 'bike', label: 'Moto e upgrade' },
       { id: 'staff', label: 'Personale tecnico' },
       { id: 'team', label: 'Scuderia' },
+      { id: 'manager', label: 'Il manager' },
     ],
   },
   {
@@ -88,7 +94,7 @@ const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
   {
     group: 'Affari',
     items: [
-      { id: 'market', label: 'Mercato piloti' },
+      { id: 'market', label: 'Mercato' },
       { id: 'sponsors', label: 'Sponsor' },
       { id: 'finance', label: 'Finanze' },
       { id: 'news', label: 'Notizie' },
@@ -222,6 +228,9 @@ export function Shell({
                   {i.id === 'sponsors' && commands.includes('SignSponsorDeal') && (
                     <span className="badge">!</span>
                   )}
+                  {i.id === 'manager' && commands.includes('AcceptJobOffer') && (
+                    <span className="badge">!</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -273,6 +282,7 @@ export function Shell({
           <WeekendScreen
             notify={notify}
             goMarket={() => go('market')}
+            goManager={() => go('manager')}
             showSeasonEnd={seasonEnd}
             openSeasonEnd={() => go('weekend', { seasonEnd: true })}
           />
@@ -306,6 +316,8 @@ export function Shell({
           <BikeScreen notify={notify} />
         ) : section === 'sponsors' ? (
           <SponsorsScreen notify={notify} />
+        ) : section === 'manager' ? (
+          <ManagerScreen notify={notify} />
         ) : section === 'paddock' ? (
           <PaddockScreen categoryId={s!.category!.id} myTeamId={team.id} />
         ) : null}

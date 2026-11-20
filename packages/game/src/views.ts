@@ -27,6 +27,7 @@ import {
   type TransactionCategory,
 } from '@lean-angle/data';
 import { payrollMonthly, runningCostMonthly, sponsorMonthly, supplyMonthly } from './economy.ts';
+import { managerMonthly } from './manager.ts';
 import { activeRiderContract, buyoutFor } from './market.ts';
 import { riderDetail, type RiderDetail } from './queries.ts';
 import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
@@ -512,7 +513,8 @@ export function financeView(s: GameState): FinanceView | null {
   const thisYear = trx.filter((t) => t.day >= yearStart);
   const sums = new Map<string, number>();
   for (const t of thisYear) sums.set(t.category, (sums.get(t.category) ?? 0) + t.amount);
-  const salaries = payrollMonthly(s, teamId);
+  // Stipendi di piloti e staff più quello del manager (pagato dalla squadra).
+  const salaries = payrollMonthly(s, teamId) + (teamId === s.meta.playerTeamId ? managerMonthly(s) : 0);
   const sponsor = sponsorMonthly(s, teamId);
   const running = runningCostMonthly(s, teamId);
   const supply = supplyMonthly(s, teamId);

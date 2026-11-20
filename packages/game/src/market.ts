@@ -12,6 +12,7 @@
  *                 + cambio di categoria (+0,15 per salire, −0,25 per scendere) − fedeltà + adattamento durata/ruolo
  *   punteggio ≥ 0,6 → accetta · altrimenti controproposta (se basta alzare lo stipendio e c'è pazienza) · altrimenti rifiuta
  */
+import { managerSkill } from './managerSkills.ts';
 import { GameCalendar, clamp, type IdFactory, type Rng } from '@lean-angle/core';
 import {
   CATEGORIES_CONTENT,
@@ -135,8 +136,10 @@ export function askingSalary(s: GameState, r: Rider, teamId: TeamId): number {
   const c = activeRiderContract(s, r.id);
   const renewal = c?.employerId === teamId;
   const fromContract = c ? c.salary * (renewal ? 1.05 : 1.15) : 0;
+  // Corso di negoziazione del manager: -4% per livello (solo la squadra del giocatore).
+  const skill = teamId === s.meta.playerTeamId ? 1 - 0.04 * managerSkill(s, 'negotiation') : 1;
   return round10k(
-    Math.max(marketValue(s, r, tier), fromContract) * (1 + (r.personality.ambition - 60) / 400),
+    Math.max(marketValue(s, r, tier), fromContract) * (1 + (r.personality.ambition - 60) / 400) * skill,
   );
 }
 
@@ -221,7 +224,7 @@ const fmt = (v: number) => `€ ${(v / 1_000_000).toFixed(2).replace('.', ',')} 
 // Esecuzione della firma
 
 /** Assegna al pilota un capotecnico e un ingegnere di pista liberi della squadra e le moto senza pilota. */
-function equipRider(s: GameState, teamId: TeamId, riderId: RiderId, ids: IdFactory): void {
+export function equipRider(s: GameState, teamId: TeamId, riderId: RiderId, ids: IdFactory): void {
   const entry = entryOf(s, teamId)!;
   const cat = s.tables.categories[entry.categoryId]!;
   if (cat.teamsManaged) {
@@ -280,7 +283,7 @@ function equipRider(s: GameState, teamId: TeamId, riderId: RiderId, ids: IdFacto
 }
 
 /** Il pilota lascia la squadra: posto vacante, staff e moto liberati. */
-function detachRider(s: GameState, teamId: string, riderId: RiderId): { seatFreed: boolean } {
+export function detachRider(s: GameState, teamId: string, riderId: RiderId): { seatFreed: boolean } {
   let seatFreed = false;
   for (const e of rows(s, 'teamEntries').filter((x) => x.teamId === teamId)) {
     for (const seat of e.seats)

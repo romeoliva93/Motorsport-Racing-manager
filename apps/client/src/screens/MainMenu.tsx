@@ -45,7 +45,7 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
         <path className="line" d={TRACK} />
         <TrackRunner />
       </svg>
-      <div className="menu-left">
+      <main className="menu-left">
         <div className="brand">
           <h1 className="brand-logo">
             <img src={logo} alt="Motorcycle Racing Manager" />
@@ -90,7 +90,7 @@ export function MainMenu({ go }: { go: (s: AppScreen) => void }) {
         </nav>
         {settings && <Settings />}
         {error && <div className="bad">{error}</div>}
-      </div>
+      </main>
       {guide && <Tutorial onClose={() => setGuide(false)} />}
       <footer className="menu-foot">Versione di prova · piloti, squadre e marchi sono inventati</footer>
     </div>

@@ -81,6 +81,8 @@ export interface GameState {
    * modifiche d'assetto fra una sessione e l'altra, cronologia di uscite e modifiche. Si azzera a ogni weekend.
    */
   practice?: PracticeState;
+  /** Il manager (il giocatore): reputazione, stipendio, soldi personali, corsi, offerte di lavoro. */
+  manager?: ManagerState;
 }
 
 export type TableName = keyof GameState['tables'];
@@ -148,4 +150,39 @@ export interface PracticeRider {
 export interface PracticeState {
   roundId: string;
   riders: Record<string, PracticeRider>;
+}
+
+export type ManagerSkill = 'negotiation' | 'commercial' | 'technical';
+
+/** Offerta di lavoro di un'altra squadra (a fine stagione). */
+export interface JobOffer {
+  id: string;
+  teamId: string;
+  /** top = squadra forte, più soldi; star = media, meno soldi ma un pilota di punta; bike = debole, moto al top. */
+  kind: 'top' | 'star' | 'bike';
+  /** Stipendio annuo offerto ora (sale con la trattativa). */
+  salary: number;
+  /** Massimo che la squadra è disposta a pagare (nascosto). */
+  maxSalary: number;
+  years: number;
+  status: 'open' | 'accepted' | 'withdrawn' | 'declined';
+  rounds: { ask: number; answer: 'accepted' | 'countered' | 'withdrawn'; offer: number }[];
+  /** Pilota di punta promesso (star) o costruttore e livelli di sviluppo garantiti (bike). */
+  starRiderId?: string;
+  manufacturerId?: string;
+  upgradeLevels?: number;
+}
+
+export interface ManagerState {
+  /** 0–100: cresce con i risultati oltre le attese. */
+  reputation: number;
+  /** Stipendio annuo dalla squadra attuale. */
+  salary: number;
+  /** Soldi personali del manager. */
+  wallet: number;
+  skills: Record<ManagerSkill, number>;
+  /** Anno della stagione di cui sono già state generate le offerte. */
+  offersYear: number | null;
+  offers: JobOffer[];
+  history: { year: number; team: string; position: number; of: number }[];
 }

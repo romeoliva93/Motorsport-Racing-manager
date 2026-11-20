@@ -1,0 +1,87 @@
+.mgr {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.mgr-rep {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+.mgr-rep i {
+  height: 8px;
+  background: var(--bg-3);
+  overflow: hidden;
+}
+.mgr-rep i b {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+}
+.mgr-rep em {
+  font-style: normal;
+  font-weight: 800;
+  font-size: 1.3rem;
+}
+.mgr-invest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.mgr-invest input {
+  background: var(--bg-3);
+  border: 1px solid var(--line-strong);
+  padding: 0.5rem 0.7rem;
+  width: 10rem;
+}
+.mgr-courses {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.8rem;
+}
+.mgr-course {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.mgr-pips {
+  display: flex;
+  gap: 0.3rem;
+}
+.mgr-pips span {
+  width: 1.6rem;
+  height: 0.45rem;
+  background: var(--bg-3);
+}
+.mgr-pips span.on {
+  background: var(--signal);
+}
+.mgr-offers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 0.8rem;
+}
+.mgr-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  box-shadow: inset 4px 0 0 var(--tc);
+}
+.mgr-offer-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.mgr-offer-head > div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.mgr-offer p {
+  margin: 0;
+  font-size: 0.9rem;
+}
