@@ -7,8 +7,12 @@ import { supplierOffers } from './suppliers.ts';
 import { nextTestDay, preseasonTests, preseasonView, testToday } from './preseason.ts';
 
 /** Test pre-stagionali della squadra del giocatore. */
-export const preseasonInfo = (s: GameState) => preseasonView(s, (d) => cal(s).format(d));
+export const preseasonInfo = (s: GameState) => {
+  const v = preseasonView(s, (d) => cal(s).format(d));
+  return v ? { ...v, stint: s.stint?.kind === 'test' ? stintView(s, undefined) : null } : null;
+};
 import { staffMarket } from './staffMarket.ts';
+import { RACE_FORMAT, pastResult, timingSectors, trackFor } from './weekend.ts';
 import { managerView } from './manager.ts';
 import { GameCalendar, cyrb128 } from '@lean-angle/core';
 import {
@@ -23,6 +27,7 @@ import {
   type Contract,
   type FacilityType,
   type GameState,
+  type Round,
   type Rider,
   type RiderAttribute,
   type RiderRole,
@@ -40,6 +45,7 @@ import {
   riderProfile,
   sponsorView,
   weekendView,
+  stintView,
 } from './views.ts';
 import { dashboardView } from './dashboard.ts';
 import { activeRiderContract, askingSalary, buyoutFor, ineligibility, marketOpen } from './market.ts';
@@ -532,7 +538,10 @@ export interface CalendarRow {
 
 export function calendar(s: GameState, categoryId: string): CalendarRow[] {
   const c = cal(s);
-  const season = rows(s, 'seasons').find((x) => x.categoryId === categoryId);
+  // Stagione in corso della categoria (la più recente).
+  const season = rows(s, 'seasons')
+    .filter((x) => x.categoryId === categoryId)
+    .sort((a, b) => b.year - a.year)[0];
   if (!season) return [];
   const rounds = season.roundIds.map((id) => s.tables.rounds[id]!).sort((a, b) => a.startDay - b.startDay);
   const nextId = rounds.find((r) => r.startDay > s.meta.currentDay)?.id;
@@ -549,6 +558,119 @@ export function calendar(s: GameState, categoryId: string): CalendarRow[] {
       status: r.startDay <= s.meta.currentDay ? 'done' : r.id === nextId ? 'next' : 'upcoming',
     };
   });
+}
+
+/** Scheda di un circuito del calendario: tracciato, caratteristiche e risultati dell'anno prima (e di quest'anno). */
+export interface CircuitInfo {
+  roundId: string;
+  number: number;
+  total: number;
+  name: string;
+  country: string;
+  date: string;
+  category: string;
+  lengthM: number;
+  turns: number;
+  laps: number;
+  raceKm: number;
+  /** Tracciato (punti 0–1) e posizioni di fine settore. */
+  track: [number, number][];
+  sectors: [number, number, number];
+  traits: { label: string; value: number; text: string }[];
+  history: {
+    year: number;
+    played: boolean;
+    pole: PastRider | null;
+    winner: PastRider | null;
+    fastestLap: PastRider | null;
+  }[];
+}
+interface PastRider {
+  name: string;
+  nationality: string;
+  team: string | null;
+  color: string | null;
+  time: number | null;
+}
+
+export function circuitInfo(s: GameState, roundId: string): CircuitInfo | null {
+  const r = s.tables.rounds[roundId as never] as Round | undefined;
+  if (!r) return null;
+  const season = s.tables.seasons[r.seasonId]!;
+  const cat = s.tables.categories[season.categoryId]!;
+  const ci = s.tables.circuits[r.circuitId]!;
+  const track = trackFor(s, r);
+  const laps = RACE_FORMAT[cat.tier].laps;
+  const teamOfIn = (year: number, riderId: string) => {
+    const ss =
+      rows(s, 'seasons').find((x) => x.categoryId === season.categoryId && x.year === year) ?? season;
+    const e = rows(s, 'teamEntries').find(
+      (x) => x.seasonId === ss.id && x.seats.some((y) => y.riderId === riderId),
+    );
+    return e ? s.tables.teams[e.teamId] : undefined;
+  };
+  const who = (year: number, x: { riderId: string; time: number | null } | null): PastRider | null => {
+    if (!x) return null;
+    const rd = s.tables.riders[x.riderId as never] as
+      { firstName: string; lastName: string; nationality: string } | undefined;
+    if (!rd) return null;
+    const t = teamOfIn(year, x.riderId);
+    return {
+      name: `${rd.firstName} ${rd.lastName}`,
+      nationality: rd.nationality,
+      team: t?.name ?? null,
+      color: t?.colors.primary ?? null,
+      time: x.time,
+    };
+  };
+  const level = (x: number) => (x >= 0.66 ? 'alta' : x >= 0.33 ? 'media' : 'bassa');
+  const history = [season.year - 1, season.year]
+    .map((y) => {
+      const p = pastResult(s, r, y);
+      return p
+        ? {
+            year: y,
+            played: p.played,
+            pole: who(y, p.pole),
+            winner: who(y, p.winner),
+            fastestLap: who(y, p.fastestLap),
+          }
+        : null;
+    })
+    .filter((x): x is NonNullable<typeof x> => !!x && (!!x.pole || !!x.winner));
+  return {
+    roundId: r.id,
+    number: r.number,
+    total: season.roundIds.length,
+    name: ci.name,
+    country: ci.country,
+    date: cal(s).format(r.startDay),
+    category: cat.name,
+    lengthM: ci.lengthM,
+    turns: ci.turns,
+    laps,
+    raceKm: Math.round((ci.lengthM * laps) / 100) / 10,
+    track: track.points as [number, number][],
+    sectors: timingSectors(track),
+    traits: [
+      {
+        label: 'Usura gomme',
+        value: Math.round(ci.abrasiveness * 100),
+        text: `Asfalto abrasivo: usura ${level(ci.abrasiveness)}. ${ci.abrasiveness >= 0.6 ? 'Conta la gestione delle gomme.' : 'Le gomme morbide reggono di più.'}`,
+      },
+      {
+        label: 'Sorpassi',
+        value: Math.round(ci.overtaking * 100),
+        text: `Facilità di sorpasso ${level(ci.overtaking)}. ${ci.overtaking < 0.4 ? 'La qualifica vale tantissimo.' : 'Si può rimontare in gara.'}`,
+      },
+      {
+        label: 'Curve',
+        value: Math.round(Math.min(1, ci.turns / 20) * 100),
+        text: `${ci.turns} curve: ${ci.turns >= 15 ? 'pista guidata, conta l’assetto agile' : 'pista veloce, conta la stabilità'}.`,
+      },
+    ],
+    history,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -760,6 +882,7 @@ export const QUERIES = {
   teamStaff,
   staffDetail,
   calendar,
+  circuitInfo,
   marketRiders,
   negotiationView,
   createTeamOptions,

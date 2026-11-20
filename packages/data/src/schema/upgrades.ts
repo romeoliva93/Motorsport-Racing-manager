@@ -43,6 +43,8 @@ export type UpgradeOrderId = Id<'upo'>;
 export interface UpgradeOrder {
   id: UpgradeOrderId;
   teamId: TeamId;
+  /** Pilota sulla cui moto verrà montato (assente nei salvataggi vecchi = tutta la squadra). */
+  riderId?: string;
   part: PartKey;
   /** Livello che il componente avrà alla consegna. */
   level: number;

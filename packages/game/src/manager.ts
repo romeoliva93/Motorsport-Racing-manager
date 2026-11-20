@@ -28,6 +28,7 @@ import {
 import { activeRiderContract, aiFillVacancy, detachRider, equipRider, marketValue } from './market.ts';
 import { addNews } from './news.ts';
 import { chooseSupplier } from './suppliers.ts';
+import { partLevel, setRiderLevel } from './upgrades.ts';
 import { expectedPosition } from './sponsors.ts';
 import { standings } from './weekend.ts';
 
@@ -328,7 +329,11 @@ export function acceptJobOffer(s: GameState, ids: IdFactory, rng: Rng, offerId: 
   if (o.kind === 'bike' && o.manufacturerId) {
     chooseSupplier(s, ids, o.teamId as TeamId, o.manufacturerId as ManufacturerId);
     const up = (s.upgrades[o.teamId] ??= {});
-    for (const k of PART_KEYS) up[k] = Math.min(MAX_PART_LEVEL, (up[k] ?? 0) + (o.upgradeLevels ?? 1));
+    const add = o.upgradeLevels ?? 1;
+    for (const rid of Object.keys(s.riderUpgrades?.[o.teamId] ?? {}))
+      for (const k of PART_KEYS)
+        setRiderLevel(s, o.teamId, rid, k, Math.min(MAX_PART_LEVEL, partLevel(s, o.teamId, k, rid) + add));
+    for (const k of PART_KEYS) up[k] = Math.min(MAX_PART_LEVEL, (up[k] ?? 0) + add);
     promise = ` Moto ${s.tables.manufacturers[o.manufacturerId as ManufacturerId]!.name} con tutti i reparti sviluppati di un livello.`;
   }
   addNews(s, ids, {

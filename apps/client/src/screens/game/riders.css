@@ -33,7 +33,6 @@
 .rs-num {
   font: 900 1.9rem/1 var(--font-display);
   font-stretch: 125%;
-  font-style: italic;
   min-width: 2.4rem;
 }
 .rs-who {

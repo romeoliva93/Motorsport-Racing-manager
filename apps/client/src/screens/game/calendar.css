@@ -1,0 +1,215 @@
+.cal-table tbody tr {
+  cursor: pointer;
+}
+.cal-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.05);
+}
+.cal-link {
+  all: unset;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-underline-offset: 3px;
+}
+.cal-link:focus-visible {
+  outline: 2px solid var(--accent, #e3262f);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sheet-back {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(5, 8, 14, 0.72);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.sheet {
+  position: relative;
+  width: min(980px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  background: var(--panel, #141a26);
+  color: var(--text, #eef1f6);
+  border-radius: 18px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+.sheet-x {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.sheet-head h2 {
+  margin: 0.2rem 0 0.3rem;
+  font-size: 1.9rem;
+}
+.sheet-body {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+@media (max-width: 760px) {
+  .sheet-body {
+    grid-template-columns: 1fr;
+  }
+}
+.circ-fig {
+  margin: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  padding: 1rem;
+}
+.circ-fig figcaption {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.circ-map {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+}
+.cm-base {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 7;
+  stroke-linejoin: round;
+}
+.cm-s {
+  fill: none;
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.cm-s.s1,
+.circ-fig .s1 {
+  stroke: #ff4d5a;
+  color: #ff4d5a;
+}
+.cm-s.s2,
+.circ-fig .s2 {
+  stroke: #4da3ff;
+  color: #4da3ff;
+}
+.cm-s.s3,
+.circ-fig .s3 {
+  stroke: #ffc94d;
+  color: #ffc94d;
+}
+.cm-s.s4,
+.circ-fig .s4 {
+  stroke: #39d98a;
+  color: #39d98a;
+}
+.circ-fig span {
+  font-weight: 700;
+}
+.cm-start {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 0.8;
+}
+.circ-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  align-content: start;
+}
+.fact {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  display: grid;
+}
+.fact b {
+  font-size: 1.35rem;
+}
+.fact small {
+  opacity: 0.7;
+}
+.trait {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.3rem;
+}
+.trait-top {
+  display: flex;
+  justify-content: space-between;
+}
+.trait-bar {
+  height: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.trait-bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent, #e3262f);
+  border-radius: 99px;
+}
+.trait small {
+  opacity: 0.75;
+}
+.sheet-h3 {
+  margin: 1.5rem 0 0.7rem;
+}
+.circ-hist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.8rem;
+}
+.hist-year {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+.hist-title {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+.hist-title b {
+  font-size: 1.3rem;
+}
+.hist-row {
+  display: grid;
+  gap: 0.1rem;
+}
+.hist-row small {
+  opacity: 0.7;
+  text-transform: none;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+}
+.hist-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  margin-right: 0.45rem;
+  vertical-align: middle;
+}
+.hist-time {
+  margin-left: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}

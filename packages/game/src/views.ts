@@ -20,6 +20,8 @@ import {
   type Rider,
   type SessionKind,
   type GameState,
+  type Debrief,
+  type RiderId,
   type NewsItem,
   type Round,
   type SessionResult,
@@ -28,7 +30,7 @@ import {
 } from '@lean-angle/data';
 import { payrollMonthly, runningCostMonthly, sponsorMonthly, supplyMonthly } from './economy.ts';
 import { managerMonthly } from './manager.ts';
-import { bikeBase } from './preseasonEffects.ts';
+import { bikeBase, trackBonus } from './preseasonEffects.ts';
 import { activeRiderContract, buyoutFor } from './market.ts';
 import { riderDetail, type RiderDetail } from './queries.ts';
 import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
@@ -59,7 +61,7 @@ import {
   workMinutesLeft,
 } from './practice.ts';
 import type { PracticeLogEntry, PracticeProgram } from '@lean-angle/data';
-import { leadDays, partLevel, pendingOrder, upgradeBonus, upgradeCost } from './upgrades.ts';
+import { leadDays, partLevel, pendingOrder, seatRiders, upgradeBonus, upgradeCost } from './upgrades.ts';
 import {
   currentDeal,
   dealWindowOpen,
@@ -168,7 +170,54 @@ export const SESSION_NAME: Record<SessionKind, { name: string; day: string }> = 
   race: { name: 'Gara', day: 'Domenica' },
 };
 
+/** Sessione a uscite in corso: uscite fatte, totale e rientro ai box dei piloti del giocatore. */
+export interface StintView {
+  kind: string;
+  done: number;
+  runs: number;
+  debrief: (Omit<Debrief, 'suggestions'> & {
+    name: string;
+    number: number;
+    minutesLeft: number | null;
+    wet: boolean;
+    /** Proposte, con l'indicazione di quelle già applicate. */
+    suggestions: (Debrief['suggestions'][number] & { applied: boolean })[];
+  })[];
+}
+
+export function stintView(s: GameState, round: Round | undefined): StintView | null {
+  const st = s.stint;
+  if (!st || (round && st.roundId !== round.id)) return null;
+  const wet = (() => {
+    if (st.kind === 'test' || !round) return false;
+    const w = weatherOf(s, round).find((x) => x.kind === st.kind);
+    return !!w && conditionsFor(w).grip !== 'dry';
+  })();
+  return {
+    kind: st.kind,
+    done: st.done,
+    runs: st.runs,
+    debrief: Object.values(st.debrief).map((d) => {
+      const r = s.tables.riders[d.riderId as RiderId]!;
+      const seat = rows(s, 'teamEntries')
+        .flatMap((e) => e.seats)
+        .find((x) => x.riderId === d.riderId);
+      const cur = setupOf(s, d.riderId, wet);
+      return {
+        ...d,
+        suggestions: d.suggestions.map((x) => ({ ...x, applied: (cur[x.key] ?? 0) === x.to })),
+        name: `${r.firstName} ${r.lastName}`,
+        number: seat?.number ?? 0,
+        minutesLeft: st.kind === 'test' ? null : workMinutesLeft(s, round, d.riderId),
+        wet,
+      };
+    }),
+  };
+}
+
 export interface WeekendView {
+  /** Prove a uscite in corso (rientro ai box). */
+  stint: StintView | null;
   /** today = si corre oggi; upcoming = prossimo GP; seasonOver = stagione conclusa; none = niente squadra. */
   state: 'none' | 'today' | 'upcoming' | 'seasonOver';
   /** La stagione della squadra del giocatore è conclusa (anche nel giorno dell'ultima gara). */
@@ -255,6 +304,7 @@ export interface PracticeView {
 export function weekendView(s: GameState): WeekendView {
   const entry = playerEntry(s);
   const empty: WeekendView = {
+    stint: null,
     state: 'none',
     seasonFinished: false,
     round: null,
@@ -319,7 +369,7 @@ export function weekendView(s: GameState): WeekendView {
     const inNext =
       next === 'q1' ? !direct.has(r.id) : next === 'q2' ? direct.has(r.id) || promoted.has(r.id) : true;
     const refLap = circuit.lengthM / RACE_FORMAT[cat.tier].avgSpeed;
-    const tmU = Math.min(1, unit(r.attributes.tyreManagement) + upgradeBonus(s, entry.teamId).tyreCare);
+    const tmU = Math.min(1, unit(r.attributes.tyreManagement) + upgradeBonus(s, entry.teamId, r.id).tyreCare);
     const mode: Strategy['mode'] =
       r.attributes.aggression >= 75 ? 'normal' : r.attributes.consistency >= 72 ? 'attack' : 'normal';
     // Secondi persi da ogni mescola rispetto alla migliore, per ciascun ritmo.
@@ -388,6 +438,7 @@ export function weekendView(s: GameState): WeekendView {
     ];
   });
   return {
+    stint: current.startDay === today ? stintView(s, current) : null,
     state: current.startDay === today ? 'today' : 'upcoming',
     seasonFinished,
     round: {
@@ -664,7 +715,10 @@ export interface BikeView {
   concession: ConcessionRank | null;
   /** Motori della stagione per pilota (solo MotoGP). */
   engines: { name: string; used: number; allocation: number; overLimit: boolean }[];
+  /** Componenti della moto di ciascun pilota (livelli e ordini sono per pilota). */
   parts: {
+    riderId: string;
+    rider: string;
     key: PartKey;
     name: string;
     what: string;
@@ -717,6 +771,8 @@ export interface BikeView {
     riderId: string;
     rider: string;
     number: number;
+    /** Qualità della moto di questo pilota. */
+    rating: number;
     bikes: {
       id: string;
       slot: 'A' | 'B';
@@ -778,10 +834,14 @@ export function bikeView(s: GameState): BikeView | null {
   if (!entry) return null;
   const team = s.tables.teams[entry.teamId]!;
   const balance = teamBalance(s, entry.teamId);
-  const rating = (teamId: string) => {
+  /** Qualità della moto di un pilota (costruttore + upgrade montati); senza pilota: media della squadra. */
+  const rating = (teamId: string, riderId?: string): number => {
     const e = rows(s, 'teamEntries').find((x) => x.teamId === teamId)!;
     const m = s.tables.manufacturers[e.manufacturerId]!;
-    return Math.round(m.engineeringStrength + upgradeBonus(s, teamId).bike * 100);
+    if (riderId) return Math.round(m.engineeringStrength + upgradeBonus(s, teamId, riderId).bike * 100);
+    const ids = seatRiders(s, teamId);
+    if (ids.length === 0) return Math.round(m.engineeringStrength + upgradeBonus(s, teamId).bike * 100);
+    return Math.round(ids.reduce((t, id) => t + rating(teamId, id), 0) / ids.length);
   };
   const rivals = rows(s, 'teamEntries').filter(
     (e) => e.seasonId === entry.seasonId && e.teamId !== entry.teamId,
@@ -852,7 +912,7 @@ export function bikeView(s: GameState): BikeView | null {
     garage: entry.seats.flatMap((seat) => {
       const r = seat.riderId ? s.tables.riders[seat.riderId] : undefined;
       if (!r) return [];
-      const base = bikeOf(s, entry.teamId, entry.manufacturerId).reliability;
+      const base = bikeOf(s, entry.teamId, entry.manufacturerId, r.id).reliability;
       const bikes = rows(s, 'bikes')
         .filter((b) => b.riderId === r.id && b.teamId === entry.teamId)
         .sort((a, b) => a.slot.localeCompare(b.slot));
@@ -861,6 +921,7 @@ export function bikeView(s: GameState): BikeView | null {
           riderId: r.id,
           rider: `${r.firstName} ${r.lastName}`,
           number: seat.number,
+          rating: rating(entry.teamId, r.id),
           bikes: bikes.map((b) => ({
             id: b.id,
             slot: b.slot,
@@ -876,7 +937,8 @@ export function bikeView(s: GameState): BikeView | null {
                 what: g.what,
                 level: g.upgrade.length
                   ? Math.round(
-                      (g.upgrade.reduce((t, u) => t + partLevel(s, entry.teamId, u), 0) / g.upgrade.length) *
+                      (g.upgrade.reduce((t, u) => t + partLevel(s, entry.teamId, u, r.id), 0) /
+                        g.upgrade.length) *
                         10,
                     ) / 10
                   : 0,
@@ -886,7 +948,7 @@ export function bikeView(s: GameState): BikeView | null {
                 serviceCost: serviceable.reduce((t, k) => t + serviceCost(s, b, k), 0),
                 ...(() => {
                   const base = s.tables.manufacturers[entry.manufacturerId]!.engineeringStrength;
-                  const lvl = (u: string) => partLevel(s, entry.teamId, u as PartKey);
+                  const lvl = (u: string) => partLevel(s, entry.teamId, u as PartKey, r.id);
                   const perf = (bonus: number) => Math.min(100, Math.round(base * 0.8 + bonus));
                   const levels = g.upgrade.map(lvl);
                   const avg = levels.length ? levels.reduce((t, x) => t + x, 0) / levels.length : 0;
@@ -894,8 +956,8 @@ export function bikeView(s: GameState): BikeView | null {
                   const target = g.upgrade.length
                     ? g.upgrade.reduce((a2, u) => (lvl(u) < lvl(a2) ? u : a2), g.upgrade[0]!)
                     : null;
-                  const order = target ? pendingOrder(s, entry.teamId, target as PartKey) : undefined;
-                  const cost = target ? upgradeCost(s, entry.teamId, target as PartKey) : null;
+                  const order = target ? pendingOrder(s, entry.teamId, target as PartKey, r.id) : undefined;
+                  const cost = target ? upgradeCost(s, entry.teamId, target as PartKey, r.id) : null;
                   return {
                     performance: perf(avg * 6),
                     next:
@@ -908,7 +970,7 @@ export function bikeView(s: GameState): BikeView | null {
                             cost,
                             leadDays:
                               cost !== null
-                                ? leadDays(s, entry.teamId, target as PartKey, lvl(target) + 1)
+                                ? leadDays(s, entry.teamId, target as PartKey, lvl(target) + 1, r.id)
                                 : null,
                             affordable: cost !== null && cost <= balance,
                             inProduction: order
@@ -933,7 +995,7 @@ export function bikeView(s: GameState): BikeView | null {
                 key: p.key,
                 name: p.name,
                 group: p.group,
-                upgradeLevel: partLevel(s, entry.teamId, p.upgrade),
+                upgradeLevel: partLevel(s, entry.teamId, p.upgrade, r.id),
                 km: Math.round(b.parts?.[p.key]?.km ?? 0),
                 lifeKm: p.life * GARAGE_WEEKEND_KM,
                 wear: Math.round(w * 100),
@@ -948,27 +1010,32 @@ export function bikeView(s: GameState): BikeView | null {
       ];
     }),
     rivalsAvg: Math.round(rivals.reduce((t, e) => t + rating(e.teamId), 0) / Math.max(1, rivals.length)),
-    parts: PARTS.map((p) => {
-      const cost = upgradeCost(s, entry.teamId, p.key);
-      return {
-        key: p.key,
-        name: p.name,
-        what: p.what,
-        effect: p.effect,
-        color: p.color,
-        level: partLevel(s, entry.teamId, p.key),
-        max: MAX_PART_LEVEL,
-        nextCost: cost,
-        affordable: cost !== null && cost <= balance,
-        nextLeadDays:
-          cost !== null ? leadDays(s, entry.teamId, p.key, partLevel(s, entry.teamId, p.key) + 1) : null,
-        inProduction: (() => {
-          const o = pendingOrder(s, entry.teamId, p.key);
-          return o
-            ? { level: o.level, ready: cal(s).format(o.readyDay), daysLeft: o.readyDay - s.meta.currentDay }
-            : null;
-        })(),
-      };
+    parts: seatRiders(s, entry.teamId).flatMap((rid) => {
+      const r = s.tables.riders[rid as never] as { firstName: string; lastName: string };
+      return PARTS.map((p) => {
+        const cost = upgradeCost(s, entry.teamId, p.key, rid);
+        const level = partLevel(s, entry.teamId, p.key, rid);
+        return {
+          riderId: rid,
+          rider: `${r.firstName} ${r.lastName}`,
+          key: p.key,
+          name: p.name,
+          what: p.what,
+          effect: p.effect,
+          color: p.color,
+          level,
+          max: MAX_PART_LEVEL,
+          nextCost: cost,
+          affordable: cost !== null && cost <= balance,
+          nextLeadDays: cost !== null ? leadDays(s, entry.teamId, p.key, level + 1, rid) : null,
+          inProduction: (() => {
+            const o = pendingOrder(s, entry.teamId, p.key, rid);
+            return o
+              ? { level: o.level, ready: cal(s).format(o.readyDay), daysLeft: o.readyDay - s.meta.currentDay }
+              : null;
+          })(),
+        };
+      });
     }),
   };
 }
@@ -1081,7 +1148,7 @@ function practiceView(s: GameState, round: Round, r: Rider, tier: CategoryTier, 
   const adv = crewChiefAdvice(s, r, tier, turns, wet, cur);
   const from = cur[adv.key ?? ''] ?? 0;
   const to = Math.max(-5, Math.min(5, from + adv.delta));
-  const trackConf = Math.round(pr?.trackConf ?? baseTrackConf(r));
+  const trackConf = Math.round(pr?.trackConf ?? baseTrackConf(r) + trackBonus(s, r.id, true));
   const bikeConf = Math.round(pr?.bikeConf ?? bikeBase(s, r.id, true));
   return {
     laps: pr?.laps ?? 0,

@@ -10,6 +10,10 @@ import {
   practiceRiderOf,
   practicesDone,
   recordPracticeRun,
+  RUNS_PER_SESSION,
+  PRACTICE_LAPS,
+  SESSION_SHORT,
+  debriefFor,
 } from './practice.ts';
 import {
   addSessionMileage,
@@ -60,7 +64,7 @@ import { conditionsFor, weekendWeather, type SessionWeather } from './weather.ts
 import { engineStatus } from './regulations.ts';
 import { upgradeBonus } from './upgrades.ts';
 import { supplierPerks } from './suppliers.ts';
-import { bikeBase } from './preseasonEffects.ts';
+import { bikeBase, longRunFactor, trackBonus } from './preseasonEffects.ts';
 import { settleDeals } from './sponsors.ts';
 
 export interface Strategy {
@@ -143,6 +147,7 @@ export function bikeOf(
   s: GameState,
   teamId: TeamId,
   manufacturerId: ManufacturerId,
+  riderId?: string,
 ): { bike: number; reliability: number } {
   const team = s.tables.teams[teamId]!;
   const m = s.tables.manufacturers[manufacturerId]!;
@@ -155,7 +160,7 @@ export function bikeOf(
   const satellitePenalty =
     team.type === 'factory' ? 0 : team.type === 'satellite' ? 1.5 : team.type === 'independent' ? 2.5 : 3.5;
   const score = m.engineeringStrength + (avg - 3) * 1.5 - satellitePenalty;
-  const up = upgradeBonus(s, teamId);
+  const up = upgradeBonus(s, teamId, riderId);
   // Accordo di fornitura del costruttore (solo squadre clienti).
   const deal = supplierPerks(s, teamId, manufacturerId);
   return {
@@ -216,7 +221,7 @@ function aiStrategy(
 
 function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, wet = false): RaceRider {
   const a = e.rider.attributes;
-  const { bike, reliability } = bikeOf(s, e.teamId, e.manufacturerId);
+  const { bike, reliability } = bikeOf(s, e.teamId, e.manufacturerId, e.rider.id);
   const mine = e.teamId === s.meta.playerTeamId;
   const match = round ? setupMatch(s, e.rider, tierOf(s, round), turnsOf(s, round), wet, mine) : 0.75;
   // Confidenza col circuito e con la moto costruita nelle prove (±1% di ritmo); passo gara = gomme gestite meglio.
@@ -230,6 +235,7 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, w
           match * 100,
           // Confidenza di partenza con la moto: dai test pre-stagionali (le IA li fanno sempre).
           bikeBase(s, e.rider.id, mine),
+          trackBonus(s, e.rider.id, mine),
         )
       : null;
   return {
@@ -247,9 +253,10 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, w
     tyreManagement: Math.min(
       1,
       (unit(a.tyreManagement) +
-        upgradeBonus(s, e.teamId).tyreCare +
+        upgradeBonus(s, e.teamId, e.rider.id).tyreCare +
         supplierPerks(s, e.teamId, e.manufacturerId).tyreCare) *
-        (pr?.longRun ? 1.04 : 1),
+        (pr?.longRun ? 1.04 : 1) *
+        longRunFactor(s, e.rider.id, mine),
     ),
     fitness: unit(a.fitness),
     fuelManagement: unit(a.fuelManagement),
@@ -456,6 +463,158 @@ function timedSession(
   return out;
 }
 
+/**
+ * Un'uscita della sessione di prove del giocatore (o della giornata di test): tutti i piloti girano per una
+ * parte della sessione; i piloti del giocatore poi rientrano ai box (rapporto in `s.stint.debrief`). All'ultima
+ * uscita la sessione si chiude: vale il miglior giro di tutte le uscite.
+ */
+export function runStint(
+  s: GameState,
+  ids: IdFactory,
+  round: Round,
+  kind: SessionKind | 'test',
+  strategies: Record<string, Strategy>,
+  opts: { testId?: string; programs?: Record<string, string> } = {},
+): {
+  timing: SessionTiming;
+  finished: boolean;
+  rows: { riderId: string; best: number }[];
+  programs: Record<string, string>;
+} {
+  const isTest = kind === 'test';
+  const list = entrants(s, round);
+  const cond = isTest ? conditionsFor(undefined) : condOf(s, round, kind);
+  const wet = cond.grip !== 'dry';
+  const runs = RUNS_PER_SESSION[kind] ?? 3;
+  let st = s.stint;
+  if (!st || st.roundId !== round.id || st.kind !== kind || st.testId !== opts.testId) {
+    if (!isTest) beforeSession(s, ids, round);
+    const programs = opts.programs ?? {};
+    st = s.stint = {
+      roundId: round.id,
+      kind,
+      ...(opts.testId ? { testId: opts.testId } : {}),
+      done: 0,
+      runs,
+      best: {},
+      tyre: Object.fromEntries(
+        list.map((e) => [
+          e.rider.id,
+          isTest
+            ? programs[e.rider.id] === 'longRun'
+              ? 'hard'
+              : 'medium'
+            : pickTyre(tyresLeft(s, round, e.rider.id), strategies[e.rider.id]?.compound, kind, cond.grip),
+        ]),
+      ),
+      programs: Object.fromEntries(
+        list
+          .filter((e) => e.teamId === s.meta.playerTeamId)
+          .map((e) => [e.rider.id, programs[e.rider.id] ?? strategies[e.rider.id]?.program ?? 'track']),
+      ),
+      debrief: {},
+    };
+  }
+  // Il programma si può cambiare a ogni uscita (prove del weekend).
+  if (!isTest)
+    for (const [id, x] of Object.entries(strategies))
+      if (x.program && id in st.programs) st.programs[id] = x.program;
+  const n = st.done + 1;
+  const sectors = timingSectors(trackFor(s, round));
+  const total = isTest ? 3600 : (SESSION_LENGTH[kind as SessionKind] ?? 1800);
+  const runLen = total / runs;
+  const tag = isTest ? `test::${opts.testId}` : kind;
+  const tyre = (id: string) => st.tyre[id] as Compound;
+  const q = runQualifying(
+    `${s.meta.seed}::${round.id}::${tag}::run${n}`,
+    refLapOf(s, round),
+    list.map((e) => toRaceRider(s, e, { compound: tyre(e.rider.id), mode: 'normal' }, round, wet)),
+    cond,
+    { sectors, length: runLen },
+  );
+  for (const x of q) st.best[x.riderId] = Math.min(st.best[x.riderId] ?? Infinity, x.best);
+  const order = Object.entries(st.best).sort((a, b) => a[1] - b[1]);
+  const tier = tierOf(s, round);
+  const turns = turnsOf(s, round);
+  st.debrief = {};
+  for (const e of list) {
+    if (e.teamId !== s.meta.playerTeamId) continue;
+    const runBest = q.find((x) => x.riderId === e.rider.id)?.best ?? null;
+    if (!isTest) {
+      const m = setupMatch(s, e.rider, tier, turns, wet, true);
+      recordPracticeRun(
+        s,
+        round,
+        kind,
+        e.rider,
+        (st.programs[e.rider.id] ?? 'track') as 'track' | 'setup' | 'longRun',
+        wet,
+        m * 100,
+        runBest,
+        {
+          laps: Math.round((PRACTICE_LAPS[kind] ?? 12) / runs),
+          label: `${SESSION_SHORT[kind] ?? kind} · uscita ${n}`,
+        },
+      );
+    }
+    if (n < runs)
+      st.debrief[e.rider.id] = debriefFor(s, e.rider, tier, turns, wet, {
+        run: n,
+        runs,
+        best: st.best[e.rider.id] ?? null,
+        position: order.findIndex(([id]) => id === e.rider.id) + 1,
+        laps: 0,
+        tag: `${round.id}:${tag}:${n}`,
+      });
+  }
+  const circuit = s.tables.circuits[round.circuitId]!;
+  const fmt = WEEKEND_FORMAT[tier];
+  const timing: SessionTiming = {
+    roundId: round.id,
+    kind,
+    circuit: circuit.name,
+    lengthM: circuit.lengthM,
+    length: Math.max(
+      runLen,
+      ...q.flatMap((x) => x.laps.map((l) => l.start + l.seg.reduce((a, b) => a + b, 0) + 20)),
+    ),
+    sectors,
+    q2Cut: kind === 'practice' && n === runs ? fmt.toQ2 : 0,
+    run: { n, of: runs },
+    riders: q.map((x) => {
+      const e = list.find((y) => y.rider.id === x.riderId)!;
+      return { ...timingRider(s, e, tyre(e.rider.id)), laps: x.laps };
+    }),
+  };
+  st.done = n;
+  const rowsBest = order.map(([riderId, best]) => ({ riderId, best }));
+  const programs = { ...st.programs };
+  if (n < runs) return { timing, finished: false, rows: rowsBest, programs };
+  // Fine della sessione.
+  s.stint = undefined;
+  if (!isTest) {
+    const lead = order[0]?.[1] ?? 0;
+    const out = order.map(([riderId, best], i) => {
+      const e = list.find((y) => y.rider.id === riderId)!;
+      return {
+        riderId: e.rider.id,
+        teamId: e.teamId,
+        manufacturerId: e.manufacturerId,
+        position: i + 1,
+        status: 'finished',
+        time: best,
+        gap: Math.round((best - lead) * 1000) / 1000,
+        bestLap: best,
+        points: 0,
+        compound: tyre(riderId),
+      } satisfies ResultRow;
+    });
+    store(s, ids, round, kind as SessionKind, out);
+    afterSession(s, round, kind as SessionKind);
+  }
+  return { timing, finished: true, rows: rowsBest, programs };
+}
+
 function qualifyingSessions(
   s: GameState,
   ids: IdFactory,
@@ -606,6 +765,8 @@ export interface SessionTiming {
   sectors: [number, number, number];
   /** Prove del venerdì: i primi N vanno direttamente in Q2 (0 = nessuno). */
   q2Cut: number;
+  /** Sessione a uscite: numero dell'uscita mostrata e totale. */
+  run?: { n: number; of: number };
   riders: (TimingRider & { laps: TimedLap[] })[];
 }
 
@@ -972,6 +1133,13 @@ export function runNextSession(
 ): ReplayData | null {
   const kind = nextSession(s, round);
   if (!kind) return null;
+  // Sessione a uscite già cominciata dal giocatore: le uscite rimaste si corrono di fila, senza modifiche.
+  if (s.stint && s.stint.roundId === round.id && s.stint.kind === kind) {
+    let res = runStint(s, ids, round, kind, strategies);
+    while (!res.finished) res = runStint(s, ids, round, kind, strategies);
+    if (sink) sink.timing = res.timing;
+    return null;
+  }
   beforeSession(s, ids, round);
   let replay: ReplayData | null = null;
   if (kind === 'fp1' || kind === 'fp2' || kind === 'practice' || kind === 'warmup')
@@ -1158,47 +1326,64 @@ export function standings(s: GameState, seasonId: string): StandingsView {
   };
 }
 
+// ---------------------------------------------------------------------------------------------
+/** Pole, vittoria e giro più veloce di un Gran Premio. */
+export interface PastResult {
+  year: number;
+  /** true = stagione giocata nella carriera; false = stagione prima dell'inizio della carriera (simulata). */
+  played: boolean;
+  pole: { riderId: string; time: number } | null;
+  winner: { riderId: string; time: number | null } | null;
+  fastestLap: { riderId: string; time: number } | null;
+}
+
 /**
- * Giornata di test pre-stagionale sul circuito di un round: tutti i piloti della categoria in pista (si vede
- * nella schermata tempi). Gomma media per tutti, dura per chi fa il passo gara. Non tocca risultati né gomme
- * del weekend.
+ * Risultati di un circuito in una stagione della categoria. Le stagioni giocate usano i risultati veri; per
+ * l'anno prima dell'inizio della carriera il Gran Premio viene simulato (in modo fisso) con le squadre attuali:
+ * qualifica con gomma morbida e passo gara con gomma media.
  */
-export function simulateTestDay(
-  s: GameState,
-  round: Round,
-  programs: Record<string, string>,
-  tag: string,
-): { rows: { riderId: string; best: number }[]; timing: SessionTiming } {
-  const list = entrants(s, round);
-  const track = trackFor(s, round);
-  const sectors = timingSectors(track);
-  const length = 3600;
-  const compound = (id: string): Compound => (programs[id] === 'longRun' ? 'hard' : 'medium');
-  const q = runQualifying(
-    `${s.meta.seed}::${round.id}::test::${tag}`,
-    refLapOf(s, round),
-    list.map((e) => toRaceRider(s, e, { compound: compound(e.rider.id), mode: 'normal' }, round, false)),
-    conditionsFor(undefined),
-    { sectors, length },
-  );
-  const circuit = s.tables.circuits[round.circuitId]!;
+export function pastResult(s: GameState, round: Round, year: number): PastResult | null {
+  const season = s.tables.seasons[round.seasonId]!;
+  const old = rows(s, 'seasons').find((x) => x.categoryId === season.categoryId && x.year === year);
+  if (old) {
+    const r = old.roundIds.map((id) => s.tables.rounds[id]!).find((x) => x.circuitId === round.circuitId);
+    if (!r) return null;
+    const quali = resultOf(s, r, 'qualifying');
+    const race = resultOf(s, r, 'race');
+    if (!quali && !race) return null;
+    const p = quali?.rows.find((x) => x.position === 1);
+    const w = race?.rows.find((x) => x.position === 1);
+    return {
+      year,
+      played: true,
+      pole: p ? { riderId: p.riderId, time: p.bestLap ?? p.time ?? 0 } : null,
+      winner: w ? { riderId: w.riderId, time: w.time ?? null } : null,
+      fastestLap: race?.fastestLap ?? null,
+    };
+  }
+  const startYear = Math.min(...rows(s, 'seasons').map((x) => x.year));
+  if (year !== startYear - 1) return null;
+  const list = entrants(s, { ...round, stage: 0 });
+  const ref = refLapOf(s, round);
+  const sim = (compound: Compound, tag: string) =>
+    runQualifying(
+      `${s.meta.seed}::storia::${round.circuitId}::${year}::${tag}`,
+      ref,
+      list.map((e) => toRaceRider(s, e, { compound, mode: 'normal' })),
+      conditionsFor(undefined),
+    );
+  const q = sim('soft', 'q');
+  const race = sim('medium', 'r');
+  const laps = RACE_FORMAT[tierOf(s, round)].laps;
   return {
-    rows: q.map((x) => ({ riderId: x.riderId, best: x.best })),
-    timing: {
-      roundId: round.id,
-      kind: 'test',
-      circuit: circuit.name,
-      lengthM: circuit.lengthM,
-      length: Math.max(
-        length,
-        ...q.flatMap((x) => x.laps.map((l) => l.start + l.seg.reduce((a, b) => a + b, 0) + 20)),
-      ),
-      sectors,
-      q2Cut: 0,
-      riders: q.map((x) => {
-        const e = list.find((y) => y.rider.id === x.riderId)!;
-        return { ...timingRider(s, e, compound(e.rider.id)), laps: x.laps };
-      }),
-    },
+    year,
+    played: false,
+    pole: q[0] ? { riderId: q[0].riderId, time: q[0].best } : null,
+    winner: race[0]
+      ? { riderId: race[0].riderId, time: Math.round(race[0].best * 1.012 * laps * 1000) / 1000 }
+      : null,
+    fastestLap: race[0]
+      ? { riderId: race[0].riderId, time: Math.round(race[0].best * 1.004 * 1000) / 1000 }
+      : null,
   };
 }

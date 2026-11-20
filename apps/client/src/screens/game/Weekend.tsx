@@ -9,6 +9,7 @@ import { WeatherIcon, SKY_LABEL } from '../../design-system/WeatherIcon.tsx';
 import { RaceViewer } from './RaceViewer.tsx';
 import { SessionViewer } from '../../race/SessionViewer.tsx';
 import { PreseasonPanel } from './Preseason.tsx';
+import { PitStop } from './PitStop.tsx';
 import './weekend.css';
 import '../../race/timing.css';
 
@@ -159,7 +160,7 @@ export function WeekendScreen({
     return (
       <SessionViewer
         timing={timing}
-        title={w.sessions.find((x) => x.kind === timing.kind)?.name ?? 'Sessione'}
+        title={`${w.sessions.find((x) => x.kind === timing.kind)?.name ?? 'Sessione'}${timing.run ? ` · uscita ${timing.run.n} di ${timing.run.of}` : ''}`}
         onClose={() => {
           setTimingOpen(false);
           setTab(timing.kind === 'q2' ? 'qualifying' : timing.kind);
@@ -272,7 +273,32 @@ export function WeekendScreen({
         </Card>
       )}
 
-      {w.state === 'today' && nextS && (
+      {w.state === 'today' && nextS && w.stint && w.stint.kind === nextS.kind && (
+        <PitStop
+          stint={w.stint}
+          title={nextS.name}
+          busy={busy}
+          notify={notify}
+          onNext={() =>
+            run(async () => {
+              await engine.dispatch({ type: 'RunSession', stint: true });
+              const tm = await engine.timing();
+              if (tm) {
+                setTiming(tm);
+                setTimingOpen(true);
+              }
+            })
+          }
+          onFinish={() =>
+            run(async () => {
+              await engine.dispatch({ type: 'RunSession' });
+              setTab(nextS.kind);
+            })
+          }
+        />
+      )}
+
+      {w.state === 'today' && nextS && !(w.stint && w.stint.kind === nextS.kind) && (
         <SessionPanel
           key={nextS.kind}
           w={w}
@@ -282,10 +308,12 @@ export function WeekendScreen({
             run(async () => {
               const raceKind = nextS.kind === 'sprint' || nextS.kind === 'race';
               // Sprint e gara in diretta: strategie modificabili mentre si corre.
+              // Prove: si esce per la prima uscita, poi si rientra ai box (le altre dal pannello dei box).
               await engine.dispatch({
                 type: 'RunSession',
                 strategies: plan,
                 ...(raceKind ? { live: true } : {}),
+                ...(PRACTICE.includes(nextS.kind) ? { stint: true } : {}),
               });
               if (raceKind) await afterRace(nextS.kind);
               else {
@@ -308,7 +336,7 @@ export function WeekendScreen({
         />
       )}
 
-      {w.state === 'today' && w.next && w.myRiders.some((r) => r.practice.log.length > 0) && (
+      {w.state === 'today' && w.next && !w.stint && w.myRiders.some((r) => r.practice.log.length > 0) && (
         <Briefing w={w} busy={busy} notify={notify} />
       )}
 
@@ -558,7 +586,7 @@ function SessionPanel({
             ? 'In pista…'
             : raceType
               ? `Via alla ${session.kind === 'sprint' ? 'Sprint' : 'gara'}!`
-              : `Corri ${session.name}`}
+              : `Corri ${session.name}${PRACTICE.includes(session.kind) ? ' · uscita 1' : ''}`}
         </button>
         <button className="btn ghost" disabled={busy} onClick={() => setPlan(initial)}>
           Ripristina i consigli

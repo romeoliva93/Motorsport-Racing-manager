@@ -5,11 +5,12 @@
  */
 import { useState } from 'react';
 import { formatMoney } from '@lean-angle/core';
-import type { PreseasonView, SessionTiming } from '@lean-angle/game';
+import type { PreseasonView, SessionTiming, StintView } from '@lean-angle/game';
 import { engine } from '../../engine/engine.ts';
-import { Card, Explain, Help, lapTime } from '../../design-system/components.tsx';
+import { Card, Explain, lapTime } from '../../design-system/components.tsx';
 import { FlagName } from '../../design-system/Flag.tsx';
 import { SessionViewer } from '../../race/SessionViewer.tsx';
+import { PitStop } from './PitStop.tsx';
 
 type Program = PreseasonView['programs'][number]['id'];
 
@@ -24,7 +25,7 @@ export function PreseasonPanel({
   v,
   notify,
 }: {
-  v: PreseasonView;
+  v: PreseasonView & { stint?: StintView | null };
   notify: (text: string, err?: boolean) => void;
 }) {
   const t = v.today;
@@ -36,16 +37,17 @@ export function PreseasonPanel({
   if (timing) return <SessionViewer timing={timing} title={title} onClose={() => setTiming(null)} />;
 
   const progOf = (id: string): Program => plan[id] ?? 'setup';
-  async function runDay() {
+  async function runDay(all = false) {
     if (!t) return;
     setBusy(true);
     try {
       const programs = Object.fromEntries(t.riders.map((r) => [r.id, progOf(r.id)]));
-      await engine.dispatch({ type: 'RunTestDay', programs });
+      await engine.dispatch({ type: 'RunTestDay', programs, ...(all ? { all: true } : {}) });
       const tm = await engine.timing();
-      setTitle(`${t.name} · giorno ${t.day}`);
+      setTitle(`${t.name} · giorno ${t.day}${tm?.run ? ` · uscita ${tm.run.n} di ${tm.run.of}` : ''}`);
       if (tm) setTiming(tm);
-      notify(`${t.name}: giorno ${t.day} di ${t.days} completato.`);
+      if (all || (tm?.run && tm.run.n === tm.run.of))
+        notify(`${t.name}: giorno ${t.day} di ${t.days} completato.`);
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -67,14 +69,24 @@ export function PreseasonPanel({
 
   return (
     <div className="preseason">
-      {t && (
+      {t && v.stint && (
+        <PitStop
+          stint={v.stint}
+          title={`${t.name} · giorno ${t.day}`}
+          busy={busy}
+          notify={notify}
+          onNext={() => runDay()}
+          onFinish={() => runDay(true)}
+        />
+      )}
+      {t && !v.stint && (
         <Card title={`${t.name} · ${t.circuit}`} aside={`Giorno ${t.day} di ${t.days}`} className="accent">
           <Explain style={{ marginBottom: '1rem' }}>
-            Nei test girano tutte le squadre della categoria. Il lavoro fatto qui resta per tutta la stagione:
-            ogni giornata alza la <b>confidenza con la moto</b> da cui i tuoi piloti partono in ogni weekend
-            (senza test si parte da 50, le squadre avversarie partono da 60). Il programma <b>Sviluppo</b>{' '}
-            invece rende gli upgrade della stagione più rapidi ed economici. Ogni giornata costa{' '}
-            {formatMoney(t.cost)} di trasferta.
+            Ogni pilota ha una <b>percentuale</b> per ogni programma (diversa per tutti). Scegli su cosa
+            lavora oggi: a fine giornata quella percentuale riceve il boost più grande (la parte verde della
+            barra), le altre salgono poco. Le percentuali valgono per tutta la stagione. La giornata ha 3
+            uscite: a ogni rientro ai box il pilota ti dice com’è la moto e il capotecnico propone modifiche.
+            Ogni giornata costa {formatMoney(t.cost)} di trasferta.
           </Explain>
           <div className="strat-grid">
             {t.riders.map((r) => (
@@ -83,32 +95,21 @@ export function PreseasonPanel({
                   <span className="strat-num">{r.number}</span>
                   <div>
                     <b>{r.name}</b>
-                    <div className="muted">Confidenza con la moto di partenza: {r.bikeBase}</div>
+                    <div className="muted">Scegli su cosa lavora oggi: tocca un programma.</div>
                   </div>
                 </div>
-                <div className="strat-label">
-                  Programma
-                  <Help>{v.programs.find((p) => p.id === progOf(r.id))!.text}</Help>
-                </div>
-                <div className="choice four">
-                  {v.programs.map((p) => (
-                    <button
-                      key={p.id}
-                      className={progOf(r.id) === p.id ? 'on' : ''}
-                      onClick={() => setPlan({ ...plan, [r.id]: p.id })}
-                      title={p.text}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="t2 ps-prog">{v.programs.find((p) => p.id === progOf(r.id))!.text}</p>
+                <ProgramBars
+                  r={r}
+                  v={v}
+                  selected={progOf(r.id)}
+                  onPick={(p) => setPlan({ ...plan, [r.id]: p })}
+                />
               </div>
             ))}
           </div>
           <div className="ps-actions">
-            <button className="btn primary big-cta" disabled={busy} onClick={runDay}>
-              {busy ? 'In pista…' : `Corri la giornata ${t.day}`}
+            <button className="btn primary big-cta" disabled={busy} onClick={() => runDay()}>
+              {busy ? 'In pista…' : `Corri la giornata ${t.day} · uscita 1`}
             </button>
             <button className="btn ghost" disabled={busy} onClick={skip}>
               Salta il resto del test
@@ -117,7 +118,7 @@ export function PreseasonPanel({
         </Card>
       )}
 
-      <Card title="Test pre-stagionali" aside={`Sviluppo: ${v.devEffect}`}>
+      <Card title="Test pre-stagionali">
         <table className="std">
           <thead>
             <tr>
@@ -144,15 +145,19 @@ export function PreseasonPanel({
             ))}
           </tbody>
         </table>
-        <p className="t2">
-          Confidenza con la moto di partenza:{' '}
-          {v.riders.map((r, i) => (
-            <span key={r.id}>
-              {i > 0 && ' · '}
-              {r.name} <b>{r.bikeBase}</b>
-            </span>
-          ))}
-        </p>
+        {!t && (
+          <div className="strat-grid" style={{ marginTop: '1rem' }}>
+            {v.riders.map((r) => (
+              <div key={r.id} className="tile strat">
+                <div className="strat-head">
+                  <span className="strat-num">{r.number}</span>
+                  <b>{r.name}</b>
+                </div>
+                <ProgramBars r={r} v={v} />
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {v.lastDay && (
@@ -197,6 +202,64 @@ export function PreseasonPanel({
           </ul>
         </Card>
       )}
+    </div>
+  );
+}
+
+/**
+ * Le quattro percentuali del pilota: barra piena = valore attuale, parte chiara = boost della giornata se si
+ * sceglie quel programma. Sotto, cosa vale in stagione.
+ */
+function ProgramBars({
+  r,
+  v,
+  selected,
+  onPick,
+}: {
+  r: PreseasonView['riders'][number];
+  v: PreseasonView;
+  selected?: Program;
+  onPick?: (p: Program) => void;
+}) {
+  const fx = r.effects;
+  const effect: Record<Program, string> = {
+    track: `confidenza col circuito ${fx.trackConf >= 0 ? '+' : ''}${fx.trackConf} a inizio weekend`,
+    setup: `confidenza con la moto ${fx.bikeConf} a inizio weekend`,
+    longRun: `gestione gomme in gara ${fx.tyres >= 0 ? '+' : ''}${fx.tyres}%`,
+    development: `upgrade −${fx.upgradeCost}% di costo, −${fx.upgradeTime}% di tempo`,
+  };
+  return (
+    <div className="prog-bars" role={onPick ? 'radiogroup' : undefined} aria-label="Programmi">
+      {v.programs.map((p) => {
+        const now = r.levels[p.id];
+        const plus = selected ? r.boost[selected][p.id] : 0;
+        const on = selected === p.id;
+        const Tag = onPick ? 'button' : 'div';
+        return (
+          <Tag
+            key={p.id}
+            className={`prog-row ${on ? 'on' : ''}`}
+            {...(onPick
+              ? { type: 'button' as const, role: 'radio', 'aria-checked': on, onClick: () => onPick(p.id) }
+              : {})}
+            title={`${p.text} ${p.effect}`}
+          >
+            <span className="prog-name">
+              {onPick && <span className="prog-dot" aria-hidden />}
+              {p.label}
+            </span>
+            <span className="prog-bar" aria-hidden>
+              <i style={{ width: `${now}%` }} />
+              {plus > 0 && <em style={{ left: `${now}%`, width: `${plus}%` }} />}
+            </span>
+            <span className="prog-val">
+              <b>{Math.round(now)}%</b>
+              {plus > 0 && <small className={on ? 'ok' : 'muted'}> +{plus.toFixed(1)}</small>}
+            </span>
+            <span className="prog-fx">{effect[p.id]}</span>
+          </Tag>
+        );
+      })}
     </div>
   );
 }

@@ -296,9 +296,9 @@ export function replaceGroup(s: GameState, b: Bike, groupKey: string) {
 }
 
 /** Upgrade consegnato dalla fabbrica: i componenti nuovi montati partono da zero chilometri. */
-export function fitNewParts(s: GameState, teamId: string, upgrade: string) {
+export function fitNewParts(s: GameState, teamId: string, upgrade: string, riderId?: string) {
   for (const b of rows(s, 'bikes')) {
-    if (b.teamId !== teamId) continue;
+    if (b.teamId !== teamId || (riderId && b.riderId !== riderId)) continue;
     for (const p of GARAGE_PARTS) {
       if (p.upgrade !== upgrade || !b.parts?.[p.key]) continue;
       b.parts[p.key] = { km: 0, services: b.parts[p.key]!.services };

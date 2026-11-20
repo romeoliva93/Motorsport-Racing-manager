@@ -14,6 +14,8 @@
  */
 import type {
   CategoryTier,
+  Debrief,
+  DebriefSuggestion,
   GameState,
   PracticeProgram,
   PracticeRider,
@@ -21,8 +23,8 @@ import type {
   Round,
   StaffMember,
 } from '@lean-angle/data';
-import { SETUP_KEYS, idealSetup } from './setup.ts';
-import { bikeBase } from './preseasonEffects.ts';
+import { SETUP_KEYS, idealSetup, setupOf } from './setup.ts';
+import { bikeBase, trackBonus } from './preseasonEffects.ts';
 import { mechanicsFactor } from './staffMarket.ts';
 import { managerSkill } from './managerSkills.ts';
 
@@ -97,8 +99,8 @@ export function practicesDone(sessions: readonly string[], stage: number): strin
  * Confidenza "di serie" (IA, o piloti del giocatore senza dati): programma Circuito in ogni prova, e confidenza
  * con la moto che insegue l'intesa media delle squadre IA (75%).
  */
-export function defaultConfidence(r: Rider, done: string[], matchPct = 75, startBike = 50) {
-  let track = baseTrackConf(r),
+export function defaultConfidence(r: Rider, done: string[], matchPct = 75, startBike = 50, trackPlus = 0) {
+  let track = baseTrackConf(r) + trackPlus,
     bike = startBike;
   for (const k of done) {
     track = grownTrackConf(track, PRACTICE_LAPS[k] ?? 10, 'track', false);
@@ -116,7 +118,7 @@ export function practiceRider(s: GameState, round: Round, r: Rider): PracticeRid
   const p = ensurePractice(s, round);
   return (p.riders[r.id] ??= {
     laps: 0,
-    trackConf: baseTrackConf(r),
+    trackConf: baseTrackConf(r) + trackBonus(s, r.id, true),
     bikeConf: bikeBase(s, r.id, true),
     minutesUsed: 0,
     longRun: false,
@@ -138,16 +140,18 @@ export function recordPracticeRun(
   wet: boolean,
   matchPct: number,
   best: number | null,
+  /** Uscita di una sessione a uscite: giri dell'uscita ed etichetta. */
+  opts: { laps?: number; label?: string } = {},
 ) {
   const pr = practiceRider(s, round, r);
-  const laps = PRACTICE_LAPS[kind] ?? 10;
+  const laps = opts.laps ?? PRACTICE_LAPS[kind] ?? 10;
   pr.laps += laps;
   pr.trackConf = Math.round(grownTrackConf(pr.trackConf, laps, program, wet) * 10) / 10;
   pr.bikeConf = Math.round(grownBikeConf(pr.bikeConf, matchPct, program) * 10) / 10;
   if (program === 'longRun') pr.longRun = true;
   pr.minutesUsed = 0;
   pr.log.push({
-    session: SESSION_SHORT[kind] ?? kind,
+    session: opts.label ?? SESSION_SHORT[kind] ?? kind,
     kind: 'run',
     text: `${laps} giri · programma ${PROGRAMS[program].label.toLowerCase()}${wet ? ' · pista bagnata' : ''}`,
     laps,
@@ -187,9 +191,11 @@ export function changeMinutes(
  * se non c'è un limite (prima del weekend, prima della prima sessione o a weekend concluso).
  */
 export function workMinutesLeft(s: GameState, round: Round | undefined, riderId: string): number | null {
-  if (!round || !round.stage) return null;
+  // Rientro ai box durante una sessione a uscite: tempo breve per le modifiche.
+  const stintOn = !!round && s.stint?.roundId === round.id && s.stint.kind !== 'test';
+  if (!round || (!round.stage && !stintOn)) return null;
   const pr = practiceRiderOf(s, round.id, riderId);
-  return BREAK_MINUTES - (pr?.minutesUsed ?? 0);
+  return (stintOn ? PIT_MINUTES : BREAK_MINUTES) - (pr?.minutesUsed ?? 0);
 }
 
 /** Consiglio del capotecnico: la regolazione più lontana dall'ideale, precisa secondo le sue competenze. */
@@ -229,4 +235,95 @@ export function crewChiefAdvice(
 /** I commenti del pilota sono chiari se ha buon feedback tecnico, o dopo abbastanza giri e confidenza. */
 export function feedbackIsClear(r: Rider, pr: PracticeRider | null): boolean {
   return r.attributes.technicalFeedback >= 70 || (!!pr && (pr.bikeConf >= 72 || pr.laps >= 30));
+}
+
+// ---------------------------------------------------------------------------------------------
+/** Uscite in pista di ogni sessione (rientro ai box fra un'uscita e l'altra). */
+export const RUNS_PER_SESSION: Record<string, number> = { fp1: 3, fp2: 3, practice: 3, warmup: 2, test: 3 };
+/** Minuti di lavoro a ogni rientro ai box durante una sessione. */
+export const PIT_MINUTES = 15;
+
+/** Numero da 0 a 1 fisso per una stringa (per scelte deterministiche senza consumare il generatore). */
+function unitHash(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return (h >>> 0) / 4294967296;
+}
+
+/**
+ * Rientro ai box: il pilota racconta come va la moto e il capotecnico propone fino a tre modifiche. Con un
+ * pilota dal feedback vago e un capotecnico poco esperto qualche proposta può essere sbagliata: sta al
+ * manager decidere quali applicare.
+ */
+export function debriefFor(
+  s: GameState,
+  r: Rider,
+  tier: CategoryTier,
+  turns: number,
+  wet: boolean,
+  info: { run: number; runs: number; best: number | null; position: number; laps: number; tag: string },
+): Debrief {
+  const cc = crewChiefOf(s, r.id);
+  const chiefName = cc ? `${cc.firstName} ${cc.lastName}` : 'Il capotecnico';
+  const cur = setupOf(s, r.id, wet);
+  const ideal = idealSetup(r, turns, wet);
+  const keys = SETUP_KEYS[tier];
+  const gaps = keys.map((k) => ({ k, d: (ideal[k.key] ?? 0) - (cur[k.key] ?? 0) }));
+  const err = gaps.reduce((t, g) => t + Math.abs(g.d), 0) / Math.max(1, keys.length);
+  const match = Math.round(Math.max(0, 100 - err * 12));
+  const pr = s.practice?.riders[r.id] ?? null;
+  const clear = r.attributes.technicalFeedback >= 70 || (!!pr && (pr.bikeConf >= 72 || pr.laps >= 30));
+  const skill = (sk(cc, 'suspensionSetup') + sk(cc, 'chassisSetup') + sk(cc, 'feedbackInterpretation')) / 300;
+  const worst = gaps.filter((g) => Math.abs(g.d) >= 1).sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
+  const suggestions: DebriefSuggestion[] = worst.slice(0, 3).map((g, i) => {
+    const big = Math.abs(g.d) >= 4;
+    const riderText =
+      Math.abs(g.d) <= 1
+        ? 'Qui quasi ci siamo.'
+        : !clear
+          ? big
+            ? 'Qui qualcosa non mi convince.'
+            : 'Non saprei, forse si può fare meglio.'
+          : `Vorrei ${g.d > 0 ? g.k.high : g.k.low}${big ? ', decisamente' : ''}.`;
+    // Precisione della proposta: capotecnico bravo e pilota chiaro = valore giusto; altrimenti un passo prudente,
+    // e dalla seconda proposta in poi può anche sbagliare direzione.
+    let step = skill >= 0.65 && clear ? g.d : Math.sign(g.d) * Math.min(2, Math.abs(g.d));
+    const wrongChance = i === 0 ? 0 : Math.max(0, (0.75 - skill) * (clear ? 0.3 : 0.9));
+    const wrong = unitHash(`${info.tag}:${r.id}:${g.k.key}`) < wrongChance;
+    if (wrong) step = -Math.sign(g.d);
+    const to = Math.max(-5, Math.min(5, (cur[g.k.key] ?? 0) + step));
+    const sure = !wrong && skill >= 0.6 && (clear || i === 0);
+    return {
+      key: g.k.key,
+      name: g.k.name,
+      from: cur[g.k.key] ?? 0,
+      to,
+      minutes: changeMinutes(s, r.id, cur, { ...cur, [g.k.key]: to }),
+      rider: riderText,
+      chief: `${g.k.name} ${to > (cur[g.k.key] ?? 0) ? '+' : '−'}${Math.abs(to - (cur[g.k.key] ?? 0))} (${to > (cur[g.k.key] ?? 0) ? g.k.high : g.k.low})${sure ? '' : ': proviamo e vediamo'}.`,
+      sure,
+    };
+  });
+  const mood: Debrief['mood'] = match >= 82 ? 'good' : match >= 60 ? 'ok' : 'bad';
+  const opener =
+    mood === 'good'
+      ? 'La moto mi piace, riesco a spingere.'
+      : mood === 'ok'
+        ? 'Va abbastanza bene, ma perdo qualcosa.'
+        : 'Faccio fatica, la moto non mi segue.';
+  const detail = suggestions[0]
+    ? ` ${suggestions[0].name}: ${suggestions[0].rider.charAt(0).toLowerCase()}${suggestions[0].rider.slice(1)}`
+    : ' Non toccherei niente.';
+  return {
+    riderId: r.id,
+    run: info.run,
+    runs: info.runs,
+    best: info.best,
+    position: info.position,
+    match: clear ? match : null,
+    quote: `${opener}${detail}`,
+    mood,
+    chiefName,
+    suggestions,
+  };
 }

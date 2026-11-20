@@ -70,43 +70,52 @@ const ICON: Record<Section, ReactNode> = {
 };
 
 /** Voci attive (collegate a dati reali). */
-const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
+/** Menu: pochi gruppi con nomi semplici; ogni voce spiega in una riga a cosa serve. */
+const NAV: { group: string; items: { id: Section; label: string; what: string }[] }[] = [
   {
-    group: 'La tua squadra',
+    group: 'Oggi',
     items: [
-      { id: 'overview', label: 'Home' },
-      { id: 'riders', label: 'Piloti' },
-      { id: 'bike', label: 'Moto e upgrade' },
-      { id: 'staff', label: 'Personale tecnico' },
-      { id: 'team', label: 'Scuderia' },
-      { id: 'manager', label: 'Il manager' },
+      { id: 'overview', label: 'Home', what: 'Il riassunto della squadra e cosa fare adesso' },
+      { id: 'weekend', label: 'Weekend di gara', what: 'Test, prove, qualifiche e gare: qui si corre' },
     ],
   },
   {
-    group: 'Le gare',
+    group: 'La squadra',
     items: [
-      { id: 'weekend', label: 'Weekend di gara' },
-      { id: 'championship', label: 'Classifiche' },
-      { id: 'paddock', label: 'Squadre e piloti' },
-      { id: 'calendar', label: 'Calendario' },
+      { id: 'riders', label: 'Piloti', what: 'I tuoi piloti: caratteristiche, morale e contratti' },
+      { id: 'bike', label: 'Moto e upgrade', what: 'Garage, assetto e sviluppo della moto di ogni pilota' },
+      { id: 'staff', label: 'Personale tecnico', what: 'Capotecnici, ingegneri e meccanici' },
+      { id: 'team', label: 'Scuderia', what: 'Strutture, costruttore e organizzazione' },
+      { id: 'manager', label: 'Il manager', what: 'Tu: stipendio, corsi e offerte di lavoro' },
     ],
   },
   {
-    group: 'Affari',
+    group: 'Campionato',
     items: [
-      { id: 'market', label: 'Mercato' },
-      { id: 'sponsors', label: 'Sponsor' },
-      { id: 'finance', label: 'Finanze' },
-      { id: 'news', label: 'Notizie' },
+      { id: 'championship', label: 'Classifiche', what: 'Piloti, squadre e costruttori' },
+      { id: 'calendar', label: 'Calendario', what: 'Tutti i Gran Premi: tocca un circuito per la scheda' },
+      { id: 'paddock', label: 'Squadre e piloti', what: 'Tutte le squadre del campionato e le loro moto' },
+      { id: 'news', label: 'Notizie', what: 'Cosa succede nel paddock' },
+    ],
+  },
+  {
+    group: 'Soldi e contratti',
+    items: [
+      { id: 'market', label: 'Mercato', what: 'Ingaggia piloti e tecnici' },
+      { id: 'sponsors', label: 'Sponsor', what: 'Il contratto di sponsorizzazione della stagione' },
+      { id: 'finance', label: 'Finanze', what: 'Entrate, uscite e soldi in cassa' },
     ],
   },
 ];
+const WHAT = Object.fromEntries(NAV.flatMap((g) => g.items.map((i) => [i.id, i.what]))) as Partial<
+  Record<Section, string>
+>;
 /** Sistemi previsti dalla roadmap e non ancora sviluppati: elencati, non cliccabili. */
 const COMING = [
   'Sviluppo tecnico avanzato',
   'Strutture',
   'Accademia',
-  'Test ufficiali e privati',
+  'Test privati in stagione',
   'Statistiche',
   'Archivio storico',
 ];
@@ -240,7 +249,12 @@ export function Shell({
             <div key={g.group}>
               <div className="grp">{g.group}</div>
               {g.items.map((i) => (
-                <button key={i.id} className={section === i.id ? 'on' : ''} onClick={() => go(i.id)}>
+                <button
+                  key={i.id}
+                  className={section === i.id ? 'on' : ''}
+                  onClick={() => go(i.id)}
+                  title={i.what}
+                >
                   {ICON[i.id]}
                   {i.label}
                   {i.id === 'weekend' && (raceDay || seasonOver || commands.includes('RunTestDay')) && (
@@ -278,7 +292,10 @@ export function Shell({
         </div>
       </aside>
       <header className="topbar">
-        <h2>{TITLE[section]}</h2>
+        <div className="page-title">
+          <h2>{TITLE[section]}</h2>
+          {WHAT[section] && <span className="page-what">{WHAT[section]}</span>}
+        </div>
         {s && <Kpi label="Oggi" value={s.date} />}
         {team && team.balance !== null && <Kpi label="In cassa" value={<Money value={team.balance} />} />}
         {s && s.roundsTotal > 0 && <Kpi label="Gare corse" value={`${s.roundsDone} di ${s.roundsTotal}`} />}

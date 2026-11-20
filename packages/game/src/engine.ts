@@ -50,6 +50,7 @@ import {
   nextSession,
   playerRoundToday,
   runNextSession,
+  runStint,
   runRestOfWeekend,
   sessionsOf,
   startLiveRace,
@@ -72,9 +73,16 @@ import {
   validateInvest,
   validateNegotiate,
 } from './manager.ts';
-import { SESSION_SHORT, changeMinutes, practiceRider, workMinutesLeft } from './practice.ts';
+import { PRACTICE_KINDS, SESSION_SHORT, changeMinutes, practiceRider, workMinutesLeft } from './practice.ts';
 import { addNews } from './news.ts';
-import { aiUpgrades, buyUpgrade, deliverUpgrades, pendingOrder, upgradeCost } from './upgrades.ts';
+import {
+  aiUpgrades,
+  buyUpgrade,
+  deliverUpgrades,
+  pendingOrder,
+  seatRiders,
+  upgradeCost,
+} from './upgrades.ts';
 import { dealWindowOpen, signDeal } from './sponsors.ts';
 import {
   buySpare,
@@ -448,8 +456,10 @@ export class GameEngine {
         const teamId = s.meta.playerTeamId;
         if (!teamId) return err('Scegli prima una squadra');
         if (!PART_KEYS.includes(cmd.part)) return err('Componente sconosciuto');
-        if (pendingOrder(s, teamId, cmd.part)) return err('Questo componente è già in produzione');
-        const cost = upgradeCost(s, teamId, cmd.part);
+        if (!seatRiders(s, teamId).includes(cmd.riderId)) return err('Il pilota non è della tua squadra');
+        if (pendingOrder(s, teamId, cmd.part, cmd.riderId))
+          return err('Questo componente è già in produzione per questo pilota');
+        const cost = upgradeCost(s, teamId, cmd.part, cmd.riderId);
         if (cost === null) return err('Componente già al livello massimo');
         if (cost > teamBalance(s, teamId)) return err('Soldi insufficienti per questo upgrade');
         return ok(true);
@@ -545,6 +555,7 @@ export class GameEngine {
       case 'ContinueToNextEvent':
         // Chi prosegue con un test in corso lo salta; ci si ferma anche ai giorni di test.
         if (testToday(s)) skipTestToday(s);
+        if (s.stint?.kind === 'test') s.stint = undefined;
         {
           const t = nextTestDay(s);
           const r = this.nextRound()!.startDay;
@@ -594,6 +605,15 @@ export class GameEngine {
             return;
           }
         }
+        if (cmd.stint && (PRACTICE_KINDS as readonly string[]).includes(session)) {
+          const res = runStint(s, this.ids, round, session, cmd.strategies ?? {});
+          this.lastTiming = res.timing;
+          if (res.finished) {
+            if (!nextSession(s, round)) finishOtherRounds(s, this.ids, rng);
+            this.events.emit('SessionDone', s.meta.currentDay, { roundId: round.id, session });
+          }
+          return;
+        }
         const sink: { timing?: SessionTiming } = {};
         const rep = runNextSession(s, this.ids, rng, round, cmd.strategies ?? {}, sink);
         if (rep) this.lastReplay = rep;
@@ -613,7 +633,9 @@ export class GameEngine {
       }
       case 'RunTestDay': {
         const t = testToday(s)!;
-        this.lastTiming = runTestDay(s, this.ids, cmd.programs);
+        const res = runTestDay(s, this.ids, cmd.programs, cmd.all);
+        this.lastTiming = res.timing;
+        if (!res.finished) return;
         this.events.emit('TestDayDone', s.meta.currentDay, { testId: t.id, day: t.done + 1 });
         // Giornata successiva dello stesso test: si va al giorno dopo.
         if (testToday(s) === null && nextTestDay(s) === s.meta.currentDay + 1)
@@ -658,10 +680,11 @@ export class GameEngine {
         return;
       }
       case 'BuyUpgrade':
-        buyUpgrade(s, this.ids, s.meta.playerTeamId!, cmd.part);
+        buyUpgrade(s, this.ids, s.meta.playerTeamId!, cmd.part, cmd.riderId);
         this.events.emit('UpgradeBought', s.meta.currentDay, {
           part: cmd.part,
-          level: pendingOrder(s, s.meta.playerTeamId!, cmd.part)!.level,
+          riderId: cmd.riderId,
+          level: pendingOrder(s, s.meta.playerTeamId!, cmd.part, cmd.riderId)!.level,
         });
         return;
       case 'ServiceParts': {
@@ -700,7 +723,10 @@ export class GameEngine {
             .map(([k, v]) => `${names[k] ?? k} ${fmtSigned(before[k] ?? 0)} → ${fmtSigned(v)}`);
           if (changes.length > 0)
             pr.log.push({
-              session: SESSION_SHORT[sessionsOf(s, round)[(round.stage ?? 1) - 1]!] ?? '',
+              session:
+                s.stint?.roundId === round.id && s.stint.kind !== 'test'
+                  ? `${SESSION_SHORT[s.stint.kind] ?? s.stint.kind} · box ${s.stint.done}`
+                  : (SESSION_SHORT[sessionsOf(s, round)[(round.stage ?? 1) - 1]!] ?? ''),
               kind: 'change',
               text: `${cmd.condition === 'wet' ? 'Bagnato: ' : ''}${changes.join(', ')}`,
               minutes,

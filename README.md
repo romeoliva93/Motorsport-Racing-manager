@@ -35,16 +35,20 @@ Premio», «Vai al weekend», «Chiudi la stagione»).
    svincolati.
 4. **Moto e upgrade** (garage): la moto è al centro, intorno i gruppi tecnici con livello, prestazione, usura e
    stato. Scegli la manutenzione (automatica, assistita o manuale), compra ricambi, ordina upgrade alla fabbrica
-   (arrivano dopo qualche giorno). In MotoGP: Moto A e Moto B, motori limitati.
+   **per un pilota alla volta** (arrivano dopo qualche giorno e vanno solo sulla sua moto). In MotoGP: Moto A e
+   Moto B, motori limitati.
 5. **Assetto** (nel garage): per ogni pilota, su asciutto e bagnato. Il pilota commenta le regolazioni; un buon
    assetto vale fino all'1,5% di ritmo.
 6. **Test pre-stagionali** («Vai al test»): prima del primo GP (MotoGP: 2 test, 3 + 2 giornate; Moto2/Moto3: 3
-   giornate; Rookies: 1). Per ogni pilota scegli *Circuito*, *Assetto*, *Passo gara* o *Sviluppo*: i primi tre
-   alzano la confidenza con la moto da cui parte ogni weekend (senza test 50, avversari 60), *Sviluppo* rende gli
-   upgrade più rapidi ed economici. Ogni giornata costa la trasferta; si può saltare il resto del test.
+   giornate; Rookies: 1). Ogni pilota ha una **percentuale per programma** (diversa per tutti): *Circuito*
+   (confidenza col circuito a inizio weekend), *Assetto* (confidenza con la moto), *Passo gara* (gomme in gara),
+   *Sviluppo* (upgrade della sua moto più economici e rapidi). Il programma scelto riceve il boost più grande.
+   Ogni giornata ha 3 uscite con rientro ai box e costa la trasferta; si può saltare il resto del test.
    Poi **Vai al Gran Premio**: i giorni scorrono fino al weekend.
-7. **Prove libere**: scegli gomma e programma di lavoro (*Circuito*, *Assetto*, *Passo gara*). Dopo ogni uscita
-   c'è la **riunione tecnica**: confidenza col circuito e con la moto, commenti del pilota, consiglio del
+7. **Prove libere**: scegli gomma e programma di lavoro (*Circuito*, *Assetto*, *Passo gara*). Ogni sessione ha
+   più **uscite**: a ogni **rientro ai box** il pilota racconta com'è la moto e il capotecnico propone modifiche
+   (alcune sicure, altre «da provare»); scegli tu quali fare (15 minuti di lavoro). A fine sessione c'è la
+   **riunione tecnica**: confidenza col circuito e con la moto, commenti del pilota, consiglio del
    capotecnico da applicare (hai 45 minuti di lavoro fra una sessione e l'altra), cronologia del weekend.
 8. **Qualifiche** (Q1/Q2 o qualifica unica): gomma per il giro secco; l'ingegnere consiglia sempre. Prove e
    qualifiche si seguono nella **schermata tempi** (settori: rosso miglior assoluto, arancio miglior personale,
@@ -55,14 +59,16 @@ Premio», «Vai al weekend», «Chiudi la stagione»).
 10. **Dopo la gara**: punti, classifiche (piloti, team, scuderie/costruttori, indipendenti), premi, forma e
     morale, usura della moto, notizie. In **Squadre e piloti** vedi tutte le squadre per costruttore, con i loro
     piloti. Poi di nuovo «Vai al Gran Premio».
-11. **Finanze**: entrate (sponsor, premi) e uscite (stipendi, gestione, canone del costruttore, trasferte,
-    ricambi, upgrade). Tieni
-    d'occhio il saldo mensile in Home.
-12. **Il manager**: la squadra ti paga uno stipendio che va nei tuoi soldi personali. Puoi spenderli in corsi
+11. **Calendario**: tocca un circuito per la sua scheda: disegno del tracciato con i settori, lunghezza, curve,
+    giri, usura gomme e sorpassi, e l'albo d'oro (pole, vincitore e giro più veloce dell'anno prima e, dopo la
+    gara, di quest'anno).
+12. **Finanze**: entrate (sponsor, premi) e uscite (stipendi, gestione, canone del costruttore, trasferte,
+    ricambi, upgrade). Tieni d'occhio il saldo mensile in Home.
+13. **Il manager**: la squadra ti paga uno stipendio che va nei tuoi soldi personali. Puoi spenderli in corsi
     (negoziazione, rapporti commerciali, gestione tecnica: effetti reali) o investirli nella squadra. Se fai meglio
     delle attese, a fine stagione arrivano **offerte di lavoro** da altre squadre (più soldi, un pilota di punta o la
     moto migliore): tratti lo stipendio e firmi.
-13. **Salva** spesso (in basso a sinistra). A fine campionato **Chiudi la stagione**: riepilogo, contratti in
+14. **Salva** spesso (in basso a sinistra). A fine campionato **Chiudi la stagione**: riepilogo, contratti in
     scadenza, stagione successiva.
 
 ### Consigli per i primi Gran Premi
@@ -96,7 +102,7 @@ temporanei di verifica, non vanno nel repository.
 | `packages/game` | `GameEngine`: comandi, weekend, regolamento, economia, garage, assetti, viste per l'interfaccia |
 | `packages/persistence` | formato dei salvataggi e archivio |
 | `packages/engine-host` | motore nel Web Worker e client con Promise |
-| `apps/client` | app React + Vite: design system "Paddock Night", schermate, vista gara 2D/3D |
+| `apps/client` | app React + Vite: design system "Pit Wall", schermate, vista gara 2D/3D |
 | `tools/` | prova e2e, report del mondo, generazione locale delle immagini (`tools/portraits/`) |
 
 Confini fra pacchetti controllati da ESLint: `core` ← `data` ← (`sim`, `game`, `persistence`) ← `engine-host` ← `apps/client`.
