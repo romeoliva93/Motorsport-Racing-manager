@@ -1,0 +1,330 @@
+[
+ {
+  "key": "hoshiro-racing-works",
+  "name": "Hoshiro Racing Works",
+  "tier": "premier",
+  "maker": "Hoshiro",
+  "primary": "#ffffff",
+  "secondary": "#c8102e"
+ },
+ {
+  "key": "ardena-corse",
+  "name": "Ardena Corse",
+  "tier": "premier",
+  "maker": "Ardena",
+  "primary": "#d4141c",
+  "secondary": "#1a1a1a"
+ },
+ {
+  "key": "vohrmann-performance",
+  "name": "Vohrmann Performance",
+  "tier": "premier",
+  "maker": "Vohrmann",
+  "primary": "#ff7a1a",
+  "secondary": "#141414"
+ },
+ {
+  "key": "takaido-factory-racing",
+  "name": "Takaido Factory Racing",
+  "tier": "premier",
+  "maker": "Takaido",
+  "primary": "#1f8a4c",
+  "secondary": "#0e2a1a"
+ },
+ {
+  "key": "scuderia-lupo-blu",
+  "name": "Scuderia Lupo Blu",
+  "tier": "premier",
+  "maker": "Ardena",
+  "primary": "#2a6cf0",
+  "secondary": "#0d1530"
+ },
+ {
+  "key": "akane-racing",
+  "name": "Akane Racing",
+  "tier": "premier",
+  "maker": "Hoshiro",
+  "primary": "#e8336b",
+  "secondary": "#1b1b2f"
+ },
+ {
+  "key": "team-meridian",
+  "name": "Team Meridian",
+  "tier": "premier",
+  "maker": "Ardena",
+  "primary": "#0f3d3e",
+  "secondary": "#e8c547"
+ },
+ {
+  "key": "corvane-moto-sport",
+  "name": "Corvane Moto Sport",
+  "tier": "premier",
+  "maker": "Corvane",
+  "primary": "#6a3df0",
+  "secondary": "#120a2e"
+ },
+ {
+  "key": "e-quipe-bastide",
+  "name": "Équipe Bastide",
+  "tier": "premier",
+  "maker": "Corvane",
+  "primary": "#00c2c7",
+  "secondary": "#082a2b"
+ },
+ {
+  "key": "alpenwerk-racing",
+  "name": "Alpenwerk Racing",
+  "tier": "premier",
+  "maker": "Vohrmann",
+  "primary": "#c9ced8",
+  "secondary": "#1c2230"
+ },
+ {
+  "key": "atlas-motorsport",
+  "name": "Atlas Motorsport",
+  "tier": "premier",
+  "maker": "Takaido",
+  "primary": "#2fbf71",
+  "secondary": "#0b1d12"
+ },
+ {
+  "key": "sakura-speed-team",
+  "name": "Sakura Speed Team",
+  "tier": "intermediate",
+  "maker": "Bertoldi Telai",
+  "primary": "#ffafcc",
+  "secondary": "#3d0e1f"
+ },
+ {
+  "key": "team-nordvik",
+  "name": "Team Nordvik",
+  "tier": "intermediate",
+  "maker": "Navarra Chassis",
+  "primary": "#18a999",
+  "secondary": "#0f3b2e"
+ },
+ {
+  "key": "equipo-sierra-norte",
+  "name": "Equipo Sierra Norte",
+  "tier": "intermediate",
+  "maker": "Navarra Chassis",
+  "primary": "#b5179e",
+  "secondary": "#24092a"
+ },
+ {
+  "key": "kestrel-racing",
+  "name": "Kestrel Racing",
+  "tier": "intermediate",
+  "maker": "Hollis Engineering",
+  "primary": "#264653",
+  "secondary": "#e9c46a"
+ },
+ {
+  "key": "costa-dorada-moto",
+  "name": "Costa Dorada Moto",
+  "tier": "intermediate",
+  "maker": "Navarra Chassis",
+  "primary": "#ff9f1c",
+  "secondary": "#1e1e24"
+ },
+ {
+  "key": "e-quipe-mistral",
+  "name": "Équipe Mistral",
+  "tier": "intermediate",
+  "maker": "Navarra Chassis",
+  "primary": "#8ecae6",
+  "secondary": "#023047"
+ },
+ {
+  "key": "alpenwerk-intermediate",
+  "name": "Alpenwerk Intermediate",
+  "tier": "intermediate",
+  "maker": "Navarra Chassis",
+  "primary": "#c9ced8",
+  "secondary": "#1c2230"
+ },
+ {
+  "key": "sabbia-racing",
+  "name": "Sabbia Racing",
+  "tier": "intermediate",
+  "maker": "Bertoldi Telai",
+  "primary": "#f2c14e",
+  "secondary": "#3a2a0c"
+ },
+ {
+  "key": "akane-junior",
+  "name": "Akane Junior",
+  "tier": "intermediate",
+  "maker": "Bertoldi Telai",
+  "primary": "#e8336b",
+  "secondary": "#1b1b2f"
+ },
+ {
+  "key": "rivetti-corse",
+  "name": "Rivetti Corse",
+  "tier": "intermediate",
+  "maker": "Bertoldi Telai",
+  "primary": "#9b2226",
+  "secondary": "#f5f3f4"
+ },
+ {
+  "key": "atlas-junior-team",
+  "name": "Atlas Junior Team",
+  "tier": "intermediate",
+  "maker": "Hollis Engineering",
+  "primary": "#2fbf71",
+  "secondary": "#0b1d12"
+ },
+ {
+  "key": "pacific-rim-racing",
+  "name": "Pacific Rim Racing",
+  "tier": "intermediate",
+  "maker": "Navarra Chassis",
+  "primary": "#06d6a0",
+  "secondary": "#073b4c"
+ },
+ {
+  "key": "brasi-lia-velocidade",
+  "name": "Brasília Velocidade",
+  "tier": "intermediate",
+  "maker": "Bertoldi Telai",
+  "primary": "#009739",
+  "secondary": "#fedd00"
+ },
+ {
+  "key": "tatra-moto-team",
+  "name": "Tatra Moto Team",
+  "tier": "intermediate",
+  "maker": "Hollis Engineering",
+  "primary": "#e63946",
+  "secondary": "#1d3557"
+ },
+ {
+  "key": "team-blauwe-leeuw",
+  "name": "Team Blauwe Leeuw",
+  "tier": "intermediate",
+  "maker": "Hollis Engineering",
+  "primary": "#1d4ed8",
+  "secondary": "#fbbf24"
+ },
+ {
+  "key": "lysander-factory-junior",
+  "name": "Lysander Factory Junior",
+  "tier": "lightweight",
+  "maker": "Lysander",
+  "primary": "#3a3f4b",
+  "secondary": "#ff7a1a"
+ },
+ {
+  "key": "hoshiro-rising-stars",
+  "name": "Hoshiro Rising Stars",
+  "tier": "lightweight",
+  "maker": "Hoshiro",
+  "primary": "#ffffff",
+  "secondary": "#c8102e"
+ },
+ {
+  "key": "takaido-youth-racing",
+  "name": "Takaido Youth Racing",
+  "tier": "lightweight",
+  "maker": "Takaido",
+  "primary": "#1f8a4c",
+  "secondary": "#d9e021"
+ },
+ {
+  "key": "equipo-levante",
+  "name": "Equipo Levante",
+  "tier": "lightweight",
+  "maker": "Lysander",
+  "primary": "#f4a261",
+  "secondary": "#264653"
+ },
+ {
+  "key": "corvane-jeunes-talents",
+  "name": "Corvane Jeunes Talents",
+  "tier": "lightweight",
+  "maker": "Corvane",
+  "primary": "#6a3df0",
+  "secondary": "#120a2e"
+ },
+ {
+  "key": "lupo-blu-junior-team",
+  "name": "Lupo Blu Junior Team",
+  "tier": "lightweight",
+  "maker": "Hoshiro",
+  "primary": "#ffd23f",
+  "secondary": "#2a6cf0"
+ },
+ {
+  "key": "southern-cross-junior",
+  "name": "Southern Cross Junior",
+  "tier": "lightweight",
+  "maker": "Hoshiro",
+  "primary": "#012169",
+  "secondary": "#ffcd00"
+ },
+ {
+  "key": "rookie-lab-racing",
+  "name": "Rookie Lab Racing",
+  "tier": "lightweight",
+  "maker": "Hoshiro",
+  "primary": "#ff6b35",
+  "secondary": "#004e89"
+ },
+ {
+  "key": "siam-speed",
+  "name": "Siam Speed",
+  "tier": "lightweight",
+  "maker": "Takaido",
+  "primary": "#ffbe0b",
+  "secondary": "#3a0ca3"
+ },
+ {
+  "key": "team-vittoria-giovani",
+  "name": "Team Vittoria Giovani",
+  "tier": "lightweight",
+  "maker": "Corvane",
+  "primary": "#ef476f",
+  "secondary": "#26547c"
+ },
+ {
+  "key": "pampas-racing",
+  "name": "Pampas Racing",
+  "tier": "lightweight",
+  "maker": "Takaido",
+  "primary": "#74acdf",
+  "secondary": "#f6b40e"
+ },
+ {
+  "key": "anatolia-genc-tak-m",
+  "name": "Anatolia Genç Takımı",
+  "tier": "lightweight",
+  "maker": "Lysander",
+  "primary": "#d62828",
+  "secondary": "#f7f7f7"
+ },
+ {
+  "key": "valkyrie-racing",
+  "name": "Valkyrie Racing",
+  "tier": "lightweight",
+  "maker": "Lysander",
+  "primary": "#a8dadc",
+  "secondary": "#1d3557"
+ },
+ {
+  "key": "danubio-racing-team",
+  "name": "Danubio Racing Team",
+  "tier": "lightweight",
+  "maker": "Corvane",
+  "primary": "#477998",
+  "secondary": "#c64191"
+ },
+ {
+  "key": "velocity-rookies-cup",
+  "name": "Velocity Rookies Cup",
+  "tier": "rookies",
+  "maker": "Lysander",
+  "primary": "#3a3f4b",
+  "secondary": "#ff7a1a"
+ }
+]

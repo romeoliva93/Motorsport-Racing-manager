@@ -1,0 +1,25 @@
+{
+  "name": "@lean-angle/client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@lean-angle/core": "0.0.0",
+    "@lean-angle/data": "0.0.0",
+    "@lean-angle/engine-host": "0.0.0",
+    "@lean-angle/game": "0.0.0",
+    "@lean-angle/persistence": "0.0.0",
+    "flag-icons": "^7.6.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.180.0"
+  }
+}

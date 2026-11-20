@@ -1,0 +1,41 @@
+# Dipendenze e build
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# Output temporanei di test e verifiche (screenshot Playwright, report, coverage)
+test-results/
+playwright-report/
+coverage/
+e2e-failure.png
+*.log
+
+# Prodotti degli strumenti di generazione (varianti, ritratti non ancora raccolti negli atlanti)
+tools/portraits/out/
+
+# Export e archivi temporanei
+export/
+*.zip
+*.tmp
+*.bak
+*~
+
+# File di sistema e degli editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Dati sensibili e credenziali
+.env
+.env.*
+*.pem
+*.key
+*.p12
+credentials*.json
+
+# Python
+__pycache__/
+*.pyc

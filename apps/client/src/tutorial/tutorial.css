@@ -1,0 +1,160 @@
+/* Guida al gioco (tutorial a passi) */
+.tut-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(4, 6, 10, 0.78);
+  backdrop-filter: blur(3px);
+}
+.tut {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  width: min(62rem, 100%);
+  max-height: min(42rem, 100%);
+  background: var(--panel, var(--bg-1));
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-1);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  overflow: hidden;
+}
+.tut-index {
+  background: #06080c;
+  border-right: 1px solid var(--line);
+  padding: 0.8rem 0.6rem;
+  overflow: auto;
+}
+.tut-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 0.4rem;
+  mix-blend-mode: lighten;
+}
+.tut-index ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tut-index button {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  padding: 0.38rem 0.5rem;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.tut-index button span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--bg-3);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.tut-index button.done {
+  color: var(--text-2);
+}
+.tut-index button.done span {
+  background: var(--ok);
+  color: #0d1a12;
+}
+.tut-index button.on {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(227, 18, 11, 0.22), transparent 85%);
+  box-shadow: inset 3px 0 0 var(--signal);
+}
+.tut-index button.on span {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+.tut-body {
+  display: flex;
+  flex-direction: column;
+  padding: 1.4rem 1.6rem 1.8rem;
+  overflow: auto;
+}
+.tut-body h2 {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 2rem;
+}
+.tut-intro {
+  margin: 0 0 0.7rem;
+  color: var(--text-1);
+  font-size: 1.02rem;
+}
+.tut-body ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+.tut-body li + li {
+  margin-top: 0.35rem;
+}
+.tut-tip {
+  margin: 0.9rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--signal);
+  background: rgba(227, 18, 11, 0.08);
+  color: var(--text-1);
+  font-size: 0.92rem;
+}
+.tut-progress {
+  height: 3px;
+  margin: auto 0 0.8rem;
+  padding-top: 1.2rem;
+  background-clip: content-box;
+  background-color: var(--bg-3);
+}
+.tut-progress i {
+  display: block;
+  height: 3px;
+  background: var(--signal);
+}
+.tut-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tut-actions .spacer {
+  flex: 1;
+}
+.tut-mini {
+  position: fixed;
+  z-index: 55;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.55rem 0.6rem 0.55rem 1.1rem;
+  background: linear-gradient(180deg, #232935, #181c25);
+  border: 1px solid var(--signal);
+  box-shadow: var(--shadow-1);
+  font-size: 0.9rem;
+}
+@media (max-width: 800px) {
+  .tut {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tut-index {
+    display: none;
+  }
+  .tut-mini {
+    flex-wrap: wrap;
+  }
+}

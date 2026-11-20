@@ -1,0 +1,226 @@
+.menu-stage {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 700px at 78% 45%, rgba(106, 168, 255, 0.1), transparent 60%),
+    linear-gradient(180deg, #121316, #0d0e10);
+}
+.menu-track {
+  position: absolute;
+  right: 4vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 55vw;
+  max-width: 1100px;
+}
+.menu-track .base {
+  fill: none;
+  stroke: #2a2c31;
+  stroke-width: 22;
+  stroke-linejoin: round;
+}
+.menu-track .line {
+  fill: none;
+  stroke: url(#mg);
+  stroke-width: 3;
+  stroke-dasharray: 14 10;
+  animation: menu-run 6s linear infinite;
+}
+@keyframes menu-run {
+  to {
+    stroke-dashoffset: -480;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-track .line {
+    animation: none;
+  }
+}
+.menu-left {
+  position: absolute;
+  left: 6vw;
+  top: 0;
+  bottom: 0;
+  width: 34rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+}
+.brand .kicker {
+  color: var(--signal);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.brand h1 {
+  margin: 0.3rem 0 0;
+  font: 900 5.6rem/0.88 var(--font-display);
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+}
+.brand h1 span {
+  color: var(--signal);
+}
+.brand p {
+  margin: 0.9rem 0 0;
+  color: var(--text-2);
+  font-size: 1.1rem;
+  max-width: 28rem;
+}
+.continue-card {
+  padding: 1rem 1.1rem;
+  border-radius: var(--r-3);
+  background: var(--glass);
+  border: 1px solid var(--line);
+}
+.continue-card .nm {
+  font: 800 1.15rem var(--font-display);
+  font-stretch: 110%;
+}
+.menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.menu-nav .item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1.2rem;
+  border-radius: var(--r-2);
+  border: 1px solid var(--line);
+  background: rgba(24, 25, 29, 0.7);
+  color: var(--text-1);
+  font: 700 1.2rem var(--font-display);
+  font-stretch: 110%;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-nav .item small {
+  font: 500 0.85rem var(--font-ui);
+  color: var(--text-3);
+}
+.menu-nav .item:hover:not(:disabled) {
+  background: var(--bg-3);
+  border-color: var(--line-strong);
+}
+.menu-nav .item.primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.menu-nav .item.primary small {
+  color: rgba(255, 255, 255, 0.82);
+}
+.menu-nav .item:disabled {
+  color: var(--text-3);
+  cursor: not-allowed;
+}
+.menu-nav .soon,
+.soon {
+  font: 600 0.72rem var(--font-ui);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  color: var(--text-3);
+}
+.menu-foot {
+  position: absolute;
+  left: 6vw;
+  bottom: 2rem;
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+@media (max-width: 1000px) {
+  .menu-stage {
+    overflow: auto;
+  }
+  .menu-track {
+    opacity: 0.25;
+    width: 120vw;
+    right: -30vw;
+  }
+  .menu-left {
+    position: relative;
+    left: auto;
+    width: auto;
+    padding: 2rem max(16px, env(safe-area-inset-left, 0px)) 4rem;
+    justify-content: flex-start;
+  }
+  .brand h1 {
+    font-size: 3.6rem;
+  }
+  .menu-foot {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    padding: 0 1rem 1rem;
+  }
+}
+
+.settings-card {
+  margin-top: 0.8rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 34rem;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.settings-row > span {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+}
+.settings-row small {
+  font-weight: 400;
+  color: var(--text-3);
+  font-size: 0.78rem;
+  max-width: 20rem;
+}
+
+/* Logo del gioco nel menu: lo sfondo nero dell'immagine si fonde con quello del menu. */
+.brand h1.brand-logo {
+  margin: 0 0 0 -1.2rem;
+  font-size: 0;
+  line-height: 0;
+}
+.brand-logo img {
+  display: block;
+  width: min(36rem, 100%);
+  height: auto;
+  mix-blend-mode: lighten;
+}
+@media (max-width: 1000px) {
+  .brand h1.brand-logo {
+    margin-left: -0.6rem;
+  }
+}
+
+/* Puntino che percorre la pista */
+.runner-trail {
+  stroke: #e3120b;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+.runner-glow {
+  fill: rgba(227, 18, 11, 0.28);
+}
+.runner-dot {
+  fill: #ff2a1f;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+}

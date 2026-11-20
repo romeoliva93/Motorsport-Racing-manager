@@ -1,0 +1,496 @@
+/*
+ * Motorcycle Racing Manager — tema "Paddock Night" (reskin completo, v4).
+ *
+ * Stesso sistema di colori funzionali (arancio = azione, blu = informazione, verde/giallo/rosso = stato) su una
+ * base più profonda e "da box": blu-nero, linee di velocità, pannelli con angolo tagliato, titoli condensati in
+ * corsivo, pulsanti e chip a parallelogramma. Caricato dopo app.css; le regole sui componenti delle singole
+ * schermate usano il prefisso `body` per avere la precedenza sui loro fogli.
+ */
+:root {
+  --bg-0: #080a0f;
+  --bg-1: #0e1117;
+  --bg-2: #151922;
+  --bg-3: #1f2430;
+  --glass: rgba(17, 20, 28, 0.94);
+  --line: #252b37;
+  --line-strong: #3a4252;
+  --text-1: #eef1f6;
+  --text-2: #aab3c1;
+  --text-3: #707a8a;
+  --r-1: 3px;
+  --r-2: 5px;
+  --r-3: 8px;
+  --cut: 14px;
+  --shadow-1: 0 14px 40px rgba(0, 0, 0, 0.5);
+  --panel: linear-gradient(180deg, rgba(30, 35, 46, 0.96) 0%, rgba(17, 20, 28, 0.96) 100%);
+}
+
+/* Sfondo: vignettatura, bagliore del colore squadra, linee di velocità diagonali. */
+body {
+  background:
+    radial-gradient(
+      1200px 700px at 85% -10%,
+      color-mix(in srgb, var(--team) 18%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(900px 600px at -10% 110%, rgba(227, 18, 11, 0.07), transparent 60%),
+    repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0.018) 0 2px, transparent 2px 46px), var(--bg-0);
+  background-attachment: fixed;
+  letter-spacing: 0.005em;
+}
+::selection {
+  background: rgba(227, 18, 11, 0.35);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #343b49 transparent;
+}
+
+/* Titoli: condensati, corsivi, maiuscoli. */
+h1,
+h2,
+h3,
+.display,
+.big {
+  font-stretch: 78%;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+h1,
+h2 {
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+/* Pannelli con angolo tagliato e filo arancio. */
+.card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: none;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.6rem;
+  height: 3px;
+  background: var(--signal);
+}
+.card.accent {
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--team) 22%, transparent), transparent 55%), var(--panel);
+  border-color: color-mix(in srgb, var(--team) 45%, var(--line));
+}
+.card.accent::before {
+  background: var(--team);
+  width: 100%;
+  opacity: 0.85;
+}
+.card > h3,
+.section-title {
+  text-transform: uppercase;
+  font-size: 1.12rem;
+  font-weight: 900;
+  font-stretch: 78%;
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+.card > h3::before,
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.95rem;
+  background: var(--signal);
+  transform: skewX(-18deg);
+  margin-right: 0.15rem;
+  align-self: center;
+}
+
+/* Pulsanti a parallelogramma. */
+.btn {
+  border-radius: 0;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  padding: 0.62rem 1.25rem;
+  background: linear-gradient(180deg, #262c38, #1c212b);
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  font-weight: 700;
+  font-stretch: 92%;
+  letter-spacing: 0.02em;
+}
+.btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #303746, #232a36);
+}
+.btn.primary {
+  background: linear-gradient(180deg, #ff3b2f 0%, #e3120b 55%, #b80d07 100%);
+  box-shadow: none;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-style: italic;
+  font-stretch: 85%;
+  letter-spacing: 0.04em;
+}
+.btn.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ff5a4f 0%, #f0261d 60%, #c8120b 100%);
+}
+.btn.ghost {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Chip, schede e selettori a segmenti. */
+.pill {
+  border-radius: 0;
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+  padding: 0.14rem 0.7rem;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.tabs,
+body .rv-speeds {
+  border-radius: 0;
+  background: rgba(8, 10, 15, 0.6);
+  border: 1px solid var(--line);
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  padding: 0.22rem 0.7rem;
+}
+.tabs button,
+body .rv-speeds button {
+  border-radius: 0;
+  font-weight: 800;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+.tabs button.on {
+  background: var(--signal);
+  color: var(--signal-ink);
+  box-shadow: none;
+}
+body .rv-speeds button.on {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+
+/* Barra laterale: nera, striscia del colore squadra, voce attiva con barra arancio. */
+.sidebar {
+  background: linear-gradient(180deg, #06080c, #0b0e14);
+  border-right: 0;
+  box-shadow: inset -3px 0 0 color-mix(in srgb, var(--team) 70%, transparent);
+}
+.sidebar .team {
+  background: linear-gradient(110deg, color-mix(in srgb, var(--team) 30%, transparent), transparent 70%);
+  border-bottom: 1px solid var(--line);
+}
+.sidebar .team b {
+  font-style: italic;
+  font-stretch: 80%;
+  text-transform: uppercase;
+  font-size: 1.08rem;
+}
+.nav .grp {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.66rem;
+  color: #5f6878;
+}
+.nav button {
+  border-radius: 0;
+  font-weight: 600;
+}
+.nav button.on {
+  background: linear-gradient(90deg, rgba(227, 18, 11, 0.2), transparent 85%);
+  box-shadow: inset 4px 0 0 var(--signal);
+  color: #fff;
+}
+.nav button.on svg {
+  color: var(--signal);
+  opacity: 1;
+}
+
+/* Barra superiore: titolo grande, filo colore squadra → arancio. */
+.topbar {
+  background: linear-gradient(180deg, rgba(10, 12, 17, 0.96), rgba(10, 12, 17, 0.88));
+  border-bottom: 0;
+  box-shadow: 0 2px 0 0 transparent;
+  position: relative;
+}
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--team), var(--signal) 45%, transparent 85%);
+}
+.topbar h2 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  font-stretch: 75%;
+  letter-spacing: 0.02em;
+}
+.kpi small,
+body .gar-kpi small,
+body .gauge small {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.64rem;
+}
+.kpi b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tabelle: intestazioni piccole e spaziate, righe alternate, evidenziazione al passaggio. */
+table.std thead th {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.66rem;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--line-strong);
+}
+table.std tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.018);
+}
+table.std tbody tr:hover {
+  background: rgba(61, 155, 255, 0.07);
+}
+
+/* Barre di avanzamento più sottili e luminose. */
+.bar {
+  height: 0.38rem;
+  border-radius: 0;
+  background: #0b0d12;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Avvisi e notifiche. */
+.toast {
+  border-radius: 0;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  padding-left: 1.6rem;
+  background: linear-gradient(180deg, #232935, #181c25);
+}
+.explain {
+  border-radius: 0;
+  border-left: 3px solid var(--info);
+}
+.nextstep {
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+}
+
+/* Schermate di gioco con pannelli propri: stessa grammatica (angolo tagliato, filo arancio). */
+body .gx-head,
+body .gx-detail,
+body .gx-setup,
+body .rv-rider,
+body .rv-left-head,
+body .rv-bar,
+body .rv-board {
+  border-radius: var(--r-2);
+  background: var(--panel);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+body .gx-card {
+  border-radius: var(--r-2);
+  background: var(--panel);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+body .gx-main {
+  border-radius: var(--r-2);
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.07) 0%, transparent 55%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 64px),
+    linear-gradient(180deg, #161a22, #0c0e13);
+}
+body .gx-lvl,
+body .rv-lap b {
+  font-stretch: 75%;
+}
+body .gx-tabs > button {
+  text-transform: uppercase;
+  font-style: italic;
+  font-stretch: 80%;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+body .rv-rider-name b,
+body .gx-team b,
+body .gx-name,
+body .gx-detail h3 {
+  font-stretch: 82%;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Moto della squadra (foto o illustrazione) con tabella del numero */
+.team-bike {
+  position: relative;
+  margin: 0;
+  max-width: 100%;
+}
+.team-bike img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  -webkit-mask-image: radial-gradient(ellipse 62% 70% at 50% 54%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(ellipse 62% 70% at 50% 54%, #000 58%, transparent 100%);
+}
+.team-bike-plate {
+  position: absolute;
+  left: 0.8rem;
+  top: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--p);
+  border-left: 6px solid var(--s);
+  padding: 0.2rem 0.9rem 0.2rem 0.7rem;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+.team-bike-plate b {
+  font: italic 900 2.2rem/1 var(--font-display);
+  font-stretch: 75%;
+  color: var(--ink);
+}
+.team-bike-plate span {
+  font: italic 800 0.9rem var(--font-display);
+  font-stretch: 80%;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* ---- Home (dashboard) ---- */
+.dash-gp {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+}
+.dash-gp .track-map {
+  flex: none;
+}
+.dash-gp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.dash-gp-name {
+  font: italic 900 2rem/1.05 var(--font-display);
+  font-stretch: 75%;
+  text-transform: uppercase;
+}
+.dash-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.6rem;
+  margin-top: 0.5rem;
+}
+.dash-facts > span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.dash-facts small {
+  color: var(--text-3);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.dash-facts .dash-weather {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dash-weather > span {
+  display: flex;
+  flex-direction: column;
+}
+.dash-tasks,
+.dash-prep {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.dash-tasks button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0;
+  border-left: 3px solid var(--info);
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+}
+.dash-tasks li.warn button {
+  border-left-color: var(--warn);
+}
+.dash-tasks li.bad button {
+  border-left-color: var(--bad);
+}
+.dash-tasks button:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.dash-tasks b {
+  color: var(--signal);
+}
+.dash-prep li {
+  color: var(--text-2);
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--line);
+}
+.dash-prep li:first-child {
+  border-top: 0;
+}
+.dash-prep li span {
+  display: inline-block;
+  width: 1.2rem;
+  color: var(--text-3);
+  font-weight: 900;
+}
+.dash-prep li.ok,
+.dash-prep li.ok span {
+  color: var(--ok);
+}
+.dash-bike {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.dash-bike .team-bike {
+  align-self: center;
+  margin-bottom: 0.4rem;
+}
+.rider-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 700px) {
+  .dash-gp {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

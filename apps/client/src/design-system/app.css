@@ -1,0 +1,861 @@
+/* Stili dell'applicazione — versione 2. Le classi sono condivise da tutte le schermate. */
+
+/* --- Testo e colori -------------------------------------------------------- */
+.muted {
+  color: var(--text-3);
+}
+.t2 {
+  color: var(--text-2);
+}
+.ok {
+  color: var(--ok);
+}
+.bad {
+  color: var(--bad);
+}
+.warn {
+  color: var(--warn);
+}
+.or {
+  color: var(--signal);
+}
+.info {
+  color: var(--info);
+}
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 112%;
+  letter-spacing: -0.01em;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  letter-spacing: -0.01em;
+}
+.big {
+  font: 800 2rem/1.05 var(--font-display);
+  font-stretch: 112%;
+}
+
+/* --- Pulsanti -------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1rem;
+  border-radius: var(--r-1);
+  border: 1px solid var(--line-strong);
+  background: var(--bg-3);
+  color: var(--text-1);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.05s;
+}
+.btn:hover:not(:disabled) {
+  background: #2d3036;
+  border-color: #50545e;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn.primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+  font-weight: 700;
+}
+.btn.primary:hover:not(:disabled) {
+  background: #ff3b30;
+  border-color: #ff3b30;
+}
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+}
+.btn.ghost:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-1);
+}
+.btn.sel {
+  border-color: var(--signal);
+  color: var(--signal);
+  background: rgba(227, 18, 11, 0.08);
+}
+.btn.big-cta {
+  padding: 0.85rem 1.4rem;
+  font-size: 1.05rem;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- Pannelli -------------------------------------------------------------- */
+.card {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 1.1rem 1.2rem;
+  min-width: 0;
+  backdrop-filter: blur(6px);
+}
+.card > h3,
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.8rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.card > h3 small,
+.section-title small {
+  margin-left: auto;
+  color: var(--text-3);
+  font: 500 0.8rem var(--font-ui);
+}
+.card.accent {
+  border-color: color-mix(in srgb, var(--team) 55%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--team) 16%, transparent), transparent 60%), var(--glass);
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--line);
+}
+.row:first-of-type {
+  border-top: 0;
+}
+.pill {
+  display: inline-block;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--bg-3);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.pill.ok {
+  background: rgba(76, 195, 138, 0.14);
+  color: var(--ok);
+}
+.pill.warn {
+  background: rgba(240, 180, 41, 0.14);
+  color: var(--warn);
+}
+.pill.or {
+  background: rgba(227, 18, 11, 0.14);
+  color: var(--signal);
+}
+.pill.info {
+  background: rgba(106, 168, 255, 0.14);
+  color: var(--info);
+}
+.pill.bad {
+  background: rgba(239, 91, 79, 0.14);
+  color: var(--bad);
+}
+.bar {
+  height: 0.5rem;
+  background: var(--bg-3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--team);
+  border-radius: 999px;
+}
+
+/* Spiegazioni per chi non conosce il motociclismo */
+.explain {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--r-2);
+  background: rgba(106, 168, 255, 0.08);
+  border: 1px solid rgba(106, 168, 255, 0.22);
+  color: var(--text-2);
+  font-size: 0.88rem;
+}
+.explain::before {
+  content: 'i';
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--info);
+  color: #0b1020;
+  font: 800 0.8rem/1 var(--font-ui);
+}
+.help {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.3rem;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  color: var(--text-3);
+  font: 700 0.7rem/1 var(--font-ui);
+  cursor: help;
+  vertical-align: middle;
+  background: none;
+  padding: 0;
+}
+.help:hover,
+.help:focus-visible {
+  color: var(--text-1);
+  border-color: var(--text-2);
+}
+.help .tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--r-1);
+  background: #2a2c31;
+  border: 1px solid var(--line-strong);
+  color: var(--text-1);
+  font: 400 0.8rem/1.4 var(--font-ui);
+  text-align: left;
+  z-index: 30;
+  box-shadow: var(--shadow-1);
+}
+.help:hover .tip,
+.help:focus .tip {
+  display: block;
+}
+
+/* --- Tabelle --------------------------------------------------------------- */
+table.std {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+table.std th {
+  text-align: left;
+  color: var(--text-3);
+  font-weight: 600;
+  font-size: 0.78rem;
+  padding: 0 0.55rem 0.5rem;
+  white-space: nowrap;
+}
+table.std td {
+  padding: 0.55rem;
+  border-top: 1px solid var(--line);
+  white-space: nowrap;
+}
+table.std td.r,
+table.std th.r {
+  text-align: right;
+}
+table.std tbody tr {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+table.std.static tbody tr {
+  cursor: default;
+}
+table.std tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+table.std tbody tr.sel td,
+table.std tbody tr.mine td {
+  background: color-mix(in srgb, var(--team) 14%, transparent);
+}
+table.std tbody tr.sel td:first-child,
+table.std tbody tr.mine td:first-child {
+  box-shadow: inset 3px 0 0 var(--team);
+}
+.pos {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.8rem;
+  height: 1.6rem;
+  border-radius: 5px;
+  background: var(--bg-3);
+  font-weight: 700;
+}
+.pos.p1 {
+  background: #e9c349;
+  color: #1b1606;
+}
+.pos.p2 {
+  background: #c9ccd2;
+  color: #16171a;
+}
+.pos.p3 {
+  background: #c98b54;
+  color: #1b1006;
+}
+.swatch {
+  display: inline-block;
+  width: 0.35rem;
+  height: 1.05rem;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+/* --- Badge squadra e monogramma -------------------------------------------- */
+.team-badge {
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font: 800 0.9rem var(--font-display);
+  flex: none;
+}
+.monogram {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font: 700 0.85rem var(--font-display);
+  flex: none;
+  color: #fff;
+}
+
+/* --- Sfondo animato -------------------------------------------------------- */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.backdrop canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* --- Shell ----------------------------------------------------------------- */
+.app {
+  position: relative;
+  display: grid;
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+.app > :not(.backdrop):not(.toast) {
+  position: relative;
+  z-index: 1;
+}
+.sidebar {
+  grid-row: 1 / 3;
+  background: rgba(16, 17, 19, 0.88);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+.sidebar .team {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.sidebar .team b {
+  font: 800 1rem/1.15 var(--font-display);
+  font-stretch: 108%;
+  display: block;
+}
+.sidebar .team span {
+  color: var(--text-3);
+  font-size: 0.8rem;
+}
+.nav {
+  padding: 0.6rem;
+  flex: 1;
+}
+.nav .grp {
+  color: var(--text-3);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.9rem 0.75rem 0.3rem;
+}
+.nav button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.7rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--r-1);
+  color: var(--text-2);
+  font-size: 0.93rem;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.nav button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+  opacity: 0.8;
+}
+.nav button:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-1);
+}
+.nav button.on {
+  background: color-mix(in srgb, var(--team) 22%, transparent);
+  color: var(--text-1);
+  box-shadow: inset 3px 0 0 var(--team);
+}
+.nav button .badge {
+  margin-left: auto;
+  min-width: 1.3rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--signal);
+  color: var(--signal-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+.nav details {
+  margin-top: 0.8rem;
+  color: var(--text-3);
+  font-size: 0.82rem;
+}
+.nav details summary {
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
+}
+.nav details ul {
+  margin: 0.2rem 0 0;
+  padding: 0 0.75rem 0 1.8rem;
+  line-height: 1.7;
+}
+.sidebar .foot {
+  padding: 0.8rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 0.4rem;
+}
+.sidebar .foot .btn {
+  flex: 1;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  padding: 0.85rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(16, 17, 19, 0.78);
+  backdrop-filter: blur(8px);
+  min-width: 0;
+}
+.topbar h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+.kpi small {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+.kpi b {
+  font-size: 0.98rem;
+  white-space: nowrap;
+}
+.spacer {
+  flex: 1;
+}
+.main {
+  overflow: auto;
+  padding: 1.4rem 1.5rem 3rem;
+}
+.grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  align-content: start;
+}
+.s3 {
+  grid-column: span 3;
+}
+.s4 {
+  grid-column: span 4;
+}
+.s5 {
+  grid-column: span 5;
+}
+.s6 {
+  grid-column: span 6;
+}
+.s7 {
+  grid-column: span 7;
+}
+.s8 {
+  grid-column: span 8;
+}
+.s12 {
+  grid-column: span 12;
+}
+.toast {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2c31;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--ok);
+  border-radius: var(--r-2);
+  padding: 0.75rem 1.1rem;
+  font-size: 0.92rem;
+  max-width: min(36rem, calc(100vw - 2rem));
+  box-shadow: var(--shadow-1);
+  z-index: 50;
+}
+.toast.err {
+  border-left-color: var(--bad);
+}
+.loading {
+  color: var(--text-3);
+  padding: 2rem;
+  text-align: center;
+}
+
+/* --- Barra "prossimo passo" ------------------------------------------------ */
+.nextstep {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: var(--r-3);
+  background:
+    linear-gradient(100deg, color-mix(in srgb, var(--team) 30%, transparent), transparent 70%), var(--glass);
+  border: 1px solid color-mix(in srgb, var(--team) 45%, var(--line));
+  margin-bottom: 1rem;
+}
+.nextstep .what {
+  flex: 1;
+  min-width: 0;
+}
+.nextstep .what small {
+  color: var(--text-3);
+  font-size: 0.8rem;
+}
+.nextstep .what b {
+  display: block;
+  font: 800 1.25rem/1.2 var(--font-display);
+  font-stretch: 108%;
+}
+
+/* --- Attributi ------------------------------------------------------------- */
+.attr {
+  display: grid;
+  grid-template-columns: 11rem 1fr 2.4rem;
+  gap: 0.7rem;
+  align-items: center;
+  font-size: 0.88rem;
+  padding: 0.22rem 0;
+}
+.attr b {
+  text-align: right;
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30rem;
+  gap: 1rem;
+  align-items: start;
+}
+.detail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.hero .num {
+  font: 900 3.4rem/1 var(--font-display);
+  font-stretch: 120%;
+  color: var(--team);
+}
+.hero .nm {
+  font: 800 1.6rem/1.05 var(--font-display);
+  font-stretch: 110%;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+/* --- Griglie della Panoramica ---------------------------------------------- */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.tile {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  padding: 0.85rem;
+}
+
+/* --- Schede (tab) ---------------------------------------------------------- */
+.tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--r-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.tabs button {
+  border: 0;
+  background: none;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--r-1);
+  color: var(--text-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+.tabs button.on {
+  background: var(--bg-3);
+  color: var(--text-1);
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+/* --- Schermi stretti (tablet e telefono) ----------------------------------- */
+@media (max-width: 1000px) {
+  body {
+    overflow: auto;
+  }
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    height: auto;
+    min-height: 100%;
+  }
+  .app > * {
+    min-width: 0;
+  }
+  .kpi b {
+    white-space: normal;
+  }
+  .two-col {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar {
+    grid-row: auto;
+    overflow: visible;
+  }
+  .nav {
+    display: flex;
+    gap: 0.3rem;
+    overflow-x: auto;
+    padding: 0.4rem 0.6rem;
+  }
+  .nav > div {
+    display: contents;
+  }
+  .nav .grp,
+  .nav details {
+    display: none;
+  }
+  .nav button {
+    width: auto;
+    white-space: nowrap;
+    flex: none;
+  }
+  .sidebar .team {
+    padding: 0.7rem 1rem;
+  }
+  .sidebar .foot {
+    padding: 0.5rem 0.8rem;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    padding: 0.7rem 1rem;
+  }
+  .main {
+    overflow: visible;
+    padding: 1rem;
+  }
+  .grid12 > * {
+    grid-column: span 12;
+  }
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card {
+    overflow-x: auto;
+  }
+  .detail {
+    position: static;
+  }
+  .attr {
+    grid-template-columns: 8.5rem 1fr 2.2rem;
+  }
+  .nextstep {
+    flex-wrap: wrap;
+  }
+  .nextstep .btn {
+    width: 100%;
+  }
+}
+
+/* --- Home ------------------------------------------------------------------ */
+.howto {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.howto > div {
+  position: relative;
+  padding-left: 2.6rem;
+}
+.howto span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: var(--signal);
+  color: var(--signal-ink);
+  font-weight: 800;
+}
+.howto p {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}
+.rider-tile {
+  position: relative;
+  overflow: hidden;
+}
+.ghost-num {
+  position: absolute;
+  right: 0.6rem;
+  top: -0.4rem;
+  font: 900 4.6rem/1 var(--font-display);
+  font-stretch: 120%;
+  color: color-mix(in srgb, var(--team) 22%, transparent);
+  pointer-events: none;
+}
+.rider-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.rider-stats small {
+  display: block;
+  font-size: 0.75rem;
+}
+.rider-stats b {
+  font-size: 1.05rem;
+}
+@media (max-width: 1000px) {
+  .howto {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- Moto e sponsor -------------------------------------------------------- */
+
+.offers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+.deal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2.4rem;
+  align-items: flex-end;
+}
+.deal b {
+  font-size: 1.15rem;
+}
+
+/* --- Bandiere ---------------------------------------------------------------- */
+.flag {
+  display: inline-block;
+  vertical-align: -0.15em;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  object-fit: cover;
+  flex: none;
+}
+.flag-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.flag-missing {
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+
+/* --- Ritratti ---------------------------------------------------------------- */
+.portrait {
+  display: block;
+  object-fit: cover;
+  border-radius: var(--r-2);
+  background-color: var(--bg-3);
+  background-repeat: no-repeat;
+  box-shadow: 0 0 0 1px var(--line-strong);
+  flex: none;
+}
+.portrait.round {
+  border-radius: 50%;
+}
+
+/* Moto illustrata: zone dei gruppi tecnici */
+.bike-art .bz {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.bike-art .bz.click {
+  cursor: pointer;
+}
+.bike-art .bz.click:hover {
+  opacity: 0.55;
+}
+.bike-art .bz.on {
+  opacity: 1;
+}

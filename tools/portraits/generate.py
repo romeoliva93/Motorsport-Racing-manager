@@ -1,0 +1,179 @@
+"""
+Ritratti fotorealistici dei personaggi di Motorcycle Racing Manager, generati in locale e gratis.
+
+Modello: SDXL-Turbo (stabilityai/sdxl-turbo), 4 passi, 512x512, funziona anche senza scheda grafica.
+Licenza del modello: Stability AI Community License (gratuita sotto 1 milione di dollari di ricavi annui).
+
+Uso:
+  bash tools/portraits/setup.sh                       # una volta: installa le librerie (gratis)
+  node tools/portraits/export.ts                      # elenco dei personaggi del mondo fisso
+  python3 tools/portraits/generate.py --kind rider --limit 8   # prova su 8 piloti
+  python3 tools/portraits/generate.py                 # tutti (riprende da dove si è fermato)
+
+Ogni ritratto usa un seme ricavato dalla sua chiave: rigenerando si ottiene lo stesso volto.
+I file vanno in tools/portraits/out/portraits/<chiave>.webp (384x384); poi `python3 tools/portraits/atlas.py`
+li inserisce nei fogli usati dal gioco.
+"""
+import argparse, hashlib, json, os, sys, time
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Uscita fuori dal gioco: atlas.py la raccoglie nei fogli (apps/client/src/assets/atlas).
+OUT = os.path.join(ROOT, 'tools', 'portraits', 'out', 'portraits')
+
+REGIONS = {
+    'south': ['ITA', 'ESP', 'POR', 'SMR', 'FRA', 'TUR'],
+    'north': ['GER', 'AUT', 'SUI', 'NED', 'BEL', 'DEN', 'NOR', 'SWE', 'POL', 'CZE', 'HUN', 'GBR'],
+    'latin': ['ARG', 'BRA', 'MEX'],
+    'japan': ['JPN'],
+    'sea': ['THA', 'INA', 'MAS'],
+    'anglo': ['AUS', 'USA'],
+    'africa': ['RSA', 'NGR'],
+}
+NATIONALITY = {
+    'ITA': 'Italian', 'ESP': 'Spanish', 'POR': 'Portuguese', 'SMR': 'Sammarinese', 'FRA': 'French', 'TUR': 'Turkish',
+    'GER': 'German', 'AUT': 'Austrian', 'SUI': 'Swiss', 'NED': 'Dutch', 'BEL': 'Belgian', 'DEN': 'Danish',
+    'NOR': 'Norwegian', 'SWE': 'Swedish', 'POL': 'Polish', 'CZE': 'Czech', 'HUN': 'Hungarian', 'GBR': 'British',
+    'ARG': 'Argentinian', 'BRA': 'Brazilian', 'MEX': 'Mexican', 'JPN': 'Japanese', 'THA': 'Thai',
+    'INA': 'Indonesian', 'MAS': 'Malaysian', 'AUS': 'Australian', 'USA': 'American', 'RSA': 'South African',
+    'NGR': 'Nigerian',
+}
+HAIR = {
+    'south': ['dark brown', 'black', 'brown', 'dark brown'],
+    'north': ['blond', 'light brown', 'brown', 'dark blond', 'red', 'brown'],
+    'latin': ['black', 'dark brown', 'brown'],
+    'japan': ['black', 'black', 'dark brown'],
+    'sea': ['black', 'black'],
+    'anglo': ['blond', 'brown', 'dark brown', 'light brown', 'black'],
+    'africa': ['black', 'black', 'dark brown'],
+}
+EYES = {'north': ['blue', 'grey', 'green', 'brown'], 'anglo': ['blue', 'brown', 'green', 'hazel']}
+STYLE_M = ['short cropped hair', 'short messy hair', 'undercut hairstyle', 'buzz cut', 'short wavy hair', 'slicked back short hair']
+STYLE_F = ['hair tied back in a ponytail', 'shoulder-length hair', 'short bob haircut', 'braided hair']
+BEARD = ['clean-shaven', 'clean-shaven', 'light stubble', 'short trimmed beard', 'stubble']
+COLORS = {
+    'red': (200, 30, 40), 'dark red': (120, 20, 30), 'orange': (240, 120, 30), 'yellow': (245, 200, 30),
+    'green': (40, 150, 70), 'dark green': (20, 80, 50), 'teal': (20, 160, 160), 'light blue': (90, 170, 230),
+    'blue': (30, 90, 220), 'navy blue': (20, 35, 90), 'purple': (120, 60, 200), 'magenta': (200, 40, 160),
+    'pink': (235, 100, 150), 'white': (240, 240, 240), 'silver grey': (170, 175, 180), 'black': (25, 25, 28),
+    'gold': (200, 160, 60), 'brown': (110, 70, 40),
+}
+
+
+def color_name(hex_):
+    n = int(hex_[1:], 16)
+    rgb = ((n >> 16) & 255, (n >> 8) & 255, n & 255)
+    return min(COLORS, key=lambda k: sum((a - b) ** 2 for a, b in zip(COLORS[k], rgb)))
+
+
+def art(word):
+    return 'an' if word[0] in 'aeiou' else 'a'
+
+
+def region(nat):
+    for k, v in REGIONS.items():
+        if nat in v:
+            return k
+    return 'south'
+
+
+def seed_of(key):
+    return int(hashlib.sha256(key.encode()).hexdigest()[:8], 16)
+
+
+def prompt_for(p):
+    h = seed_of(p['key'])
+    reg = region(p['nationality'])
+    who_age = p['age']
+    sex = 'woman' if p['female'] else ('boy' if who_age < 18 else 'man')
+    if p['female'] and who_age < 18:
+        sex = 'girl'
+    hair = HAIR[reg][h % len(HAIR[reg])]
+    style = (STYLE_F if p['female'] else STYLE_M)[(h >> 4) % (4 if p['female'] else 6)]
+    eyes = EYES.get(reg, ['brown', 'dark brown', 'hazel'])[(h >> 8) % len(EYES.get(reg, ['brown', 'dark brown', 'hazel']))]
+    if who_age >= 45 and (h >> 12) % 3 == 0:
+        hair = 'greying ' + hair
+    athlete = p['kind'] == 'rider' and p['role'] in ('race', 'reserve', 'academy')
+    beard_pool = ['clean-shaven', 'clean-shaven', 'light stubble'] if athlete else BEARD
+    beard = '' if p['female'] or who_age < 19 else beard_pool[(h >> 16) % len(beard_pool)] + ', '
+    # Il modello tende a invecchiare i volti: per i piloti titolari si chiede un'età apparente più giovane
+    # (un trentacinquenne in attività ha l'aspetto di un atleta, non di un cinquantenne).
+    if athlete and who_age > 22:
+        who_age = round(22 + (who_age - 22) * 0.5)
+    c1, c2 = color_name(p['primary']), color_name(p['secondary'])
+    if p.get('organizer'):
+        outfit = 'wearing the official junior cup team jacket, yellow and black, identical for every rider'
+    elif p['kind'] == 'pool':
+        outfit = 'wearing a plain black polo shirt'
+    elif p['kind'] == 'staff':
+        extra = ', radio headset around the neck' if p['role'] in ('trackEngineer', 'crewChief') else ''
+        outfit = f'wearing a plain {c1} zip jacket with {c2} collar{extra}'
+    else:
+        outfit = f'wearing a plain {c1} polo shirt with {c2} collar'
+    job = {
+        'rider': 'professional motorcycle racer',
+        'staff': {'crewChief': 'motorcycle racing crew chief', 'trackEngineer': 'motorcycle racing track engineer',
+                  'technicalDirector': 'motorcycle racing technical director',
+                  'sportingDirector': 'motorcycle racing team manager'}.get(p['role'], 'motorcycle racing engineer'),
+        'pool': 'young motorcycle racer',
+    }[p['kind']]
+    # Il modello legge al massimo 77 token: prima le parole che contano, niente dettagli superflui.
+    return (
+        f"photorealistic paddock press photo, head and shoulders portrait, {who_age}-year-old "
+        f"{NATIONALITY.get(p['nationality'], '')} {sex}, {job}, {hair} {style}, {eyes} eyes, {beard}"
+        f"{outfit}{', athletic build, youthful fit face' if athlete else ''}, looking at camera, blurred team garage background, soft light, realistic skin"
+    )
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--kind', choices=['rider', 'staff', 'pool'])
+    ap.add_argument('--limit', type=int, default=0)
+    ap.add_argument('--only', help='genera solo questa chiave')
+    ap.add_argument('--keys', help='file con un elenco di chiavi (una per riga) da generare')
+    ap.add_argument('--model', default='stabilityai/sdxl-turbo')
+    ap.add_argument('--steps', type=int, default=4)
+    ap.add_argument('--force', action='store_true', help='rigenera anche i ritratti esistenti')
+    ap.add_argument('--print', action='store_true', help='stampa solo i prompt')
+    a = ap.parse_args()
+
+    roster = json.load(open(os.path.join(ROOT, 'tools', 'portraits', 'roster.json')))
+    order = {'rider': 0, 'staff': 1, 'pool': 2}
+    roles = {'race': 0, 'technicalDirector': 1, 'crewChief': 2, 'trackEngineer': 3, 'test': 4, 'reserve': 5, 'academy': 6}
+    keys = set(open(a.keys).read().split()) if a.keys else None
+    todo = [p for p in roster if (not a.kind or p['kind'] == a.kind) and (not a.only or p['key'] == a.only)
+            and (keys is None or p['key'] in keys)]
+    todo.sort(key=lambda p: (order[p['kind']], p.get('organizer', False), roles.get(p['role'], 9), p['key']))
+    os.makedirs(OUT, exist_ok=True)
+    # Già presenti: negli atlanti del gioco o generati e non ancora raccolti.
+    atlas = os.path.join(ROOT, 'apps', 'client', 'src', 'assets', 'atlas', 'index.json')
+    done = set(json.load(open(atlas))['map']) if os.path.exists(atlas) else set()
+    todo = [p for p in todo if a.force or (p['key'] not in done and not os.path.exists(os.path.join(OUT, p['key'] + '.webp')))]
+    if a.limit:
+        todo = todo[: a.limit]
+    if a.print:
+        for p in todo:
+            print(p['key'], '|', prompt_for(p))
+        return
+    if not todo:
+        print('Niente da generare.')
+        return
+
+    import torch
+    from diffusers import AutoPipelineForText2Image
+
+    torch.set_num_threads(os.cpu_count() or 4)
+    # variante fp16 (download ~7 GB) e calcoli in bfloat16: in float32 il modello non sta in 16 GB di RAM
+    pipe = AutoPipelineForText2Image.from_pretrained(a.model, dtype=torch.bfloat16, variant='fp16')
+    pipe.set_progress_bar_config(disable=True)
+    t0 = time.time()
+    for i, p in enumerate(todo, 1):
+        g = torch.Generator('cpu').manual_seed(seed_of(p['key']))
+        img = pipe(prompt=prompt_for(p), num_inference_steps=a.steps, guidance_scale=0.0,
+                   width=512, height=512, generator=g).images[0]
+        img.convert('RGB').resize((384, 384)).save(os.path.join(OUT, p['key'] + '.webp'), quality=82)
+        el = time.time() - t0
+        print(f'[{i}/{len(todo)}] {p["key"]}  ({el / i:.0f} s/ritratto)', flush=True)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

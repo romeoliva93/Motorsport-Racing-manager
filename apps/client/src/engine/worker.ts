@@ -1,0 +1,10 @@
+/** Web Worker del motore: la simulazione gira fuori dal thread dell'interfaccia. */
+import { createEngineHost, type Request } from '@lean-angle/engine-host';
+import { BrowserSaveStore } from './idbStore.ts';
+
+const ctx = self as unknown as {
+  postMessage(m: unknown): void;
+  onmessage: ((e: MessageEvent<Request>) => void) | null;
+};
+const host = createEngineHost({ store: new BrowserSaveStore(), post: (m) => ctx.postMessage(m) });
+ctx.onmessage = (e) => void host.receive(e.data);

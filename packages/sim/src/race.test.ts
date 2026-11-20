@@ -1,0 +1,231 @@
+import { describe, expect, it } from 'vitest';
+import { generateTrack, pointAt } from './track.ts';
+import { compoundForecast, runQualifying, runRace, type RaceRider } from './race.ts';
+
+const track = generateTrack('brennholz', 14);
+const rider = (id: string, skill: number, bike = 0.8, extra: Partial<RaceRider> = {}): RaceRider => ({
+  id,
+  skill,
+  bike,
+  overtaking: 0.7,
+  defending: 0.7,
+  consistency: 0.75,
+  concentration: 0.8,
+  aggression: 0.5,
+  tyreManagement: 0.7,
+  reliability: 0.9,
+  compound: 'medium',
+  mode: 'normal',
+  ...extra,
+});
+const grid = Array.from({ length: 22 }, (_, i) => rider(`r${i}`, 0.9 - i * 0.01));
+
+describe('tracciati', () => {
+  it('sono stabili e diversi per circuito', () => {
+    expect(generateTrack('brennholz', 14)).toEqual(track);
+    expect(generateTrack('vltava', 14).points[10]).not.toEqual(track.points[10]);
+    expect(track.points).toHaveLength(480);
+    const meanInv = track.speed.reduce((s, v) => s + 1 / v, 0) / track.speed.length;
+    expect(meanInv).toBeCloseTo(1, 5);
+    const [x, y] = pointAt(track, 0.5);
+    expect(x).toBeGreaterThanOrEqual(0);
+    expect(y).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('qualifiche e gara', () => {
+  it('le qualifiche ordinano per tempo e i più forti stanno davanti in media', () => {
+    const q = runQualifying('q1', 100, grid);
+    expect(q.map((x) => x.position)).toEqual(Array.from({ length: 22 }, (_, i) => i + 1));
+    const avgPos = (ids: string[]) =>
+      ids.reduce((s, id) => s + q.find((x) => x.riderId === id)!.position, 0) / ids.length;
+    expect(avgPos(['r0', 'r1', 'r2', 'r3'])).toBeLessThan(avgPos(['r18', 'r19', 'r20', 'r21']));
+  });
+
+  it('la gara è deterministica e produce risultati coerenti', () => {
+    const setup = { seed: 'race-1', track, lengthM: 4600, laps: 12, refLap: 100, grid };
+    const a = runRace(setup);
+    const b = runRace(setup);
+    expect(a.results).toEqual(b.results);
+    const fin = a.results.filter((r) => r.status === 'finished');
+    expect(fin[0]!.position).toBe(1);
+    expect(fin[0]!.gap).toBe(0);
+    for (let i = 1; i < fin.length; i++)
+      if (fin[i]!.gap !== null && fin[i - 1]!.gap !== null)
+        expect(fin[i]!.gap!).toBeGreaterThanOrEqual(fin[i - 1]!.gap!);
+    expect(a.results).toHaveLength(22);
+    expect(a.frames.length).toBeGreaterThan(100);
+    expect(a.events.some((e) => e.kind === 'overtake')).toBe(true);
+    // Durata realistica: circa giri × giro di riferimento.
+    expect(a.duration).toBeGreaterThan(12 * 100 * 0.95);
+    expect(a.duration).toBeLessThan(12 * 100 * 1.25);
+  });
+
+  it('su molte gare vince più spesso chi è più forte, ma non sempre', () => {
+    const wins = new Map<string, number>();
+    for (let i = 0; i < 40; i++) {
+      const out = runRace({
+        seed: `stat-${i}`,
+        track,
+        lengthM: 4600,
+        laps: 20,
+        refLap: 100,
+        grid: [...grid].reverse(),
+      });
+      const w = out.results[0]!.riderId;
+      wins.set(w, (wins.get(w) ?? 0) + 1);
+    }
+    // Dai primi cinque per abilità ci si aspetta la maggior parte delle vittorie, anche partendo dal fondo.
+    const topWins = ['r0', 'r1', 'r2', 'r3', 'r4'].reduce((t, id) => t + (wins.get(id) ?? 0), 0);
+    expect(topWins).toBeGreaterThan(15); // a caso sarebbero ~9
+    expect(wins.size).toBeGreaterThan(2);
+  });
+
+  it("il ritmo d'attacco aumenta le cadute", () => {
+    let calm = 0,
+      attack = 0;
+    for (let i = 0; i < 30; i++) {
+      const g1 = grid.map((r) => ({ ...r, mode: 'conservative' as const }));
+      const g2 = grid.map((r) => ({ ...r, mode: 'attack' as const }));
+      calm += runRace({
+        seed: `c-${i}`,
+        track,
+        lengthM: 4600,
+        laps: 10,
+        refLap: 100,
+        grid: g1,
+      }).events.filter((e) => e.kind === 'crash').length;
+      attack += runRace({
+        seed: `c-${i}`,
+        track,
+        lengthM: 4600,
+        laps: 10,
+        refLap: 100,
+        grid: g2,
+      }).events.filter((e) => e.kind === 'crash').length;
+    }
+    expect(attack).toBeGreaterThan(calm);
+  });
+});
+
+describe('equilibrio delle gomme', () => {
+  it('ogni mescola è la migliore per qualche pilota, su ogni lunghezza di gara', () => {
+    for (const laps of [10, 12, 13, 15]) {
+      const winners = new Set<string>();
+      for (const tm of [0.3, 0.5, 0.7, 0.9, 1])
+        for (const mode of ['conservative', 'normal', 'attack'] as const) {
+          const fc = compoundForecast(tm, mode, laps);
+          winners.add((['soft', 'medium', 'hard'] as const).reduce((a, b) => (fc[a] <= fc[b] ? a : b)));
+        }
+      expect([...winners].sort()).toEqual(['hard', 'medium', 'soft']);
+    }
+  });
+
+  it('la previsione corrisponde alla gara simulata', () => {
+    const solo = (tm: number, compound: 'soft' | 'hard') => {
+      let t = 0;
+      for (let i = 0; i < 20; i++)
+        t += runRace({
+          seed: `tyre-${i}`,
+          track,
+          lengthM: 4600,
+          laps: 15,
+          refLap: 100,
+          grid: [
+            rider('a', 0.85, 0.85, {
+              tyreManagement: tm,
+              consistency: 0.8,
+              concentration: 1,
+              reliability: 1,
+              compound,
+            }),
+          ],
+        }).results[0]!.time!;
+      return t / 20;
+    };
+    expect(solo(0.95, 'soft')).toBeLessThan(solo(0.95, 'hard'));
+    expect(solo(0.3, 'hard')).toBeLessThan(solo(0.3, 'soft'));
+  });
+});
+
+describe('Long Lap Penalty', () => {
+  const wild = (k: number) =>
+    rider(`w${k}`, 0.85 - k * 0.004, 0.85, { concentration: 0.1, aggression: 1, mode: 'attack' });
+  const outs = Array.from({ length: 30 }, (_, i) =>
+    runRace({
+      seed: `llp-${i}`,
+      track,
+      lengthM: 4600,
+      laps: 12,
+      refLap: 100,
+      sprint: i % 2 === 0,
+      grid: Array.from({ length: 18 }, (_, k) => wild(k)),
+    }),
+  );
+
+  it("l'anello è lontano da traguardo e box", () => {
+    expect(track.longLap).toBeGreaterThan(50);
+    expect(track.longLap).toBeLessThan(track.points.length - 50);
+  });
+
+  it('ogni Long Lap viene scontata in pista o convertita in secondi', () => {
+    let given = 0;
+    for (const o of outs) {
+      const ev = o.events.filter((e) => e.kind === 'longLapPenalty').reduce((t, e) => t + (e.count ?? 0), 0);
+      const served = o.events.filter((e) => e.kind === 'longLap').length;
+      const pen = o.results.reduce((t, r) => t + (r.penalty?.longLaps ?? 0), 0);
+      const servedRes = o.results.reduce((t, r) => t + (r.penalty?.served ?? 0), 0);
+      expect(pen).toBe(ev);
+      expect(servedRes).toBe(served);
+      for (const r of o.results)
+        if (r.penalty && r.status === 'finished')
+          expect(r.penalty.timeAdded).toBeCloseTo((r.penalty.longLaps - r.penalty.served) * 2.2, 1);
+      given += ev;
+    }
+    expect(given).toBeGreaterThan(5);
+  });
+
+  it("passare nell'anello costa tempo", () => {
+    const passes = outs.flatMap((o) => o.events.filter((e) => e.kind === 'longLap'));
+    expect(passes.length).toBeGreaterThan(0);
+    for (const e of passes) expect(e.duration!).toBeGreaterThan(2.2);
+  });
+
+  it('soglie: Long Lap alla 3ª infrazione nella Sprint, alla 5ª in gara', () => {
+    for (const [i, o] of outs.entries()) {
+      for (const e of o.events.filter((x) => x.kind === 'longLapPenalty' && x.reason === 'trackLimits')) {
+        const n = o.events.filter(
+          (x) => x.kind === 'trackLimits' && x.riderId === e.riderId && x.t <= e.t,
+        ).length;
+        expect(n).toBe(i % 2 === 0 ? 3 : 5);
+      }
+    }
+  });
+});
+
+describe('bandiere', () => {
+  const outs = Array.from({ length: 150 }, (_, i) =>
+    runRace({ seed: `flag-${i}`, track, lengthM: 4600, laps: 15, refLap: 100, grid }),
+  );
+  it('bandiera gialla a ogni caduta, nessun sorpasso nella zona gialla', () => {
+    for (const o of outs) {
+      const falls = o.events.filter((e) => e.kind === 'crash' || e.kind === 'remount').length;
+      expect(o.events.filter((e) => e.kind === 'yellowFlag').length).toBe(falls);
+    }
+  });
+  it('bandiera rossa rara; dopo la ripartenza la gara arriva in fondo', () => {
+    const red = outs.filter((o) => o.events.some((e) => e.kind === 'redFlag'));
+    expect(red.length).toBeLessThan(outs.length * 0.15);
+    for (const o of red) {
+      const e = o.events.find((x) => x.kind === 'redFlag')!;
+      if (!e.final) expect(o.events.some((x) => x.kind === 'restart')).toBe(true);
+      expect(o.results.filter((r) => r.status === 'finished').every((r) => r.gap !== null)).toBe(true);
+    }
+  });
+  it('partenza dalla corsia box: si parte ultimi', () => {
+    const g = grid.map((r, k) => (k === 0 ? { ...r, pitLaneStart: true } : r));
+    const o = runRace({ seed: 'pit', track, lengthM: 4600, laps: 3, refLap: 100, grid: g, frameEvery: 0.5 });
+    const first = o.frames[4]!;
+    expect(first[0]).toBeLessThan(Math.min(...first.slice(1).filter((d) => d >= 0)));
+  });
+});

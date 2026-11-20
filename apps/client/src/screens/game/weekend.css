@@ -1,0 +1,1253 @@
+.weekend {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.wk-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.4rem 1.6rem;
+}
+.wk-info {
+  flex: 1;
+  min-width: 0;
+}
+.wk-hero h1 {
+  margin: 0.2rem 0 0.3rem;
+  font-size: 2.3rem;
+  font-weight: 900;
+  font-stretch: 118%;
+  line-height: 1.05;
+}
+.wk-facts {
+  display: flex;
+  gap: 1.4rem;
+  margin-top: 0.9rem;
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+.wk-facts b {
+  font: 800 1.5rem/1 var(--font-display);
+  color: var(--text-1);
+  margin-right: 0.2rem;
+}
+.track-map {
+  flex: none;
+  max-width: 40%;
+  height: auto;
+}
+.tm-base {
+  fill: none;
+  stroke: #3a3c42;
+  stroke-width: 6;
+  stroke-linejoin: round;
+}
+.tm-line {
+  fill: none;
+  stroke: var(--team);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.tm-start {
+  fill: var(--signal);
+}
+
+/* Fasi del weekend */
+
+/* Strategia */
+.strat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 1rem;
+}
+.strat-head {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.strat-num {
+  font: 900 2rem/1 var(--font-display);
+  font-stretch: 120%;
+  color: var(--team);
+  min-width: 2.6rem;
+}
+.strat-label {
+  margin: 0.8rem 0 0.35rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+.strat-text {
+  font-size: 0.82rem;
+  margin-top: 0.35rem;
+  min-height: 2.3em;
+}
+.choice {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+}
+.choice button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: var(--r-1);
+  border: 1px solid var(--line-strong);
+  background: var(--bg-1);
+  color: var(--text-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+.choice button.on {
+  border-color: var(--signal);
+  background: rgba(227, 18, 11, 0.1);
+  color: var(--text-1);
+}
+.tyre {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  border: 3px solid;
+  display: inline-block;
+}
+.tyre.soft {
+  border-color: var(--tyre-soft);
+}
+.tyre.medium {
+  border-color: var(--tyre-medium);
+}
+.tyre.hard {
+  border-color: var(--tyre-hard);
+}
+.advice {
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.84rem;
+  color: var(--text-2);
+}
+
+/* Risultato dei nostri piloti */
+.my-result {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+.my-res {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.my-res .pos {
+  min-width: 3rem;
+  height: 3rem;
+  font-size: 1.4rem;
+  border-radius: 10px;
+}
+.my-res > div:nth-child(2) {
+  flex: 1;
+}
+.my-res .pts {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+}
+.my-res .pts b {
+  font: 900 1.8rem/1 var(--font-display);
+}
+.my-res .pts small {
+  color: var(--text-3);
+}
+
+/* Vista gara */
+.race-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.rv-speeds {
+  display: inline-flex;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  padding: 0.2rem;
+}
+.rv-speeds button {
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--r-1);
+  font-weight: 700;
+  cursor: pointer;
+}
+.rv-speeds button.on {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+.rv-clock {
+  font-variant-numeric: tabular-nums;
+  min-width: 4.5rem;
+}
+.rv-stage {
+  position: relative;
+  height: min(70vh, 46rem);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  overflow: hidden;
+  background: #2c3a24;
+}
+.rv-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.rv-board {
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  max-height: min(70vh, 46rem);
+  overflow: auto;
+  font-size: 0.86rem;
+}
+.rv-board li {
+  display: grid;
+  grid-template-columns: 1.6rem 0.3rem minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+}
+.rv-board li.mine {
+  background: rgba(227, 18, 11, 0.12);
+}
+.rv-board li.out {
+  opacity: 0.45;
+}
+.rv-board .p {
+  font-weight: 800;
+  text-align: right;
+}
+.rv-board .c {
+  height: 1rem;
+  border-radius: 2px;
+}
+.rv-board .n {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rv-board .g {
+  color: var(--text-3);
+  font-size: 0.8rem;
+}
+.rv-feed {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+.rv-feed li.crash,
+.rv-feed li.mechanical {
+  color: var(--bad);
+}
+.rv-feed li.finish {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+@media (max-width: 1000px) {
+  .wk-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .wk-hero h1 {
+    font-size: 1.8rem;
+  }
+  .track-map {
+    max-width: 100%;
+    width: 12rem !important;
+  }
+  .rv-stage {
+    height: 60vh;
+  }
+  .rv-board {
+    max-height: 18rem;
+  }
+}
+.choice button small {
+  display: block;
+  width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.choice button:has(small) {
+  flex-wrap: wrap;
+  row-gap: 0.1rem;
+}
+
+/* Programma del weekend e meteo */
+.wk-program {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.wk-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.wk-sessions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.wk-sess {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem 0.45rem 0.5rem;
+  border-radius: var(--r-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+}
+.wk-sess:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+.wk-sess span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.wk-sess b {
+  font-size: 0.86rem;
+  color: var(--text-1);
+}
+.wk-sess small {
+  font-size: 0.74rem;
+  color: var(--text-3);
+}
+.wk-sess.done {
+  border-color: rgba(76, 195, 138, 0.45);
+}
+.wk-sess.now {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 1px var(--signal) inset;
+}
+.wx-box {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  border-radius: var(--r-2);
+  background: rgba(16, 17, 19, 0.55);
+  border: 1px solid var(--line);
+  min-width: 15rem;
+}
+.wx-box b {
+  display: block;
+  font-size: 1.15rem;
+}
+.wk-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.choice.four {
+  grid-template-columns: repeat(4, 1fr);
+}
+.choice button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.tyre.wet {
+  border-color: #4a9dff;
+}
+.tyre-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+table.std tbody tr.cut td {
+  border-bottom: 2px dashed var(--signal);
+}
+@media (max-width: 1000px) {
+  .choice.four {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .wx-box {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+.rv-board .llp,
+.pen {
+  margin-left: 0.35rem;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  background: #1d3f8a;
+  color: #ffd21f;
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.rv-feed li.longLapPenalty,
+.rv-feed li.jumpStart,
+.rv-feed li.positionDrop {
+  color: var(--warn);
+  font-weight: 600;
+}
+.rv-feed li.trackLimits,
+.rv-feed li.longLap,
+.rv-feed li.contact {
+  color: var(--info);
+}
+
+.rv-3d {
+  position: absolute;
+  inset: 0;
+}
+.rv-3d canvas {
+  display: block;
+}
+
+/* ---- Schermata gara v2: classifica | circuito | pannelli piloti ---- */
+.race-viewer.rv2 {
+  display: grid;
+  grid-template-columns: 22rem minmax(0, 1fr) 20rem;
+  gap: 0.8rem;
+  align-items: start;
+}
+.rv-left,
+.rv-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.rv-left-head {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.rv-left-head small {
+  color: var(--signal);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  font-size: 0.72rem;
+}
+.rv-left-head b {
+  font-size: 1.15rem;
+}
+.rv-left-head .muted {
+  font-size: 0.8rem;
+}
+.rv2 .rv-board {
+  max-height: calc(min(70vh, 46rem) + 5rem);
+}
+.rv2 .rv-board li {
+  grid-template-columns: 1.5rem 0.25rem 1.9rem minmax(0, 1fr) 1.5rem 4.6rem;
+  gap: 0.4rem;
+  padding: 0.28rem 0.35rem;
+}
+.rv2 .rv-board .num {
+  font-family: var(--font-display, inherit);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 1rem;
+  text-align: center;
+}
+.rv2 .rv-board .team {
+  display: block;
+  color: var(--text-3);
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rv2 .rv-board .g {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1, inherit);
+  font-weight: 700;
+}
+.rv2 .rv-board .g small {
+  display: block;
+  color: var(--text-3);
+  font-weight: 500;
+  font-size: 0.7rem;
+}
+.tyre-chip {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.68rem;
+  font-weight: 900;
+  background: #111;
+  border: 3px solid #888;
+  color: #fff;
+}
+.tyre-chip.soft {
+  border-color: #ff4d4d;
+}
+.tyre-chip.medium {
+  border-color: #ffc93d;
+}
+.tyre-chip.hard {
+  border-color: #e9edf2;
+}
+.tyre-chip.wet {
+  border-color: #3d9bff;
+}
+.rv-center {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.rv2 .rv-stage {
+  height: min(70vh, 46rem);
+}
+.rv-phase {
+  position: absolute;
+  left: 0.8rem;
+  top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+  pointer-events: none;
+}
+.rv-phase b {
+  background: rgba(8, 10, 14, 0.78);
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--r-1);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.rv-direction {
+  background: rgba(8, 10, 14, 0.85);
+  border-left: 4px solid var(--warn);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--r-1);
+  font-size: 0.85rem;
+}
+.rv-direction.redFlag {
+  border-color: var(--bad);
+}
+.rv-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.5rem 0.8rem;
+}
+.rv-bar .spacer {
+  flex: 1;
+}
+.rv-lap {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  padding-right: 0.6rem;
+  border-right: 1px solid var(--line);
+}
+.rv-lap small {
+  color: var(--text-3);
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+.rv-lap b {
+  font-size: 1.9rem;
+  font-weight: 900;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+}
+.rv-lap b span {
+  font-size: 1rem;
+  color: var(--text-3);
+}
+.rv-rider {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--team);
+  border-radius: var(--r-3);
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.rv-rider-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.rv-rider-name {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.1;
+}
+.rv-rider-name small {
+  color: var(--text-3);
+  font-size: 0.75rem;
+}
+.rv-rider-name b {
+  display: block;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rv-rider-pos {
+  text-align: center;
+  line-height: 1;
+}
+.rv-rider-pos small {
+  color: var(--text-3);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+.rv-rider-pos b {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--signal);
+}
+.rv-gauges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+.gauge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.gauge svg {
+  width: 2.8rem;
+  height: 2.8rem;
+  flex: none;
+}
+.gauge div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.gauge small,
+.gauge span {
+  color: var(--text-3);
+  font-size: 0.68rem;
+}
+.gauge b {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.rv-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+.rv-stat > span {
+  color: var(--text-3);
+  flex: 1;
+}
+.rv-stat .bar {
+  flex: 1;
+  height: 0.35rem;
+  background: var(--bg-3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.rv-stat .bar span {
+  display: block;
+  height: 100%;
+}
+.rv-stat b {
+  font-variant-numeric: tabular-nums;
+}
+.rv-mode {
+  color: var(--info);
+}
+.rv-note {
+  font-size: 0.75rem;
+}
+@media (max-width: 1400px) {
+  .race-viewer.rv2 {
+    grid-template-columns: 19rem minmax(0, 1fr);
+  }
+  .rv-right {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .rv-right .rv-rider {
+    flex: 1 1 18rem;
+  }
+}
+@media (max-width: 900px) {
+  .race-viewer.rv2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rv-center {
+    order: -1;
+  }
+  .rv2 .rv-stage {
+    height: 55vh;
+  }
+  .rv2 .rv-board {
+    max-height: 20rem;
+  }
+}
+
+/* ---- Garage ---- */
+
+.gar-kpi {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.gar-kpi small {
+  color: var(--text-3);
+  font-size: 0.72rem;
+}
+.gar-kpi b {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+b.ok {
+  color: var(--ok);
+}
+
+b.info {
+  color: var(--info);
+}
+
+b.warn {
+  color: var(--warn);
+}
+
+b.bad {
+  color: var(--bad);
+}
+
+/* Vista 2D interattiva e selezione */
+.rv-top {
+  cursor: grab;
+  touch-action: none;
+}
+.rv-top:active {
+  cursor: grabbing;
+}
+.rv-reset {
+  position: absolute;
+  right: 0.8rem;
+  top: 0.8rem;
+}
+.rv2 .rv-board li {
+  cursor: pointer;
+}
+.rv2 .rv-board li.sel {
+  box-shadow: 0 0 0 1px #fff inset;
+}
+
+/* ---- Garage v2: gruppi tecnici ---- */
+.garage .tabs {
+  margin: 0.6rem 0 0.8rem;
+}
+.gar-decisions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.gar-decisions > div {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  background: rgba(255, 201, 61, 0.08);
+  border: 1px solid rgba(255, 201, 61, 0.35);
+  border-radius: var(--r-2);
+  padding: 0.5rem 0.7rem;
+}
+
+/* ---- Garage v3 (prototipo): moto dall'alto al centro, schede intorno ---- */
+
+.gx {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.gx-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.7rem 1rem;
+}
+.gx-head .spacer,
+.gx-tabs .spacer {
+  flex: 1;
+}
+.gx-team {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  padding-right: 0.8rem;
+  border-right: 1px solid var(--line);
+}
+.gx-team small {
+  color: var(--signal);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+.gx-team b {
+  font-size: 1.15rem;
+}
+.gx-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.gx-tabs > button {
+  border: 0;
+  background: none;
+  color: var(--text-3);
+  font: inherit;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 0.4rem 0.8rem;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+.gx-tabs > button.on {
+  color: var(--text-1, #fff);
+  border-bottom-color: var(--signal);
+}
+.gx-main {
+  display: grid;
+  grid-template-columns: minmax(0, 23rem) minmax(20rem, 1fr) minmax(0, 23rem);
+  gap: 1.2rem;
+  align-items: center;
+  background: radial-gradient(ellipse at 50% 50%, #2e333c 0%, #15171b 62%);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 1rem;
+  min-height: 34rem;
+}
+.gx-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.gx-bike {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.gx-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5.6rem 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 0.25rem 0.8rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.15)), var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 0.7rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.gx-card:hover {
+  border-color: var(--info);
+  transform: translateY(-1px);
+}
+.gx-card.on {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 1px var(--signal) inset;
+}
+.gx-img {
+  grid-row: 1 / 4;
+  width: 5.6rem;
+  height: 5.6rem;
+  border-radius: var(--r-2);
+  background-size: cover;
+  background-position: center;
+  background-color: #101114;
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+.gx-img.big {
+  width: 7rem;
+  height: 7rem;
+  flex: none;
+}
+.gx-lvl {
+  position: absolute;
+  right: 0.6rem;
+  top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  background: var(--signal);
+  color: var(--signal-ink);
+  border-radius: var(--r-1);
+  padding: 0.25rem 0.5rem;
+}
+.gx-lvl small {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.gx-lvl b {
+  font-size: 1.3rem;
+  font-weight: 900;
+  font-style: italic;
+}
+.gx-name {
+  font-weight: 800;
+  font-size: 0.98rem;
+  padding-right: 3.2rem;
+}
+.gx-stats {
+  display: flex;
+  gap: 0.9rem;
+}
+.gx-stats span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.gx-stats small {
+  color: var(--text-3);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+.gx-stats b {
+  font-variant-numeric: tabular-nums;
+}
+.pill.or {
+  background: rgba(227, 18, 11, 0.16);
+  color: var(--signal);
+}
+.gx-detail {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--signal);
+  border-radius: var(--r-3);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.gx-detail-head {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.gx-detail-head h3 {
+  margin: 0.1rem 0;
+}
+.gx-compare td.ok {
+  color: var(--ok);
+}
+.gx-compare td.warn {
+  color: var(--warn);
+}
+.gx-compare td.bad {
+  color: var(--bad);
+}
+.gx-compare td.info {
+  color: var(--info);
+}
+.gx-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.gx-setup {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.gx-setup-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.gx-setup-head h3 {
+  margin: 0;
+}
+.gx-sliders {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.gx-sliders li {
+  display: grid;
+  grid-template-columns: 16rem 1fr 2.5rem 1.2fr;
+  gap: 0.8rem;
+  align-items: center;
+  background: var(--bg-1, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  padding: 0.5rem 0.8rem;
+}
+.gx-sliders label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.gx-sliders label .muted {
+  font-size: 0.75rem;
+}
+.gx-sliders input[type='range'] {
+  accent-color: var(--signal);
+  width: 100%;
+}
+.gx-val {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.gx-fb {
+  font-style: italic;
+  color: var(--text-2);
+  font-size: 0.88rem;
+}
+.gx-fb.ok {
+  color: var(--ok);
+}
+@media (max-width: 1200px) {
+  .gx-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .gx-bike {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+  .gx-sliders li {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .gx-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Garage: schema tecnico sulla moto, con la zona del gruppo selezionato illuminata */
+.gx-bike {
+  position: relative;
+  flex-direction: column;
+}
+.gx-schema {
+  position: relative;
+  align-self: center;
+  margin-top: 0.6rem;
+  width: 22rem;
+  max-width: 100%;
+  background: rgba(8, 10, 15, 0.82);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--signal);
+  padding: 0.35rem 0.5rem 0.2rem;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  backdrop-filter: blur(4px);
+}
+.gx-schema small {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+  color: var(--text-3);
+}
+.gx-schema .bike-art .bz.on {
+  animation: gx-pulse 1.6s ease-in-out infinite;
+}
+@keyframes gx-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+.gx-up {
+  color: var(--signal);
+  font-weight: 900;
+  font-size: 0.9rem;
+  align-self: center;
+}
+.gx-up.info {
+  color: var(--info);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gx-schema .bike-art .bz.on {
+    animation: none;
+  }
+}
+
+/* Strategia in gara (gara in diretta) */
+.rv-strategy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.3rem 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--line);
+}
+.rv-lever small {
+  display: block;
+  color: var(--text-3);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.1rem;
+}
+.rv-lever .rv-speeds {
+  display: flex;
+  width: 100%;
+  padding: 0.12rem 0.4rem;
+}
+.rv-lever .rv-speeds button {
+  flex: 1;
+  padding: 0.28rem 0.15rem;
+  font-size: 0.66rem;
+}
+
+/* Riunione tecnica (prove) */
+.brief-pick {
+  margin-bottom: 0.8rem;
+}
+.brief {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.4fr) minmax(220px, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .brief {
+    grid-template-columns: 1fr;
+  }
+}
+.brief h4 {
+  margin: 0 0 0.4rem;
+}
+.brief-conf {
+  display: grid;
+  gap: 0.55rem;
+}
+.brief-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.6rem;
+  font-size: 0.85rem;
+}
+.brief-bar i {
+  grid-column: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line, rgba(255, 255, 255, 0.1));
+  overflow: hidden;
+}
+.brief-bar i b {
+  display: block;
+  height: 100%;
+}
+.brief-bar i b.ok {
+  background: var(--ok, #3ccf7a);
+}
+.brief-bar i b.mid {
+  background: var(--warn, #f2b233);
+}
+.brief-bar i b.low {
+  background: var(--bad, #e5484d);
+}
+.brief-bar em {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-style: normal;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.brief-talk ul,
+.brief-log ol {
+  margin: 0 0 0.8rem;
+  padding-left: 1.1rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.brief-talk li.ok {
+  color: var(--muted, #9aa3ad);
+}
+.brief-log ol {
+  list-style: none;
+  padding: 0;
+  max-height: 260px;
+  overflow: auto;
+}
+.brief-log li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+.brief-log li.change b::after {
+  content: ' · modifica';
+  font-weight: 400;
+  color: var(--accent, #ff4d2e);
+}
+.brief-note {
+  font-size: 0.8rem;
+  margin-top: 0.6rem;
+}

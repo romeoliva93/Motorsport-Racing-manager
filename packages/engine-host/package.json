@@ -1,0 +1,15 @@
+{
+  "name": "@lean-angle/engine-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@lean-angle/core": "0.0.0",
+    "@lean-angle/data": "0.0.0",
+    "@lean-angle/game": "0.0.0",
+    "@lean-angle/persistence": "0.0.0"
+  }
+}

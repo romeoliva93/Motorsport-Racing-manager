@@ -1,0 +1,107 @@
+/*
+ * Design tokens di Motorcycle Racing Manager — versione 3.
+ *
+ * Base scura (antracite, grafite, grigio tecnico) e colori vivaci solo per ciò che è interattivo o informativo:
+ *   arancione = azioni principali · blu = informazioni e componenti · verde = condizioni positive
+ *   giallo = attenzione · rosso = pericolo e usura critica.
+ * Il colore della squadra del giocatore personalizza le schermate (--team, impostato dalla shell).
+ */
+:root {
+  /* Superfici */
+  --bg-0: #0f1013;
+  --bg-1: #16181c;
+  --bg-2: #1d2025;
+  --bg-3: #272a31;
+  --glass: rgba(26, 28, 33, 0.86);
+  --line: #2f333b;
+  --line-strong: #434853;
+
+  /* Testo */
+  --text-1: #f3f1ec;
+  --text-2: #bdb9b0;
+  --text-3: #8a867e;
+
+  /* Azione e identità */
+  --signal: #e3120b; /* rosso del logo: azioni principali */
+  --signal-ink: #ffffff;
+  --accent-blue: #3d9bff; /* informazioni e componenti */
+  --team: #3d7bfd; /* sostituito dalla shell con il colore della squadra */
+  --orange: var(--signal);
+  --accent-grad: linear-gradient(90deg, var(--signal), var(--signal));
+
+  /* Stati */
+  --ok: #34d17c;
+  --warn: #ffc93d;
+  --bad: #ff4d4d;
+  --info: #3d9bff;
+
+  /* Gomme (convenzione di gioco) */
+  --tyre-soft: #ef5b4f;
+  --tyre-medium: #f7d046;
+  --tyre-hard: #e9e7e2;
+
+  /* Tipografia */
+  --font-ui: 'Archivo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Archivo', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* Spaziatura e raggi */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 16px;
+
+  --shadow-1: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Scala: 1080p = 16px, 1440p+ = 18px, 4K = 30px */
+html {
+  font-size: 16px;
+}
+@media (min-width: 2400px) {
+  html {
+    font-size: 19px;
+  }
+}
+@media (min-width: 3600px) {
+  html {
+    font-size: 30px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+a {
+  color: var(--info);
+}
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
