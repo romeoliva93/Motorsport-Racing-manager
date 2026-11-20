@@ -146,18 +146,18 @@ export function PreseasonPanel({
           </tbody>
         </table>
         {!t && (
-        <div className="strat-grid" style={{ marginTop: '1rem' }}>
-          {v.riders.map((r) => (
-            <div key={r.id} className="tile strat">
-              <div className="strat-head">
-                <span className="strat-num">{r.number}</span>
-                <b>{r.name}</b>
+          <div className="strat-grid" style={{ marginTop: '1rem' }}>
+            {v.riders.map((r) => (
+              <div key={r.id} className="tile strat">
+                <div className="strat-head">
+                  <span className="strat-num">{r.number}</span>
+                  <b>{r.name}</b>
+                </div>
+                <ProgramBars r={r} v={v} />
               </div>
-              <ProgramBars r={r} v={v} />
-            </div>
+            ))}
+          </div>
         )}
-          ))}
-        </div>
       </Card>
 
       {v.lastDay && (
