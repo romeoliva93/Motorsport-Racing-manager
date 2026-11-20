@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { rows, type TeamId } from '@lean-angle/data';
-import { GameEngine } from '@lean-angle/game';
+import { GameEngine, skipPreseason } from '@lean-angle/game';
 import { buildScene } from './circuitScene.ts';
 import { INTRO, duration, lastDistances, raceFrame, teamsOf } from './raceState.ts';
 
 function raceReplay() {
   const tmp = GameEngine.newCareer({ seed: 'vista', saveName: 'x' });
   const team = rows(tmp.state, 'teams').find((t) => t.name === 'Scuderia Lupo Blu')!.id as TeamId;
-  const e = GameEngine.newCareer({ seed: 'vista', saveName: 'x', teamId: team });
+  const e = skipPreseason(GameEngine.newCareer({ seed: 'vista', saveName: 'x', teamId: team }));
   e.dispatch({ type: 'ContinueToNextEvent' });
   e.dispatch({ type: 'RunRace', strategies: {} });
   return e.lastReplay!;

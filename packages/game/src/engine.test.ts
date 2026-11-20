@@ -1,3 +1,4 @@
+import { skipPreseason } from './preseason.ts';
 import { describe, expect, it } from 'vitest';
 import { rows, validateGameState, type TeamId } from '@lean-angle/data';
 import { GameEngine } from './engine.ts';
@@ -20,7 +21,7 @@ const lupoBlu = (e: GameEngine) =>
 describe('GameEngine', () => {
   it('nuova carriera: mondo valido e squadra del giocatore impostata', () => {
     const tmp = GameEngine.newCareer({ seed: 's1', saveName: 'prova' });
-    const e = GameEngine.newCareer({ seed: 's1', saveName: 'prova', teamId: lupoBlu(tmp) });
+    const e = skipPreseason(GameEngine.newCareer({ seed: 's1', saveName: 'prova', teamId: lupoBlu(tmp) }));
     expect(validateGameState(e.state)).toEqual([]);
     expect(e.state.meta.playerTeamId).toBe(lupoBlu(e));
     expect(e.availableCommands()).toEqual([
@@ -63,6 +64,7 @@ describe('GameEngine', () => {
   it('avanza il tempo e raggiunge il primo evento del calendario', () => {
     const e = GameEngine.newCareer({ seed: 's3', saveName: 'prova' });
     e.dispatch({ type: 'SetPlayerTeam', teamId: lupoBlu(e) });
+    skipPreseason(e);
     const first = e.nextRound()!;
     const r = e.dispatch({ type: 'ContinueToNextEvent' });
     expect(r.ok).toBe(true);
@@ -84,7 +86,7 @@ describe('GameEngine', () => {
 
 describe('viste', () => {
   const tmp = GameEngine.newCareer({ seed: 'views', saveName: 'v' });
-  const e = GameEngine.newCareer({ seed: 'views', saveName: 'v', teamId: lupoBlu(tmp) });
+  const e = skipPreseason(GameEngine.newCareer({ seed: 'views', saveName: 'v', teamId: lupoBlu(tmp) }));
   const s = e.state as Parameters<typeof teamCards>[0];
   const team = lupoBlu(e);
 

@@ -172,20 +172,39 @@ export function Shell({
           hint: 'Campionato finito',
           action: () => go('weekend', { seasonEnd: true }),
         }
-      : commands.includes('ContinueToNextEvent')
+      : commands.includes('RunTestDay')
         ? {
-            label: 'Vai al Gran Premio',
-            hint: s?.nextRound ? `${s.nextRound.circuit} tra ${s.nextRound.inDays} giorni` : '',
-            action: continueTime,
+            label: 'Vai al test',
+            hint: s?.nextTest ? `${s.nextTest.name}: si gira oggi` : 'Giornata di test',
+            action: () => go('weekend'),
           }
-        : null;
+        : s?.nextTest && commands.includes('ContinueToNextEvent')
+          ? {
+              label: 'Vai al test',
+              hint: `${s.nextTest.name} (${s.nextTest.circuit}) tra ${s.nextTest.inDays} giorni`,
+              action: continueTime,
+            }
+          : commands.includes('ContinueToNextEvent')
+            ? {
+                label: 'Vai al Gran Premio',
+                hint: s?.nextRound ? `${s.nextRound.circuit} tra ${s.nextRound.inDays} giorni` : '',
+                action: continueTime,
+              }
+            : null;
 
   async function continueTime() {
     setBusy(true);
     try {
       await engine.dispatch({ type: 'ContinueToNextEvent' });
       go('weekend');
-      notify('È arrivato il weekend di gara: si comincia con le prove libere.');
+      const now = await engine.availableCommands();
+      notify(
+        now.includes('RunTestDay')
+          ? 'Sei ai test pre-stagionali: scegli il lavoro dei piloti e corri la giornata.'
+          : now.includes('RunRace')
+            ? 'È arrivato il weekend di gara: si comincia con le prove libere.'
+            : 'Il tempo è avanzato.',
+      );
     } catch (e) {
       notify((e as Error).message, true);
     } finally {
@@ -224,7 +243,9 @@ export function Shell({
                 <button key={i.id} className={section === i.id ? 'on' : ''} onClick={() => go(i.id)}>
                   {ICON[i.id]}
                   {i.label}
-                  {i.id === 'weekend' && (raceDay || seasonOver) && <span className="badge">!</span>}
+                  {i.id === 'weekend' && (raceDay || seasonOver || commands.includes('RunTestDay')) && (
+                    <span className="badge">!</span>
+                  )}
                   {i.id === 'sponsors' && commands.includes('SignSponsorDeal') && (
                     <span className="badge">!</span>
                   )}

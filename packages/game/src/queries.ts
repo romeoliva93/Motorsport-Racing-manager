@@ -4,6 +4,10 @@
  * rientro da un infortunio — non escono mai dal motore; si espongono solo stime.
  */
 import { supplierOffers } from './suppliers.ts';
+import { nextTestDay, preseasonTests, preseasonView, testToday } from './preseason.ts';
+
+/** Test pre-stagionali della squadra del giocatore. */
+export const preseasonInfo = (s: GameState) => preseasonView(s, (d) => cal(s).format(d));
 import { staffMarket } from './staffMarket.ts';
 import { managerView } from './manager.ts';
 import { GameCalendar, cyrb128 } from '@lean-angle/core';
@@ -182,6 +186,8 @@ export interface CareerSummary {
   } | null;
   roundsTotal: number;
   roundsDone: number;
+  /** Prossimo test pre-stagionale, se viene prima del prossimo GP (o è oggi). */
+  nextTest: { name: string; circuit: string; inDays: number; today: boolean } | null;
 }
 
 export function careerSummary(s: GameState): CareerSummary {
@@ -218,6 +224,15 @@ export function careerSummary(s: GameState): CareerSummary {
         : null,
     roundsTotal: rounds.length,
     roundsDone: rounds.filter((r) => r.status === 'raced').length,
+    nextTest: (() => {
+      if (!teamId) return null;
+      const today = testToday(s);
+      const nd = nextTestDay(s);
+      const day = today ? s.meta.currentDay : nd;
+      if (day === null || (next && day >= next.startDay)) return null;
+      const t = today ?? preseasonTests(s).find((x) => x.startDay + x.done === day || x.startDay === day);
+      return t ? { name: t.name, circuit: t.circuit, inDays: day - s.meta.currentDay, today: !!today } : null;
+    })(),
   };
 }
 
@@ -758,6 +773,7 @@ export const QUERIES = {
   riderProfile,
   dashboardView,
   supplierOffers,
+  preseasonInfo,
   staffMarket,
   managerView,
 } as const;

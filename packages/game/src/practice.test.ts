@@ -1,3 +1,4 @@
+import { skipPreseason } from './preseason.ts';
 import { describe, expect, it } from 'vitest';
 import { rows, type TeamId } from '@lean-angle/data';
 import { GameEngine } from './engine.ts';
@@ -14,7 +15,7 @@ import {
 function weekend(seed: string) {
   const tmp = GameEngine.newCareer({ seed, saveName: 'x' });
   const team = rows(tmp.state, 'teams').find((t) => t.name === 'Scuderia Lupo Blu')!.id as TeamId;
-  const e = GameEngine.newCareer({ seed, saveName: 'x', teamId: team });
+  const e = skipPreseason(GameEngine.newCareer({ seed, saveName: 'x', teamId: team }));
   e.dispatch({ type: 'ContinueToNextEvent' });
   const w = weekendView(e.state as never);
   return { e, riders: w.myRiders.map((r) => r.id) };

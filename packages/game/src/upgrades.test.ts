@@ -1,3 +1,4 @@
+import { skipPreseason } from './preseason.ts';
 import { describe, expect, it } from 'vitest';
 import { rows, teamBalance, validateGameState, type TeamId } from '@lean-angle/data';
 import { GameEngine } from './engine.ts';
@@ -7,7 +8,7 @@ import { upgradeBonus } from './upgrades.ts';
 function career(seed: string) {
   const tmp = GameEngine.newCareer({ seed, saveName: 'x' });
   const team = rows(tmp.state, 'teams').find((t) => t.name === 'Scuderia Lupo Blu')!.id as TeamId;
-  return GameEngine.newCareer({ seed, saveName: 'x', teamId: team });
+  return skipPreseason(GameEngine.newCareer({ seed, saveName: 'x', teamId: team }));
 }
 
 describe('upgrade dei componenti', () => {

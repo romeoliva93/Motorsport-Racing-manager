@@ -22,6 +22,7 @@ import type {
   StaffMember,
 } from '@lean-angle/data';
 import { SETUP_KEYS, idealSetup } from './setup.ts';
+import { bikeBase } from './preseasonEffects.ts';
 import { mechanicsFactor } from './staffMarket.ts';
 import { managerSkill } from './managerSkills.ts';
 
@@ -96,9 +97,9 @@ export function practicesDone(sessions: readonly string[], stage: number): strin
  * Confidenza "di serie" (IA, o piloti del giocatore senza dati): programma Circuito in ogni prova, e confidenza
  * con la moto che insegue l'intesa media delle squadre IA (75%).
  */
-export function defaultConfidence(r: Rider, done: string[], matchPct = 75) {
+export function defaultConfidence(r: Rider, done: string[], matchPct = 75, startBike = 50) {
   let track = baseTrackConf(r),
-    bike = 50;
+    bike = startBike;
   for (const k of done) {
     track = grownTrackConf(track, PRACTICE_LAPS[k] ?? 10, 'track', false);
     bike = grownBikeConf(bike, matchPct, 'track');
@@ -116,7 +117,7 @@ export function practiceRider(s: GameState, round: Round, r: Rider): PracticeRid
   return (p.riders[r.id] ??= {
     laps: 0,
     trackConf: baseTrackConf(r),
-    bikeConf: 50,
+    bikeConf: bikeBase(s, r.id, true),
     minutesUsed: 0,
     longRun: false,
     log: [],

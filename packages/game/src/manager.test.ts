@@ -1,3 +1,4 @@
+import { skipPreseason } from './preseason.ts';
 import { describe, expect, it } from 'vitest';
 import { rows, teamBalance, type TeamId } from '@lean-angle/data';
 import { GameEngine } from './engine.ts';
@@ -13,7 +14,7 @@ const pick = (e: GameEngine, name: string) =>
   rows(e.state, 'teams').find((t) => t.name === name)!.id as TeamId;
 function career(seed: string, team = 'Scuderia Lupo Blu') {
   const tmp = GameEngine.newCareer({ seed, saveName: 'x' });
-  return GameEngine.newCareer({ seed, saveName: 'x', teamId: pick(tmp, team) });
+  return skipPreseason(GameEngine.newCareer({ seed, saveName: 'x', teamId: pick(tmp, team) }));
 }
 function playSeason(e: GameEngine) {
   let n = 0;

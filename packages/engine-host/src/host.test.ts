@@ -20,7 +20,11 @@ describe('engine host + client', () => {
     expect((await client.query('careerSummary')).team!.name).toBe('Scuderia Lupo Blu');
     expect(await client.availableCommands()).toContain('MakeOffer');
 
-    const events = await client.dispatch({ type: 'ContinueToNextEvent' });
+    // Prima del GP ci sono i test pre-stagionali: «Vai al…» si ferma a ogni test; andando avanti si saltano.
+    let events = await client.dispatch({ type: 'ContinueToNextEvent' });
+    expect(await client.availableCommands()).toContain('RunTestDay');
+    for (let i = 0; i < 4 && !events.some((e) => e.type === 'RoundReached'); i++)
+      events = await client.dispatch({ type: 'ContinueToNextEvent' });
     expect(events.map((e) => e.type)).toContain('RoundReached');
     const after = await client.query('careerSummary');
     expect(after.roundsDone).toBe(0);

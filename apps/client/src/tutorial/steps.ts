@@ -131,6 +131,20 @@ export const TUTORIAL: TutorialStep[] = [
     ],
   },
   {
+    id: 'preseason',
+    title: 'I test pre-stagionali',
+    section: 'weekend',
+    intro:
+      'Prima del primo Gran Premio ci sono i test: «Vai al test» porta alla giornata, che si corre con tutte le squadre.',
+    points: [
+      'MotoGP: due test (3 + 2 giornate). Moto2 e Moto3: un test di 3 giornate. Rookies Cup: una giornata.',
+      'Per ogni pilota scegli un programma: Circuito, Assetto, Passo gara oppure Sviluppo.',
+      'Circuito, Assetto e Passo gara alzano la confidenza con la moto da cui il pilota parte in ogni weekend della stagione (senza test 50, gli avversari 60).',
+      'Sviluppo rende gli upgrade della stagione più rapidi e più economici.',
+      'Ogni giornata costa la trasferta; puoi anche saltare il resto del test e andare avanti.',
+    ],
+  },
+  {
     id: 'weekend',
     title: 'Il weekend di gara',
     section: 'weekend',

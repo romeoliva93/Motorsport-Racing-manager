@@ -83,6 +83,8 @@ export interface GameState {
   practice?: PracticeState;
   /** Il manager (il giocatore): reputazione, stipendio, soldi personali, corsi, offerte di lavoro. */
   manager?: ManagerState;
+  /** Test pre-stagionali della stagione in corso (squadra del giocatore). */
+  preseason?: PreseasonState;
 }
 
 export type TableName = keyof GameState['tables'];
@@ -185,4 +187,21 @@ export interface ManagerState {
   offersYear: number | null;
   offers: JobOffer[];
   history: { year: number; team: string; position: number; of: number }[];
+}
+
+export type TestProgram = 'track' | 'setup' | 'longRun' | 'development';
+
+export interface PreseasonState {
+  seasonId: string;
+  /** Giornate corse per test (id del test → numero). */
+  done: Record<string, number>;
+  /** Test saltati. */
+  skipped: string[];
+  /** Confidenza con la moto con cui ogni pilota inizia i weekend (0–100). */
+  bikeBase: Record<string, number>;
+  /** Giornate di sviluppo (componenti provati in pista): upgrade più rapidi ed economici in stagione. */
+  devDays: number;
+  log: { testId: string; day: number; text: string }[];
+  /** Ultima giornata: miglior giro di ciascuno (per la classifica dei tempi). */
+  lastDay: { testId: string; day: number; rows: { riderId: string; best: number }[] } | null;
 }
