@@ -23,6 +23,12 @@
   prudenza si può comunque citare il modello nei crediti.
 - Vietato usare gli output per addestrare altri modelli di base; rispetto della Acceptable Use Policy.
 
+### Come si scrivono i prompt
+Dal 20/11/2026 i prompt seguono la guida del plugin *image-generation*: frasi in prosa (soggetto, inquadratura,
+luce, materiale) invece di elenchi di parole chiave, «photorealistic» all'inizio, esclusioni («no text, no
+logos») in fondo, sempre entro i 77 token del modello (oltre, il testo viene tagliato). Le moto di Scuderia
+Lupo Blu, Lupo Blu Junior e Pampas sono state rigenerate così (avevano segni illeggibili sulle carene).
+
 ### Azioni prima di vendere il gioco
 1. Registrazione gratuita alla Community License (se ricavi < 1 M$).
 2. Verifica legale sulla proteggibilità delle immagini nel paese di pubblicazione.
