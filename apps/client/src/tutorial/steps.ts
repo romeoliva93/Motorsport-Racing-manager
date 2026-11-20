@@ -22,7 +22,7 @@ export const TUTORIAL: TutorialStep[] = [
       'Sei il manager di una squadra del motomondiale. Non guidi la moto: scegli i piloti, prepari la moto e il weekend, decidi la strategia e fai quadrare i conti.',
     points: [
       'Obiettivo: fare punti, rispettare l’obiettivo dello sponsor e non finire senza soldi.',
-      'Il tempo avanza solo quando lo decidi tu, con il pulsante arancione in alto a destra: indica sempre il prossimo passo («Vai al Gran Premio», «Vai al weekend», «Chiudi la stagione»).',
+      'Il tempo avanza solo quando lo decidi tu, con il pulsante rosso in alto a destra: indica sempre il prossimo passo («Vai al Gran Premio», «Vai al weekend», «Chiudi la stagione»).',
       'Piloti, squadre, circuiti e marchi sono inventati: il mondo di partenza è lo stesso in ogni nuova carriera.',
     ],
     tip: 'Puoi riaprire questa guida quando vuoi dal pulsante «Guida» in basso a sinistra.',
