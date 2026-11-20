@@ -111,8 +111,12 @@
   border-color: var(--signal);
   color: var(--signal-ink);
 }
+.menu-nav .item.primary {
+  background: #c20f09;
+  border-color: #c20f09;
+}
 .menu-nav .item.primary small {
-  color: rgba(255, 255, 255, 0.82);
+  color: #fff;
 }
 .menu-nav .item:disabled {
   color: var(--text-3);

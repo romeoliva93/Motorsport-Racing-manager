@@ -83,9 +83,9 @@ export const SPONSOR_MONTHLY: Record<CategoryTier, number> = {
 };
 /** Premio per ogni punto conquistato in gara. */
 export const PRIZE_PER_POINT: Record<CategoryTier, number> = {
-  premier: 40_000,
-  intermediate: 8_000,
-  lightweight: 3_000,
+  premier: 12_000,
+  intermediate: 2_400,
+  lightweight: 900,
   rookies: 0,
 };
 /** Diritti commerciali per ogni Gran Premio disputato (per squadra). */
@@ -104,8 +104,8 @@ export const TRAVEL_COST: Record<CategoryTier, number> = {
 };
 /** Costi fissi mensili di gestione (sede, officina, magazzino ricambi, utenze). */
 export const RUNNING_COST_MONTHLY: Record<CategoryTier, number> = {
-  premier: 420_000,
-  intermediate: 80_000,
-  lightweight: 35_000,
+  premier: 560_000,
+  intermediate: 105_000,
+  lightweight: 46_000,
   rookies: 0,
 };

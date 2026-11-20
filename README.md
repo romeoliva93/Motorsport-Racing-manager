@@ -29,8 +29,10 @@ Premio», «Vai al weekend», «Chiudi la stagione»).
    rapidi, contributo alla firma) e chiede un canone annuo. Oppure **Crea la tua squadra**.
 2. **Sponsor**: firma il contratto della stagione prima del primo Gran Premio (sicuro, bilanciato o ambizioso;
    più soldi = obiettivo più difficile).
-3. **Piloti** e **Mercato piloti**: controlla attributi, morale, forma e contratti; fai offerte (stipendio e
-   anni), valuta le controproposte. Il mercato è aperto fino al primo Gran Premio e a fine stagione.
+3. **Piloti** e **Mercato**: controlla attributi, morale, forma e contratti; fai offerte (stipendio e anni),
+   valuta le controproposte. I piloti sotto contratto si trattano fino al primo Gran Premio e a fine stagione; gli
+   **svincolati** in ogni momento. Nella scheda **Personale tecnico** ingaggi capotecnici, ingegneri e meccanici
+   svincolati.
 4. **Moto e upgrade** (garage): la moto è al centro, intorno i gruppi tecnici con livello, prestazione, usura e
    stato. Scegli la manutenzione (automatica, assistita o manuale), compra ricambi, ordina upgrade alla fabbrica
    (arrivano dopo qualche giorno). In MotoGP: Moto A e Moto B, motori limitati.
@@ -52,7 +54,11 @@ Premio», «Vai al weekend», «Chiudi la stagione»).
 11. **Finanze**: entrate (sponsor, premi) e uscite (stipendi, gestione, canone del costruttore, trasferte,
     ricambi, upgrade). Tieni
     d'occhio il saldo mensile in Home.
-12. **Salva** spesso (in basso a sinistra). A fine campionato **Chiudi la stagione**: riepilogo, contratti in
+12. **Il manager**: la squadra ti paga uno stipendio che va nei tuoi soldi personali. Puoi spenderli in corsi
+    (negoziazione, rapporti commerciali, gestione tecnica: effetti reali) o investirli nella squadra. Se fai meglio
+    delle attese, a fine stagione arrivano **offerte di lavoro** da altre squadre (più soldi, un pilota di punta o la
+    moto migliore): tratti lo stipendio e firmi.
+13. **Salva** spesso (in basso a sinistra). A fine campionato **Chiudi la stagione**: riepilogo, contratti in
     scadenza, stagione successiva.
 
 ### Consigli per i primi Gran Premi

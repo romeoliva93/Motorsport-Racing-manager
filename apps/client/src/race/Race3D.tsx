@@ -466,15 +466,42 @@ export default function Race3D(props: Race3DProps) {
       return o;
     };
     // Spruzzi d'acqua dietro le moto sul bagnato.
-    const sprayMat = new THREE.MeshBasicMaterial({
-      color: 0xdfe6ee,
+    // Sbuffi morbidi (sprite sempre rivolti alla telecamera, bordi sfumati): niente sagome piatte dall'alto.
+    const sprayTex = (() => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 64;
+      const g = c.getContext('2d')!;
+      const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(235,240,246,0.9)');
+      grad.addColorStop(0.45, 'rgba(225,232,240,0.35)');
+      grad.addColorStop(1, 'rgba(220,228,236,0)');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 64, 64);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    })();
+    const sprayMat = new THREE.SpriteMaterial({
+      map: sprayTex,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.32,
       depthWrite: false,
     });
-    const sprayGeo = new THREE.ConeGeometry(1.1, 3.2, 10, 1, true);
-    sprayGeo.rotateZ(Math.PI / 2);
-    sprayGeo.translate(-2.2, 0.7, 0);
+    const makeSpray = () => {
+      const g = new THREE.Group();
+      g.name = 'spray';
+      for (const [x, y, z, sc] of [
+        [-1.5, 0.45, 0, 1.1],
+        [-2.3, 0.7, 0.25, 1.6],
+        [-3.1, 0.95, -0.2, 2.1],
+      ] as const) {
+        const sp = new THREE.Sprite(sprayMat);
+        sp.position.set(x, y, z);
+        sp.scale.set(sc, sc * 0.75, 1);
+        g.add(sp);
+      }
+      return g;
+    };
 
     const crashGroup = new THREE.Group();
     world.add(crashGroup);
@@ -573,8 +600,7 @@ export default function Race3D(props: Race3DProps) {
         poseBike(m, lean);
         let spray = m.getObjectByName('spray');
         if (f.rain > 0.5 && f.racing && !spray) {
-          spray = new THREE.Mesh(sprayGeo, sprayMat);
-          spray.name = 'spray';
+          spray = makeSpray();
           m.add(spray);
         }
       }

@@ -135,7 +135,7 @@ export function aiUpgrades(s: GameState, ids: IdFactory, rng: Rng): void {
     if (!rng.chance(0.35)) continue;
     const options = PART_KEYS.filter((k) => {
       const c = upgradeCost(s, acc.teamId, k);
-      return c !== null && teamBalance(s, acc.teamId) > c * 4;
+      return c !== null && teamBalance(s, acc.teamId) > c * 6;
     });
     if (options.length === 0) continue;
     buyUpgrade(s, ids, acc.teamId, rng.pick(options));

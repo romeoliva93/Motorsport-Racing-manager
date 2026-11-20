@@ -79,11 +79,13 @@ function explain(kind: Session['kind'], w: WeekendView): string {
 export function WeekendScreen({
   notify,
   goMarket,
+  goManager,
   showSeasonEnd,
   openSeasonEnd,
 }: {
   notify: (text: string, err?: boolean) => void;
   goMarket: () => void;
+  goManager: () => void;
   /** Mostra il riepilogo di fine stagione (richiesto dal pulsante "Chiudi la stagione"). */
   showSeasonEnd: boolean;
   openSeasonEnd: () => void;
@@ -144,7 +146,7 @@ export function WeekendScreen({
   }
 
   if (w.state === 'seasonOver' || (w.seasonFinished && showSeasonEnd && !watching))
-    return <SeasonEnd notify={notify} goMarket={goMarket} />;
+    return <SeasonEnd notify={notify} goMarket={goMarket} goManager={goManager} />;
   if (!w.round) return <div className="loading">Nessun evento in calendario.</div>;
 
   if (timingOpen && timing)
@@ -892,8 +894,18 @@ export function TrackMap({ points, size = 15 }: { points: [number, number][]; si
 }
 
 // ---------------------------------------------------------------------------------------------
-function SeasonEnd({ notify, goMarket }: { notify: (t: string, e?: boolean) => void; goMarket: () => void }) {
+function SeasonEnd({
+  notify,
+  goMarket,
+  goManager,
+}: {
+  notify: (t: string, e?: boolean) => void;
+  goMarket: () => void;
+  goManager: () => void;
+}) {
   const q = useQuery('seasonReview');
+  const mv = useQuery('managerView');
+  const offers = mv.status === 'ready' && mv.data ? mv.data.offers.filter((o) => o.status === 'open') : [];
   const [busy, setBusy] = useState(false);
   if (q.status !== 'ready' || !q.data) return <div className="loading">Caricamento…</div>;
   const r = q.data;
@@ -913,6 +925,18 @@ function SeasonEnd({ notify, goMarket }: { notify: (t: string, e?: boolean) => v
           )}
         </div>
       </div>
+      {offers.length > 0 && (
+        <Card title="Offerte di lavoro per te" aside={`${offers.length} da valutare`}>
+          <p className="t2" style={{ marginTop: 0 }}>
+            {offers.map((o) => o.team).join(', ')} {offers.length === 1 ? 'ti vuole' : 'ti vogliono'} come
+            manager. Ogni offerta ha un compromesso diverso: puoi trattare lo stipendio prima di firmare. Se
+            non firmi, le offerte decadono con la nuova stagione.
+          </p>
+          <button className="btn primary" onClick={goManager}>
+            Valuta le offerte ▸
+          </button>
+        </Card>
+      )}
       <div className="grid12">
         <Card title="I campioni" className="s6">
           {r.champions.map((c) => (

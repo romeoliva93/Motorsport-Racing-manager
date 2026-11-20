@@ -165,7 +165,7 @@ async function waitForServer(url, ms = 20000) {
     await shot('17-moto');
     step('upgrade ordinato alla fabbrica');
 
-    await page.locator('.nav').getByRole('button', { name: 'Mercato piloti' }).click();
+    await page.locator('.nav').getByRole('button', { name: 'Mercato', exact: true }).click();
     await page.getByText('Contratto attuale').waitFor();
     await page.locator('.mk-table tbody tr', { hasText: 'Team Meridian' }).first().click();
     await page.getByText('Clausola rescissoria').first().waitFor();
@@ -174,6 +174,19 @@ async function waitForServer(url, ms = 20000) {
     await page.locator('.mk-round').first().waitFor();
     await shot('08-mercato');
     step('mercato: ' + (await page.locator('.mk-round').first().innerText()).split('\n').pop());
+    // Svincolati sempre visibili; personale tecnico: ingaggio di un meccanico.
+    await page.getByRole('button', { name: 'Svincolati', exact: true }).click();
+    await page.getByText('Libero').first().waitFor();
+    await page.getByRole('tab', { name: 'Personale tecnico' }).click();
+    await page.getByText('Personale tecnico svincolato').waitFor();
+    const nFree = await page.locator('.mk-table tbody tr').count();
+    if (nFree < 10) throw new Error(`Pochi tecnici svincolati: ${nFree}`);
+    await page.locator('.mk-filters').getByRole('button', { name: 'Meccanico', exact: true }).click();
+    await page.locator('.mk-table tbody tr').first().click();
+    await page.getByRole('button', { name: /^Ingaggia per/ }).click();
+    await page.getByText(/ingaggiato \(meccanico\)/).waitFor();
+    await shot('08-personale');
+    step(`mercato del personale: ${nFree} tecnici svincolati, meccanico ingaggiato`);
 
     // Weekend di gara completo.
     const today = () => page.locator('.topbar .kpi', { hasText: 'Oggi' }).locator('b').innerText();
@@ -408,6 +421,14 @@ async function waitForServer(url, ms = 20000) {
     await page.locator('.pd-rider').first().waitFor();
     await shot('14-squadre');
     step(`squadre e piloti: ${nTeams} squadre per costruttore; classifiche team e scuderie`);
+    // Il manager: stipendio arrivato nei soldi personali, investimento nella squadra.
+    await page.locator('.nav button', { hasText: 'Il manager' }).click();
+    await page.getByText('Corsi da manager').waitFor();
+    await page.locator('.mgr-invest input').first().fill('0,1');
+    await page.getByRole('button', { name: 'Investi', exact: true }).click();
+    await page.getByText(/Hai investito/).waitFor();
+    await shot('14-manager');
+    step('il manager: stipendio nei soldi personali, investimento nella squadra');
     await page.locator('.nav button', { hasText: 'Notizie' }).click();
     await page.getByText(/vince/).first().waitFor();
     await shot('15-notizie');
@@ -429,7 +450,7 @@ async function waitForServer(url, ms = 20000) {
     await shot('09-crea-squadra');
     await page.getByRole('button', { name: /Crea la squadra/ }).click();
     await page.locator('.topbar h2', { hasText: 'Mercato' }).waitFor();
-    await page.getByRole('button', { name: 'Senza contratto' }).click();
+    await page.getByRole('button', { name: 'Svincolati', exact: true }).click();
     await page.locator('.mk-table tbody tr', { hasText: 'Libero' }).first().waitFor();
     await page.locator('.mk-table tbody tr').first().click();
     await page.getByText('Pilota senza contratto').waitFor();
