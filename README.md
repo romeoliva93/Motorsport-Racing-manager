@@ -19,7 +19,7 @@ I salvataggi restano nel browser di chi gioca.
 
 ### L'obiettivo
 Fare punti in campionato, raggiungere l'obiettivo dello sponsor e non restare senza soldi. Il tempo avanza solo
-quando lo decidi tu: il **pulsante arancione in alto a destra** indica sempre il prossimo passo («Vai al Gran
+quando lo decidi tu: il **pulsante rosso in alto a destra** indica sempre il prossimo passo («Vai al Gran
 Premio», «Vai al weekend», «Chiudi la stagione»).
 
 ### Cosa fare, in ordine
