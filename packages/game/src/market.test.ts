@@ -1,3 +1,4 @@
+import { skipPreseason } from './preseason.ts';
 import { describe, expect, it } from 'vitest';
 import {
   rows,
@@ -13,7 +14,7 @@ import { activeRiderContract, askingSalary, buyoutFor, marketOpen } from './mark
 function career(seed = 'market') {
   const tmp = GameEngine.newCareer({ seed, saveName: 'm' });
   const lupo = rows(tmp.state, 'teams').find((t) => t.name === 'Scuderia Lupo Blu')!.id as TeamId;
-  return { e: GameEngine.newCareer({ seed, saveName: 'm', teamId: lupo }), lupo };
+  return { e: skipPreseason(GameEngine.newCareer({ seed, saveName: 'm', teamId: lupo })), lupo };
 }
 const st = (e: GameEngine) => e.state as GameState;
 const riderOf = (e: GameEngine, teamName: string, i = 0) => {

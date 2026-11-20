@@ -38,7 +38,11 @@ Premio», «Vai al weekend», «Chiudi la stagione»).
    (arrivano dopo qualche giorno). In MotoGP: Moto A e Moto B, motori limitati.
 5. **Assetto** (nel garage): per ogni pilota, su asciutto e bagnato. Il pilota commenta le regolazioni; un buon
    assetto vale fino all'1,5% di ritmo.
-6. **Vai al Gran Premio**: i giorni scorrono fino al weekend.
+6. **Test pre-stagionali** («Vai al test»): prima del primo GP (MotoGP: 2 test, 3 + 2 giornate; Moto2/Moto3: 3
+   giornate; Rookies: 1). Per ogni pilota scegli *Circuito*, *Assetto*, *Passo gara* o *Sviluppo*: i primi tre
+   alzano la confidenza con la moto da cui parte ogni weekend (senza test 50, avversari 60), *Sviluppo* rende gli
+   upgrade più rapidi ed economici. Ogni giornata costa la trasferta; si può saltare il resto del test.
+   Poi **Vai al Gran Premio**: i giorni scorrono fino al weekend.
 7. **Prove libere**: scegli gomma e programma di lavoro (*Circuito*, *Assetto*, *Passo gara*). Dopo ogni uscita
    c'è la **riunione tecnica**: confidenza col circuito e con la moto, commenti del pilota, consiglio del
    capotecnico da applicare (hai 45 minuti di lavoro fra una sessione e l'altra), cronologia del weekend.

@@ -57,6 +57,7 @@ import {
   tyresLeft,
 } from './weekend.ts';
 import { chooseSupplier } from './suppliers.ts';
+import { nextTestDay, runTestDay, skipTestToday, testToday, validateTestDay } from './preseason.ts';
 import { hireStaff, validateHire } from './staffMarket.ts';
 import {
   acceptJobOffer,
@@ -258,6 +259,7 @@ export class GameEngine {
     if (marketOpen(s)) out.push('MakeOffer', 'AcceptCounter', 'WithdrawNegotiation');
     out.push('BuyUpgrade', 'ServiceParts', 'SetGarageMode', 'BuySpare', 'ReplaceGroup', 'SetSetup');
     if (dealWindowOpen(s)) out.push('SignSponsorDeal');
+    if (!this.live && testToday(s)) out.push('RunTestDay');
     out.push('HireStaff', 'ManagerCourse', 'InvestInTeam');
     if (s.manager?.offers.some((o) => o.status === 'open')) out.push('NegotiateJobOffer', 'AcceptJobOffer');
     return out;
@@ -414,6 +416,11 @@ export class GameEngine {
       }
       case 'StartNextSeason':
         return seasonFinished(s) ? ok(true) : err('La stagione non è ancora finita');
+      case 'RunTestDay': {
+        if (!s.meta.playerTeamId) return err('Scegli prima una squadra');
+        const why = validateTestDay(s, cmd.programs);
+        return why ? err(why) : ok(true);
+      }
       case 'HireStaff': {
         if (!s.meta.playerTeamId) return err('Scegli prima una squadra');
         const why = validateHire(s, s.meta.playerTeamId, cmd);
@@ -536,7 +543,13 @@ export class GameEngine {
         this.advanceTo(s.meta.currentDay + cmd.days);
         return;
       case 'ContinueToNextEvent':
-        this.advanceTo(this.nextRound()!.startDay);
+        // Chi prosegue con un test in corso lo salta; ci si ferma anche ai giorni di test.
+        if (testToday(s)) skipTestToday(s);
+        {
+          const t = nextTestDay(s);
+          const r = this.nextRound()!.startDay;
+          this.advanceTo(t !== null && t < r ? t : r);
+        }
         return;
       case 'MakeOffer':
         this.handleOffer(cmd.riderId, clampOffer(cmd.offer));
@@ -596,6 +609,15 @@ export class GameEngine {
         if (rep) this.lastReplay = rep;
         finishOtherRounds(s, this.ids, rng);
         this.events.emit('RaceDone', s.meta.currentDay, { roundId: round.id, summary: '' });
+        return;
+      }
+      case 'RunTestDay': {
+        const t = testToday(s)!;
+        this.lastTiming = runTestDay(s, this.ids, cmd.programs);
+        this.events.emit('TestDayDone', s.meta.currentDay, { testId: t.id, day: t.done + 1 });
+        // Giornata successiva dello stesso test: si va al giorno dopo.
+        if (testToday(s) === null && nextTestDay(s) === s.meta.currentDay + 1)
+          this.advanceTo(s.meta.currentDay + 1);
         return;
       }
       case 'HireStaff': {
@@ -792,6 +814,7 @@ export class GameEngine {
     const s = this.stateValue;
     const from = s.meta.currentDay;
     const rounds = this.playerRounds();
+    const testStop = nextTestDay(s);
     let reached = target;
     for (let day = from + 1; day <= target; day++) {
       s.meta.currentDay = day;
@@ -800,6 +823,8 @@ export class GameEngine {
       if (new GameCalendar(s.meta.startYear).toDate(day).day === 1)
         aiUpgrades(s, this.ids, this.streams.get('ai-upgrades'));
       if (rounds.some((r) => r.startDay === day)) reached = day;
+      // Giornata di test pre-stagionale: ci si ferma (la si corre o la si salta).
+      if (testStop === day) break;
       for (const r of rounds) {
         if (r.startDay === day) {
           const season = s.tables.seasons[r.seasonId]!;

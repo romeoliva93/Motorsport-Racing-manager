@@ -191,10 +191,38 @@ async function waitForServer(url, ms = 20000) {
     // Weekend di gara completo.
     const today = () => page.locator('.topbar .kpi', { hasText: 'Oggi' }).locator('b').innerText();
     const dateBefore = await today();
+    // Test pre-stagionali: «Vai al test», una giornata corsa davvero (programma Sviluppo), poi si saltano gli altri.
     await page
       .locator('.topbar')
-      .getByRole('button', { name: /Vai al Gran Premio/ })
+      .getByRole('button', { name: /Vai al test/ })
       .click();
+    await page.getByRole('button', { name: /^Corri la giornata 1/ }).waitFor();
+    await shot('10-test');
+    await page.locator('.preseason .choice').first().getByRole('button', { name: 'Sviluppo' }).click();
+    await page.getByRole('button', { name: /^Corri la giornata 1/ }).click();
+    await page.getByText('Tempo rimanente').waitFor();
+    await page.getByRole('button', { name: '64×' }).click();
+    await page.waitForFunction(() => document.querySelectorAll('.tt-s.done').length >= 6, null, {
+      timeout: 60000,
+    });
+    await page
+      .getByRole('button', { name: /Chiudi|Torna/ })
+      .first()
+      .click();
+    await page.getByRole('button', { name: /^Corri la giornata 2/ }).waitFor();
+    const log = await page.locator('.ps-log li').count();
+    if (log < 2) throw new Error(`Diario dei test vuoto (${log})`);
+    step('test pre-stagionale: giornata 1 corsa, tempi e diario');
+    // Salta il resto dei test fino al primo Gran Premio.
+    for (let i = 0; i < 6; i++) {
+      if (await page.getByRole('button', { name: 'Corri Prove libere 1' }).count()) break;
+      const skipBtn = page.getByRole('button', { name: 'Salta il resto del test' });
+      const bar = page.locator('.topbar');
+      if (await skipBtn.count()) await skipBtn.click();
+      else if (await bar.getByRole('button', { name: /Vai al (test|Gran Premio|weekend)/ }).count())
+        await bar.getByRole('button', { name: /Vai al (test|Gran Premio|weekend)/ }).click();
+      await page.waitForTimeout(500);
+    }
     await page.getByRole('button', { name: 'Corri Prove libere 1' }).waitFor();
     const dateAfter = await today();
     if (dateAfter === dateBefore) throw new Error('La data non è avanzata');

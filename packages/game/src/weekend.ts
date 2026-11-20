@@ -60,6 +60,7 @@ import { conditionsFor, weekendWeather, type SessionWeather } from './weather.ts
 import { engineStatus } from './regulations.ts';
 import { upgradeBonus } from './upgrades.ts';
 import { supplierPerks } from './suppliers.ts';
+import { bikeBase } from './preseasonEffects.ts';
 import { settleDeals } from './sponsors.ts';
 
 export interface Strategy {
@@ -223,7 +224,13 @@ function toRaceRider(s: GameState, e: Entrant, strat: Strategy, round?: Round, w
   const conf = pr
     ? pr
     : round
-      ? defaultConfidence(e.rider, practicesDone(sessionsOf(s, round), round.stage ?? 0), match * 100)
+      ? defaultConfidence(
+          e.rider,
+          practicesDone(sessionsOf(s, round), round.stage ?? 0),
+          match * 100,
+          // Confidenza di partenza con la moto: dai test pre-stagionali (le IA li fanno sempre).
+          bikeBase(s, e.rider.id, mine),
+        )
       : null;
   return {
     id: e.rider.id,
@@ -591,7 +598,7 @@ export interface TimingRider {
 /** Sessione a tempo (prove, qualifiche, Warm Up) per la schermata tempi: giri e settori di ogni pilota. */
 export interface SessionTiming {
   roundId: string;
-  kind: SessionKind;
+  kind: SessionKind | 'test';
   circuit: string;
   lengthM: number;
   /** Durata della sessione (s). */
@@ -1148,5 +1155,50 @@ export function standings(s: GameState, seasonId: string): StandingsView {
       (r) => s.tables.teams[r.teamId as TeamId]!.type !== 'factory',
     ),
     racesDone: races.filter((r) => r.kind === 'race').length,
+  };
+}
+
+/**
+ * Giornata di test pre-stagionale sul circuito di un round: tutti i piloti della categoria in pista (si vede
+ * nella schermata tempi). Gomma media per tutti, dura per chi fa il passo gara. Non tocca risultati né gomme
+ * del weekend.
+ */
+export function simulateTestDay(
+  s: GameState,
+  round: Round,
+  programs: Record<string, string>,
+  tag: string,
+): { rows: { riderId: string; best: number }[]; timing: SessionTiming } {
+  const list = entrants(s, round);
+  const track = trackFor(s, round);
+  const sectors = timingSectors(track);
+  const length = 3600;
+  const compound = (id: string): Compound => (programs[id] === 'longRun' ? 'hard' : 'medium');
+  const q = runQualifying(
+    `${s.meta.seed}::${round.id}::test::${tag}`,
+    refLapOf(s, round),
+    list.map((e) => toRaceRider(s, e, { compound: compound(e.rider.id), mode: 'normal' }, round, false)),
+    conditionsFor(undefined),
+    { sectors, length },
+  );
+  const circuit = s.tables.circuits[round.circuitId]!;
+  return {
+    rows: q.map((x) => ({ riderId: x.riderId, best: x.best })),
+    timing: {
+      roundId: round.id,
+      kind: 'test',
+      circuit: circuit.name,
+      lengthM: circuit.lengthM,
+      length: Math.max(
+        length,
+        ...q.flatMap((x) => x.laps.map((l) => l.start + l.seg.reduce((a, b) => a + b, 0) + 20)),
+      ),
+      sectors,
+      q2Cut: 0,
+      riders: q.map((x) => {
+        const e = list.find((y) => y.rider.id === x.riderId)!;
+        return { ...timingRider(s, e, compound(e.rider.id)), laps: x.laps };
+      }),
+    },
   };
 }

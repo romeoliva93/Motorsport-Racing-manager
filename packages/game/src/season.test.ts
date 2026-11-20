@@ -1,3 +1,4 @@
+import { skipPreseason } from './preseason.ts';
 import { describe, expect, it } from 'vitest';
 import { rows, teamBalance, validateGameState, type TeamId } from '@lean-angle/data';
 import { GameEngine } from './engine.ts';
@@ -6,7 +7,7 @@ import { championship, financeView, newsFeed, seasonReview, weekendView } from '
 function career(seed: string) {
   const tmp = GameEngine.newCareer({ seed, saveName: 'x' });
   const team = rows(tmp.state, 'teams').find((t) => t.name === 'Scuderia Lupo Blu')!.id as TeamId;
-  return GameEngine.newCareer({ seed, saveName: 'x', teamId: team });
+  return skipPreseason(GameEngine.newCareer({ seed, saveName: 'x', teamId: team }));
 }
 
 /** Gioca una stagione intera: continua fino a ogni GP, qualifiche, gara. */
@@ -127,7 +128,10 @@ describe('stagione giocabile', () => {
           en.seats.every((x) => x.riderId !== null),
           en.teamId,
         ).toBe(true);
-    expect(e.dispatch({ type: 'ContinueToNextEvent' }).ok).toBe(true);
+    // Nella nuova stagione ci sono di nuovo i test pre-stagionali: andando avanti si saltano e si arriva al GP.
+    for (let i = 0; i < 4 && weekendView(e.state).state !== 'today'; i++)
+      expect(e.dispatch({ type: 'ContinueToNextEvent' }).ok).toBe(true);
+    expect(e.state.preseason?.skipped.length).toBe(2);
     expect(weekendView(e.state).state).toBe('today');
   });
 

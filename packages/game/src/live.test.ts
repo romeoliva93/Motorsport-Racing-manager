@@ -1,3 +1,4 @@
+import { skipPreseason } from './preseason.ts';
 import { describe, expect, it } from 'vitest';
 import { deserializeState, rows, serializeState, type TeamId } from '@lean-angle/data';
 import { GameEngine } from './engine.ts';
@@ -6,7 +7,7 @@ import { nextSession, playerRoundToday } from './weekend.ts';
 function toSprint(seed: string) {
   const tmp = GameEngine.newCareer({ seed, saveName: 'x' });
   const team = rows(tmp.state, 'teams').find((t) => t.name === 'Scuderia Lupo Blu')!.id as TeamId;
-  const e = GameEngine.newCareer({ seed, saveName: 'x', teamId: team });
+  const e = skipPreseason(GameEngine.newCareer({ seed, saveName: 'x', teamId: team }));
   e.dispatch({ type: 'ContinueToNextEvent' });
   while (nextSession(e.state as never, playerRoundToday(e.state as never)!) !== 'sprint')
     expect(e.dispatch({ type: 'RunSession', strategies: {} }).ok).toBe(true);

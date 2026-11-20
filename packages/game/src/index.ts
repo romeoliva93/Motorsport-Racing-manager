@@ -18,3 +18,4 @@ export * from './dashboard.ts';
 export * from './suppliers.ts';
 export * from './staffMarket.ts';
 export * from './manager.ts';
+export * from './preseason.ts';

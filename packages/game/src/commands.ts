@@ -72,6 +72,8 @@ export type Command =
   | { type: 'SetSetup'; riderId: string; condition: 'dry' | 'wet'; values: Record<string, number> }
   /** Ingaggia un tecnico svincolato (capotecnico/ingegnere: assegnato a un pilota). */
   | { type: 'HireStaff'; staffId: string; years: number; riderId?: string; replaceStaffId?: string }
+  /** Giornata di test pre-stagionale: programma di lavoro per ciascun pilota. */
+  | { type: 'RunTestDay'; programs: Record<string, 'track' | 'setup' | 'longRun' | 'development'> }
   /** Il manager paga un corso con i suoi soldi. */
   | { type: 'ManagerCourse'; skill: 'negotiation' | 'commercial' | 'technical' }
   /** Il manager mette soldi propri nella squadra. */
@@ -112,6 +114,7 @@ export type GameEvents = {
   SetupChanged: { riderId: string; condition: string };
   SponsorSigned: { risk: string };
   StaffHired: { staffId: string; role: string };
+  TestDayDone: { testId: string; day: number };
   ManagerCourseTaken: { skill: string; level: number };
   ManagerInvested: { amount: number };
   JobOfferAnswered: { offerId: string; answer: string; offer: number };

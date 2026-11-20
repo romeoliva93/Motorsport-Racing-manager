@@ -1251,3 +1251,26 @@ b.bad {
   font-size: 0.8rem;
   margin-top: 0.6rem;
 }
+
+/* Test pre-stagionali */
+.preseason {
+  display: grid;
+  gap: 1rem;
+}
+.preseason .ps-prog {
+  font-size: 0.82rem;
+  margin: 0.5rem 0 0;
+}
+.preseason .ps-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 1rem;
+}
+.preseason .ps-log {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+}

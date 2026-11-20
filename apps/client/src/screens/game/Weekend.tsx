@@ -8,6 +8,7 @@ import { WeatherIcon, SKY_LABEL } from '../../design-system/WeatherIcon.tsx';
 
 import { RaceViewer } from './RaceViewer.tsx';
 import { SessionViewer } from '../../race/SessionViewer.tsx';
+import { PreseasonPanel } from './Preseason.tsx';
 import './weekend.css';
 import '../../race/timing.css';
 
@@ -91,6 +92,7 @@ export function WeekendScreen({
   openSeasonEnd: () => void;
 }) {
   const q = useQuery('weekendView');
+  const pq = useQuery('preseasonInfo');
   const [replay, setReplay] = useState<ReplayData | null>(null);
   const [watching, setWatching] = useState(false);
   /** Gara in diretta (simulazione incrementale) e istante da cui riprendere la visione. */
@@ -147,7 +149,11 @@ export function WeekendScreen({
 
   if (w.state === 'seasonOver' || (w.seasonFinished && showSeasonEnd && !watching))
     return <SeasonEnd notify={notify} goMarket={goMarket} goManager={goManager} />;
+  // Giornata di test pre-stagionale: si lavora in pista prima del campionato.
+  const pv = pq.status === 'ready' ? pq.data : null;
+  if (pv?.today && !w.seasonFinished) return <PreseasonPanel v={pv} notify={notify} />;
   if (!w.round) return <div className="loading">Nessun evento in calendario.</div>;
+  const showTests = !!pv && w.state === 'upcoming' && w.round.number === 1 && pv.tests.length > 0;
 
   if (timingOpen && timing)
     return (
@@ -250,6 +256,8 @@ export function WeekendScreen({
           );
         })}
       </div>
+
+      {showTests && <PreseasonPanel v={pv} notify={notify} />}
 
       {w.state === 'upcoming' && (
         <Card title="Il prossimo Gran Premio">

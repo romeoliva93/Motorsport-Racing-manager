@@ -28,6 +28,7 @@ import {
 } from '@lean-angle/data';
 import { payrollMonthly, runningCostMonthly, sponsorMonthly, supplyMonthly } from './economy.ts';
 import { managerMonthly } from './manager.ts';
+import { bikeBase } from './preseasonEffects.ts';
 import { activeRiderContract, buyoutFor } from './market.ts';
 import { riderDetail, type RiderDetail } from './queries.ts';
 import { careerTotals, riderHistory, technicalPreferences, type SeasonStats } from './stats.ts';
@@ -1081,7 +1082,7 @@ function practiceView(s: GameState, round: Round, r: Rider, tier: CategoryTier, 
   const from = cur[adv.key ?? ''] ?? 0;
   const to = Math.max(-5, Math.min(5, from + adv.delta));
   const trackConf = Math.round(pr?.trackConf ?? baseTrackConf(r));
-  const bikeConf = Math.round(pr?.bikeConf ?? 50);
+  const bikeConf = Math.round(pr?.bikeConf ?? bikeBase(s, r.id, true));
   return {
     laps: pr?.laps ?? 0,
     trackConf,
